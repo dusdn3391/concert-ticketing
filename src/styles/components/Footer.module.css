@@ -1,0 +1,11 @@
+.all {
+  background-color: #fff;
+  border-top: 1px solid #eee;
+  padding: 20px 12%;
+  margin-top: 80px;
+}
+
+.all p {
+  color: #000;
+  display: block;
+}

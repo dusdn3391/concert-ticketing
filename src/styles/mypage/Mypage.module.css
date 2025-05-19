@@ -1,0 +1,147 @@
+.all {
+  padding: 20px 12%;
+}
+.container {
+  display: flex;
+  gap: 20px;
+}
+
+.sidebar {
+  width: 250px;
+  font-size: 14px;
+}
+
+.mypage {
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  padding: 20px;
+}
+.welcome {
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.menu {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-top: 10px;
+  padding: 20px;
+}
+.menu h3 {
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+.menu p {
+  margin: 5px 0;
+  cursor: pointer;
+}
+
+.content {
+  flex: 1;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.noticeBox {
+  border: 1px solid #aaa;
+  border-radius: 10px;
+  padding: 12px 30px;
+  margin-bottom: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 15px;
+}
+
+.border {
+  background-color: #000;
+  width: 3px;
+  height: 16px;
+  margin-right: 10px;
+}
+.notice {
+  border-right: 1px solid #000;
+  padding-right: 30px;
+  font-size: 16px;
+}
+.historyBox,
+.inquiryBox {
+  margin-bottom: 30px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.moreButton {
+  font-size: 8px;
+  padding: 4px 9px;
+  border-radius: 10px;
+  border: 1px solid #000;
+  margin-left: 10px;
+  background-color: #fff;
+  line-height: 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+.table th:nth-child(1) {
+  border-left: 0px;
+}
+.table th:nth-child(6) {
+  border-right: 0px;
+}
+
+.table td:nth-child(1) {
+  border-left: 0px;
+}
+
+.table td:nth-child(6) {
+  border-right: 0px;
+}
+.inquiryTable {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #ccc;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.answerBox {
+  border: 1px solid #000;
+  border-radius: 10px;
+  padding: 5px 15px;
+  font-size: 12px;
+  margin-right: 20px;
+  margin-top: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.inquiryInfo {
+  display: flex;
+  margin-top: 12px;
+  white-space: nowrap;
+  width: 100%;
+  justify-content: space-between;
+}

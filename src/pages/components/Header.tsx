@@ -1,6 +1,3 @@
-// components/Header.tsx
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -43,7 +40,7 @@ export default function Header() {
               <span>회원가입</span>
             </div>
           </Link>
-          <Link href="#">
+          <Link href="/mypage">
             <div className={styles.navItem}>
               <Image
                 src="/ico_header_mypage.png"

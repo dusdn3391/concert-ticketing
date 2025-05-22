@@ -8,7 +8,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 39px 12%;
+  padding: 39px 20%;
 }
 
 .logoSearch {
@@ -77,7 +77,7 @@
 }
 .menuBar {
   display: flex;
-  padding: 20px 12%;
+  padding: 20px 20%;
   gap: 16px;
   border-top: 1px solid #eee;
   background-color: #fff;

@@ -1,6 +1,7 @@
 import React from "react";
 import { useRouter } from "next/router";
 import styles from "@/styles/concert/ConcertDetail.module.css";
+import ConcertDetailTabs from "@/pages/concert/ConcertDetailTabs";
 
 export default function ConcertDetail() {
   const router = useRouter();
@@ -47,6 +48,7 @@ export default function ConcertDetail() {
         예매하기
         <div>(예매 열림)</div>
       </button>
+      <ConcertDetailTabs />
     </div>
   );
 }

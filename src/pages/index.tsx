@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-import Link from "next/link";
-
-export default function Home() {
-  return (
-    <>
-      <Link href="/admin/seating-editor">좌석 선택</Link>
-    </>
-=======
-"use client";
-
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import styles from "@/styles/Home.module.css";
@@ -179,6 +168,5 @@ export default function HomePage() {
         </div>
       </section>
     </div>
->>>>>>> complate
   );
 }

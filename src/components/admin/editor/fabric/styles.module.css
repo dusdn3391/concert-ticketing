@@ -1,0 +1,86 @@
+.canvas {
+  position: relative !important;
+  z-index: 1;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: fixed;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #000;
+  background-color: #9dcffa;
+  z-index: 2;
+}
+
+.toolbar button {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  border-radius: 4px;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: 0.3s;
+  background-color: #537d8a;
+}
+
+.toolbar button:hover {
+  background-color: #b9deff;
+}
+
+.active {
+  background-color: #4a4cbb !important;
+  border: 2px solid #ffffff;
+}
+
+.settings {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  background-color: #9dcffa;
+  padding: 24px 8px;
+  border-radius: 8px;
+  text-align: left;
+  &:empty {
+    padding: 0;
+  }
+}
+
+.settings .locked {
+  position: absolute;
+  right: 20px;
+  top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings input {
+  padding: 5px 7px;
+  border-radius: 5px;
+}
+
+.settings .flexGroup {
+  display: flex;
+  gap: 10px;
+}
+
+.settings .flexGroup button {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.settings .group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

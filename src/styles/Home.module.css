@@ -1,0 +1,193 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+/* 슬라이드 영역 */
+.slider {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  height: 500px; /* 적절히 조정 가능 */
+}
+
+.sliderWrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.sliderInner {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+  height: 100%;
+}
+
+.slide {
+  min-width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.slideText {
+  position: absolute;
+  top: 150px;
+  padding-left: 20%;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.slideFooter {
+  display: flex;
+  bottom: 0;
+  position: absolute;
+  padding: 0px 20%;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  font-size: 14px;
+  width: 60%;
+}
+
+.slideFooter span {
+  color: #fff;
+}
+.slideFooter button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* 이벤트 영역 */
+.events h2 {
+  font-size: 32px;
+  margin-left: 20%;
+  margin-bottom: 20px;
+}
+
+.eventContent {
+  display: flex;
+  align-items: flex-start;
+  border: 1px solid #eee;
+  padding: 20px 20%;
+  gap: 24px;
+}
+
+.eventLeft {
+  flex: 1;
+  font-size: 14px;
+}
+
+.eventLeft h3 {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.eventLeft p {
+  font-size: 12px;
+  color: #666;
+}
+
+.eventImage {
+  width: 300px;
+  height: 350px;
+  border-radius: 12px;
+  display: flex;
+  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.imagePlaceholder {
+  color: white;
+}
+
+/* 이벤트 리스트 */
+.eventList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.eventItem {
+  padding: 20px;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.pageButtons {
+  display: flex;
+  gap: 1px;
+  margin-top: 12px;
+}
+
+.pageButtons button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pageButtons button:hover {
+  opacity: 0.8;
+}
+
+.concerts {
+  padding: 40px 20%;
+}
+
+.concerts h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.concertGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 35px;
+}
+
+.concertItem {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  transition: box-shadow 0.3s ease;
+}
+
+.concertImageWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 6; /* 비율 조절 */
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.concertImage {
+  border-radius: 8px;
+}
+
+.concertTitle {
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.concertDate {
+  color: #666;
+  font-size: 14px;
+  margin-top: 4px;
+}

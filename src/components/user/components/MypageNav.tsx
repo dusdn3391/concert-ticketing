@@ -23,7 +23,9 @@ export default function MypageNav() {
           <Link href="/mypage/review">
             <p>후기관리</p>
           </Link>
-          <p>알림</p>
+          <Link href="/mypage/alarm">
+            <p>알림</p>
+          </Link>
         </div>
         <div>
           <h3>회원정보관리</h3>

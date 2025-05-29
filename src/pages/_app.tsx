@@ -1,6 +1,6 @@
 import "@/styles/globals.css";
-import Header from "@/components/user/components/Header";
-import Footer from "@/components/user/components/Footer";
+import Header from "@/components/user/Header";
+import Footer from "@/components/user/Footer";
 import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
 

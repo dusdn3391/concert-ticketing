@@ -30,7 +30,9 @@ export default function MypageNav() {
         <div>
           <h3>회원정보관리</h3>
           <p>내정보</p>
-          <p>1:1 문의 내역</p>
+          <Link href="/mypage/inquiry">
+            <p>1:1 문의 내역</p>
+          </Link>
           <p>회원탈퇴</p>
         </div>
       </div>

@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/router";
 import styles from "./ConcertDetail.module.css";
-import ConcertDetailTabs from "@/pages/concert/ConcertDetailTabs";
+import ConcertDetailSection from "@/components/user/concert/ConcertDetailSection";
+import ReviewSection from "@/components/user/concert/ReviewSection";
+import LocationInfoSection from "@/components/user/concert/LocationInfoSection";
+import NoticeSection from "@/components/user/concert/NoticeSection";
+
+const TABS = ["상세보기", "관람후기", "장소정보", "예매 / 취소 안내"];
 
 export default function ConcertDetail() {
   const router = useRouter();
@@ -15,6 +20,23 @@ export default function ConcertDetail() {
     date: "2025.06.01 ~ 2025.06.10",
     age: "12세 이상",
     price: "99,000원",
+  };
+
+  const [activeTab, setActiveTab] = useState("상세보기");
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "상세보기":
+        return <ConcertDetailSection />;
+      case "관람후기":
+        return <ReviewSection />;
+      case "장소정보":
+        return <LocationInfoSection />;
+      case "예매 / 취소 안내":
+        return <NoticeSection />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -48,7 +70,22 @@ export default function ConcertDetail() {
         예매하기
         <div>(예매 열림)</div>
       </button>
-      <ConcertDetailTabs />
+      <div className={styles.tabContainer}>
+        <div className={styles.tabWrapper}>
+          {TABS.map((tab) => (
+            <div
+              key={tab}
+              className={
+                activeTab === tab ? styles.activeTabButton : styles.tabButton
+              }
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </div>
+          ))}
+        </div>
+        <div className={styles.tabContent}>{renderTabContent()}</div>
+      </div>
     </div>
   );
 }

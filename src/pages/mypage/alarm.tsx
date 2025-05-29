@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import styles from "./Alarm.module.css";
-import MypageNav from "../../components/user/components/MypageNav";
-import Pagination from "@/components/user/components/Pagination";
-import AlarmModal from "./AlarmModal";
+import MypageNav from "../../components/user/MypageNav";
+import Pagination from "@/components/user/Pagination";
+import AlarmModal from "../../components/user/AlarmModal";
 
 export default function Alarm() {
   const totalAlarms = 13;

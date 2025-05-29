@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./Mypage.module.css";
-import MypageNav from "@/components/user/components/MypageNav";
+import MypageNav from "@/components/user/MypageNav";
 
 interface Reservation {
   date: string;

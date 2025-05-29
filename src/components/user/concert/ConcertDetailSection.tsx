@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "./ConcertDetail.module.css";
+import styles from "@/pages/concert/ConcertDetail.module.css";
 
 export default function ConcertDetailSection() {
   return (

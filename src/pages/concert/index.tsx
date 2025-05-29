@@ -1,6 +1,6 @@
 // pages/concert/concert.tsx
 import { useState } from "react";
-import Pagination from "@/components/user/components/Pagination";
+import Pagination from "@/components/user/Pagination";
 import Link from "next/link";
 import styles from "./Concert.module.css";
 

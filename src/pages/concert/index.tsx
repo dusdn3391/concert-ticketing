@@ -1,8 +1,8 @@
 // pages/concert/concert.tsx
 import { useState } from "react";
 import Pagination from "@/components/user/Pagination";
-import Link from "next/link";
 import styles from "./Concert.module.css";
+import { useRouter } from "next/router";
 
 type Concert = {
   id: number;
@@ -19,6 +19,8 @@ const mockData: Concert[] = Array.from({ length: 20 }, (_, i) => ({
 }));
 
 export default function ConcertPage() {
+  const router = useRouter();
+
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState("latest");
   const perPage = 9;
@@ -58,8 +60,8 @@ export default function ConcertPage() {
       </div>
       <div className={styles.list}>
         {currentData.map((concert) => (
-          <Link
-            href={`/concert/${concert.id}`}
+          <div
+            onClick={() => router.push(`/concert/${concert.id}`)}
             key={concert.id}
             className={styles.card}
           >
@@ -69,7 +71,7 @@ export default function ConcertPage() {
             <div className={styles.cardDate}>
               {concert.date} ~ {concert.date}
             </div>
-          </Link>
+          </div>
         ))}
       </div>
       <Pagination

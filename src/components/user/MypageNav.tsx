@@ -29,7 +29,9 @@ export default function MypageNav() {
         </div>
         <div>
           <h3>회원정보관리</h3>
-          <p>내정보</p>
+          <Link href="/mypage/myinfo">
+            <p>내정보</p>
+          </Link>
           <Link href="/mypage/inquiry">
             <p>1:1 문의 내역</p>
           </Link>

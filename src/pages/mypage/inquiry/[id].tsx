@@ -1,11 +1,36 @@
-// pages/mypage/inquiryDetail/[id].tsx
 import { useRouter } from "next/router";
 import styles from "@/pages/mypage/inquiry/inquiryDetail.module.css";
 import MypageNav from "@/components/user/MypageNav";
+import React, { useEffect } from "react";
+import { GetServerSideProps } from "next";
 
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { id } = context.params ?? {};
+
+  if (!id || Array.isArray(id) || !/^\d+$/.test(id as string)) {
+    return {
+      redirect: {
+        destination: "/mypage/inquiry",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { id },
+  };
+};
 export default function InquiryDetail() {
   const router = useRouter();
   const { id } = router.query;
+  useEffect(() => {
+    if (typeof id !== "string") return;
+
+    if (!/^\d+$/.test(id)) {
+      alert("유효하지 않은 페이지입니다.");
+      router.push("/mypage/inquiry");
+    }
+  }, [id]);
 
   return (
     <div className={styles.all}>

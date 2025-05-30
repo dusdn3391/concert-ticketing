@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// pages/concert/[id].tsx
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import styles from "./ConcertDetail.module.css";
 import ConcertDetailSection from "@/components/user/concert/ConcertDetailSection";
@@ -7,10 +8,36 @@ import LocationInfoSection from "@/components/user/concert/LocationInfoSection";
 import NoticeSection from "@/components/user/concert/NoticeSection";
 
 const TABS = ["상세보기", "관람후기", "장소정보", "예매 / 취소 안내"];
+import { GetServerSideProps } from "next";
 
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { id } = context.params ?? {};
+
+  if (!id || Array.isArray(id) || !/^\d+$/.test(id as string)) {
+    return {
+      redirect: {
+        destination: "/concert",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: { id },
+  };
+};
 export default function ConcertDetail() {
   const router = useRouter();
   const { id } = router.query;
+
+  useEffect(() => {
+    if (typeof id !== "string") return;
+
+    if (!/^\d+$/.test(id)) {
+      alert("유효하지 않은 페이지입니다.");
+      router.push("/concert");
+    }
+  }, [id]);
 
   const mockData = {
     image: "/placeholder.png",
@@ -70,6 +97,7 @@ export default function ConcertDetail() {
         예매하기
         <div>(예매 열림)</div>
       </button>
+
       <div className={styles.tabContainer}>
         <div className={styles.tabWrapper}>
           {TABS.map((tab) => (

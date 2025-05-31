@@ -1,8 +1,8 @@
-const js = require("@eslint/js");
-const typescript = require("@typescript-eslint/eslint-plugin");
-const typescriptParser = require("@typescript-eslint/parser");
+import js from "@eslint/js";
+import typescript from "@typescript-eslint/eslint-plugin";
+import typescriptParser from "@typescript-eslint/parser";
 
-module.exports = [
+export default [
   {
     files: ["**/*.{js,mjs,cjs,ts,tsx}"],
     languageOptions: {
@@ -29,10 +29,12 @@ module.exports = [
 
       // 선택적: any를 사용하는 다른 관련 규칙들
       "@typescript-eslint/ban-types": "off",
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
   {
-    // any 타입 허용
+    // 특정 파일에서만 any 허용하고 싶은 경우
+    files: ["**/*.d.ts", "**/types/**/*.ts"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
     },

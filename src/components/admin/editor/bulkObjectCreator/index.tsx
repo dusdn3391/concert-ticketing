@@ -2,6 +2,8 @@ import React, { useState, useCallback } from "react";
 import * as fabric from "fabric";
 import styles from "./bulkObject.module.css";
 
+import { ObjectConfig, GridConfig, PatternConfig } from "@/types/BulkObject";
+
 interface BulkObjectCreatorProps {
   canvas: fabric.Canvas;
 }
@@ -9,45 +11,6 @@ interface BulkObjectCreatorProps {
 type ObjectType = "rect" | "circle" | "text";
 type PatternType = "grid" | "circle" | "line" | "random";
 type TabType = "grid" | "pattern";
-
-interface ObjectConfig {
-  type: ObjectType;
-  fill: string;
-  stroke: string;
-  strokeWidth: number;
-  width?: number;
-  height?: number;
-  radius?: number;
-  borderRadius?: number;
-  text?: string;
-  fontSize?: number;
-  // 도형 내 텍스트 관련 설정
-  includeText: boolean;
-  textContent: string;
-  textColor: string;
-  textFontSize: number;
-}
-
-interface GridConfig {
-  rows: number;
-  cols: number;
-  spacingX: number;
-  spacingY: number;
-  startX: number;
-  startY: number;
-}
-
-interface PatternConfig {
-  pattern: PatternType;
-  count: number;
-  centerX: number;
-  centerY: number;
-  radius?: number;
-  angle?: number;
-  spacing?: number;
-  areaWidth?: number;
-  areaHeight?: number;
-}
 
 export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -101,7 +64,6 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
       const id = `bulk_${objectConfig.type}_${Date.now()}_${index}`;
 
       if (objectConfig.type === "text") {
-        // 텍스트 객체는 기존과 동일
         const textObj = new fabric.IText(`${objectConfig.text} ${index + 1}`, {
           left: x,
           top: y,

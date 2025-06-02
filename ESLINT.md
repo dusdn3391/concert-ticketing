@@ -1,7 +1,9 @@
 ## ESLint formatter 사용법
-1.  새로 추가된 패키지 설치 (yarn 명령어 입력)
-2. vscode에서 ctrl + shift + p 눌러서 'settings' 입력해서 제일 위에 있는 파일로 이동
-3. 다음과 같은 코드 추가
+### 사용하는 이유는 잘못된 문법이나 코드 띄어쓰기, import의 위치 등 파일을 저장만 하면 자동으로 고쳐주기에 사용하면 매우 편리합니다. 
+
+#### 1.  새로 추가된 패키지 설치 (yarn 명령어 입력)
+#### 2. vscode에서 ctrl + shift + p 눌러서 'settings' 입력해서 제일 위에 있는 파일로 이동
+#### 3. 다음과 같은 코드 추가
 ```json
 {
 "editor.formatOnSave": true,
@@ -45,7 +47,13 @@
   },
 }
 ```
-4. 상단 왼쪽 메뉴에 File - Preferences - settings 들어감
-5. 검색창에서 'formatter' 검색 후 Editor: Default Formattter를 Prettier - Code formatter 적용
+#### 4. 상단 왼쪽 메뉴에 File - Preferences - settings 들어감
+#### 5. 검색창에서 'formatter' 검색 후 Editor: Default Formattter를 Prettier - Code formatter 적용
+#### 6. 본인 터미널에서 'yarn lint' 입력한 뒤 문법 체크, 잘못된 부분 수정
 
-### 이것을 사용하는 이유는 잘못된 문법이나 코드 띄어쓰기, import의 위치 등 파일을 저장만 하면 자동으로 고쳐주기에 사용하면 매우 편리합니다. 
+![yarnLint]
+
+
+
+
+[yarnLint]: /public/yarnLint.png

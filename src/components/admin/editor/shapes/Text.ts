@@ -1,4 +1,4 @@
-import * as fabric from "fabric";
+import * as fabric from 'fabric';
 
 /**
  * 텍스트를 생성하여 캔버스에 추가합니다.
@@ -14,19 +14,19 @@ export function addTextFn(
   x: number,
   y: number,
   text: string,
-  setSelectedTool: (tool: "text" | null) => void
+  setSelectedTool: (tool: 'text' | null) => void,
 ) {
   const textObject = new fabric.IText(text, {
     left: x,
     top: y,
     fontSize: 16,
-    fill: "#000000",
+    fill: '#000000',
     selectable: true,
     editable: true,
     lockScalingX: true,
     lockScalingY: true,
-    originX: "center",
-    originY: "center",
+    originX: 'center',
+    originY: 'center',
   }) as fabric.IText & { id: string };
 
   textObject.id = `text-${Date.now()}`;

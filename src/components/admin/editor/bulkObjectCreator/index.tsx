@@ -1,39 +1,41 @@
-import React, { useState, useCallback } from "react";
-import * as fabric from "fabric";
-import styles from "./bulkObject.module.css";
+import React, { useState, useCallback } from 'react';
+import * as fabric from 'fabric';
 
-import { ObjectConfig, GridConfig, PatternConfig } from "@/types/BulkObject";
+import {
+  ObjectConfig,
+  GridConfig,
+  PatternConfig,
+  TabType,
+  ObjectType,
+  PatternType,
+} from '@/types/BulkObject';
+
+import styles from './bulkObject.module.css';
 
 interface BulkObjectCreatorProps {
   canvas: fabric.Canvas;
 }
 
-type ObjectType = "rect" | "circle" | "text"; // 생성 객체 유형
-type PatternType = "grid" | "circle" | "line"; // 생성 패턴 유형
-type TabType = "grid" | "pattern";
-
 export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabType>("grid");
-
-  console.log(isOpen);
+  const [activeTab, setActiveTab] = useState<TabType>('grid');
 
   // 객체 설정
   const [objectConfig, setObjectConfig] = useState<ObjectConfig>({
-    type: "rect",
-    fill: "#3b82f6",
-    stroke: "#1e40af",
+    type: 'rect',
+    fill: '#3b82f6',
+    stroke: '#1e40af',
     strokeWidth: 1,
     width: 60,
     height: 60,
     radius: 40,
     borderRadius: 0,
-    text: "Text",
+    text: 'Text',
     fontSize: 16,
     // 도형 내 텍스트 설정
     includeText: false,
-    textContent: "텍스트",
-    textColor: "#ffffff",
+    textContent: '텍스트',
+    textColor: '#ffffff',
     textFontSize: 14,
   });
 
@@ -49,7 +51,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
 
   // 패턴 설정
   const [patternConfig, setPatternConfig] = useState<PatternConfig>({
-    pattern: "circle",
+    pattern: 'circle',
     count: 8,
     centerX: 300,
     centerY: 300,
@@ -65,7 +67,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
     (x: number, y: number, index: number): fabric.FabricObject => {
       const id = `bulk_${objectConfig.type}_${Date.now()}_${index}`;
 
-      if (objectConfig.type === "text") {
+      if (objectConfig.type === 'text') {
         const textObj = new fabric.IText(`${objectConfig.text} ${index + 1}`, {
           left: x,
           top: y,
@@ -82,7 +84,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
       // 도형 객체 생성
       let shape: fabric.FabricObject;
 
-      if (objectConfig.type === "rect") {
+      if (objectConfig.type === 'rect') {
         shape = new fabric.Rect({
           left: 0,
           top: 0,
@@ -117,27 +119,24 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
       }
 
       // 도형 내부에 텍스트 추가 - 수정된 부분
-      const textObj = new fabric.IText(
-        `${objectConfig.textContent} ${index + 1}`,
-        {
-          fontSize: objectConfig.textFontSize,
-          fill: objectConfig.textColor,
-          textAlign: "center",
-          originX: "center",
-          originY: "center",
-          editable: true,
-        }
-      );
+      const textObj = new fabric.IText(`${objectConfig.textContent} ${index + 1}`, {
+        fontSize: objectConfig.textFontSize,
+        fill: objectConfig.textColor,
+        textAlign: 'center',
+        originX: 'center',
+        originY: 'center',
+        editable: true,
+      });
 
       // 도형의 중심에 텍스트 배치 - 수정된 부분
-      if (objectConfig.type === "rect") {
+      if (objectConfig.type === 'rect') {
         const rectWidth = objectConfig.width || 60;
         const rectHeight = objectConfig.height || 60;
         textObj.set({
           left: rectWidth / 2,
           top: rectHeight / 2,
         });
-      } else if (objectConfig.type === "circle") {
+      } else if (objectConfig.type === 'circle') {
         const circleRadius = objectConfig.radius || 40;
         textObj.set({
           left: circleRadius,
@@ -153,7 +152,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
 
       (group as fabric.FabricObject & { id?: string }).id = id;
 
-      group.on("mousedblclick", (e) => {
+      group.on('mousedblclick', (e) => {
         // 이벤트 전파 방지
         e.e.preventDefault();
         e.e.stopPropagation();
@@ -224,7 +223,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
 
       return group;
     },
-    [objectConfig, canvas]
+    [objectConfig, canvas],
   );
 
   // 그리드 패턴으로 생성
@@ -252,10 +251,8 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
 
     for (let i = 0; i < patternConfig.count; i++) {
       const angle = i * angleStep;
-      const x =
-        patternConfig.centerX + Math.cos(angle) * (patternConfig.radius || 100);
-      const y =
-        patternConfig.centerY + Math.sin(angle) * (patternConfig.radius || 100);
+      const x = patternConfig.centerX + Math.cos(angle) * (patternConfig.radius || 100);
+      const y = patternConfig.centerY + Math.sin(angle) * (patternConfig.radius || 100);
 
       objects.push(createObject(x, y, i));
     }
@@ -283,9 +280,9 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
   // 패턴별 객체 생성
   const createPatternObjects = useCallback(() => {
     switch (patternConfig.pattern) {
-      case "circle":
+      case 'circle':
         return createCirclePattern();
-      case "line":
+      case 'line':
         return createLinePattern();
       default:
         return [];
@@ -300,7 +297,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
       });
       canvas.renderAll();
     },
-    [canvas]
+    [canvas],
   );
 
   // 그리드 생성 실행
@@ -344,10 +341,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
       <div className={styles.modal}>
         <div className={styles.header}>
           <h2 className={styles.title}>대량 객체 생성</h2>
-          <button
-            onClick={() => setIsOpen(false)}
-            className={styles.closeButton}
-          >
+          <button onClick={() => setIsOpen(false)} className={styles.closeButton}>
             ✕
           </button>
         </div>
@@ -355,18 +349,14 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
         {/* 탭 메뉴 */}
         <div className={styles.tabContainer}>
           <button
-            onClick={() => setActiveTab("grid")}
-            className={`${styles.tab} ${
-              activeTab === "grid" ? styles.activeTab : ""
-            }`}
+            onClick={() => setActiveTab('grid')}
+            className={`${styles.tab} ${activeTab === 'grid' ? styles.activeTab : ''}`}
           >
             그리드
           </button>
           <button
-            onClick={() => setActiveTab("pattern")}
-            className={`${styles.tab} ${
-              activeTab === "pattern" ? styles.activeTab : ""
-            }`}
+            onClick={() => setActiveTab('pattern')}
+            className={`${styles.tab} ${activeTab === 'pattern' ? styles.activeTab : ''}`}
           >
             패턴
           </button>
@@ -384,16 +374,16 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                 onChange={handleObjectTypeChange}
                 className={styles.select}
               >
-                <option value="rect">사각형</option>
-                <option value="circle">원</option>
-                <option value="text">텍스트</option>
+                <option value='rect'>사각형</option>
+                <option value='circle'>원</option>
+                <option value='text'>텍스트</option>
               </select>
             </div>
 
             <div className={styles.field}>
               <label className={styles.label}>채우기</label>
               <input
-                type="color"
+                type='color'
                 value={objectConfig.fill}
                 onChange={(e) =>
                   setObjectConfig((prev) => ({ ...prev, fill: e.target.value }))
@@ -407,7 +397,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
             <div className={styles.field}>
               <label className={styles.label}>테두리 색</label>
               <input
-                type="color"
+                type='color'
                 value={objectConfig.stroke}
                 onChange={(e) =>
                   setObjectConfig((prev) => ({
@@ -422,7 +412,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
             <div className={styles.field}>
               <label className={styles.label}>테두리 두께</label>
               <input
-                type="number"
+                type='number'
                 value={objectConfig.strokeWidth}
                 onClick={(e) => e.currentTarget.select()}
                 onChange={(e) =>
@@ -432,18 +422,18 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                   }))
                 }
                 className={styles.input}
-                min="0"
+                min='0'
               />
             </div>
           </div>
 
           {/* 도형 내 텍스트 설정 (사각형, 원일 때만) */}
-          {(objectConfig.type === "rect" || objectConfig.type === "circle") && (
+          {(objectConfig.type === 'rect' || objectConfig.type === 'circle') && (
             <div className={styles.section}>
               <div className={styles.field}>
                 <label className={styles.label}>
                   <input
-                    type="checkbox"
+                    type='checkbox'
                     checked={objectConfig.includeText}
                     onChange={(e) =>
                       setObjectConfig((prev) => ({
@@ -451,7 +441,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                         includeText: e.target.checked,
                       }))
                     }
-                    style={{ marginRight: "8px" }}
+                    style={{ marginRight: '8px' }}
                   />
                   도형 안에 텍스트 포함
                 </label>
@@ -463,7 +453,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                     <div className={styles.field}>
                       <label className={styles.label}>텍스트 내용</label>
                       <input
-                        type="text"
+                        type='text'
                         value={objectConfig.textContent}
                         onChange={(e) =>
                           setObjectConfig((prev) => ({
@@ -478,7 +468,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                     <div className={styles.field}>
                       <label className={styles.label}>텍스트 색상</label>
                       <input
-                        type="color"
+                        type='color'
                         value={objectConfig.textColor}
                         onChange={(e) =>
                           setObjectConfig((prev) => ({
@@ -494,7 +484,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                   <div className={styles.field}>
                     <label className={styles.label}>텍스트 크기</label>
                     <input
-                      type="number"
+                      type='number'
                       value={objectConfig.textFontSize}
                       onChange={(e) =>
                         setObjectConfig((prev) => ({
@@ -503,7 +493,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                         }))
                       }
                       className={styles.input}
-                      min="8"
+                      min='8'
                     />
                   </div>
                 </>
@@ -512,13 +502,13 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
           )}
 
           {/* 객체별 설정 */}
-          {objectConfig.type === "rect" && (
+          {objectConfig.type === 'rect' && (
             <>
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label className={styles.label}>너비</label>
                   <input
-                    type="number"
+                    type='number'
                     value={objectConfig.width}
                     onClick={(e) => e.currentTarget.select()}
                     onChange={(e) =>
@@ -534,7 +524,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                 <div className={styles.field}>
                   <label className={styles.label}>높이</label>
                   <input
-                    type="number"
+                    type='number'
                     value={objectConfig.height}
                     onClick={(e) => e.currentTarget.select()}
                     onChange={(e) =>
@@ -551,7 +541,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
               <div className={styles.field}>
                 <label className={styles.label}>모서리</label>
                 <input
-                  type="number"
+                  type='number'
                   value={objectConfig.borderRadius}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -561,17 +551,17 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                     }))
                   }
                   className={styles.input}
-                  min="0"
+                  min='0'
                 />
               </div>
             </>
           )}
 
-          {objectConfig.type === "circle" && (
+          {objectConfig.type === 'circle' && (
             <div className={styles.field}>
               <label className={styles.label}>반지름</label>
               <input
-                type="number"
+                type='number'
                 value={objectConfig.radius}
                 onClick={(e) => e.currentTarget.select()}
                 onChange={(e) =>
@@ -585,12 +575,12 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
             </div>
           )}
 
-          {objectConfig.type === "text" && (
+          {objectConfig.type === 'text' && (
             <div className={styles.row}>
               <div className={styles.field}>
                 <label className={styles.label}>텍스트 내용</label>
                 <input
-                  type="text"
+                  type='text'
                   value={objectConfig.text}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -606,7 +596,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
               <div className={styles.field}>
                 <label className={styles.label}>폰트 크기</label>
                 <input
-                  type="number"
+                  type='number'
                   value={objectConfig.fontSize}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -623,7 +613,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
         </div>
 
         {/* 그리드 설정 */}
-        {activeTab === "grid" && (
+        {activeTab === 'grid' && (
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>그리드 설정</h3>
 
@@ -631,7 +621,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
               <div className={styles.field}>
                 <label className={styles.label}>행 수</label>
                 <input
-                  type="number"
+                  type='number'
                   value={gridConfig.rows}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -641,14 +631,14 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                     }))
                   }
                   className={styles.input}
-                  min="1"
+                  min='1'
                 />
               </div>
 
               <div className={styles.field}>
                 <label className={styles.label}>열 수</label>
                 <input
-                  type="number"
+                  type='number'
                   value={gridConfig.cols}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -658,7 +648,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                     }))
                   }
                   className={styles.input}
-                  min="1"
+                  min='1'
                 />
               </div>
             </div>
@@ -667,7 +657,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
               <div className={styles.field}>
                 <label className={styles.label}>가로 간격</label>
                 <input
-                  type="number"
+                  type='number'
                   value={gridConfig.spacingX}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -683,7 +673,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
               <div className={styles.field}>
                 <label className={styles.label}>세로 간격</label>
                 <input
-                  type="number"
+                  type='number'
                   value={gridConfig.spacingY}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -701,7 +691,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
               <div className={styles.field}>
                 <label className={styles.label}>시작 좌표 X</label>
                 <input
-                  type="number"
+                  type='number'
                   value={gridConfig.startX}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -717,7 +707,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
               <div className={styles.field}>
                 <label className={styles.label}>시작 좌표 Y</label>
                 <input
-                  type="number"
+                  type='number'
                   value={gridConfig.startY}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -738,7 +728,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
         )}
 
         {/* 패턴 설정 */}
-        {activeTab === "pattern" && (
+        {activeTab === 'pattern' && (
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>패턴 설정</h3>
 
@@ -750,15 +740,15 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                   onChange={handlePatternTypeChange}
                   className={styles.select}
                 >
-                  <option value="circle">원형</option>
-                  <option value="line">직선</option>
+                  <option value='circle'>원형</option>
+                  <option value='line'>직선</option>
                 </select>
               </div>
 
               <div className={styles.field}>
                 <label className={styles.label}>개수</label>
                 <input
-                  type="number"
+                  type='number'
                   value={patternConfig.count}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -768,7 +758,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                     }))
                   }
                   className={styles.input}
-                  min="1"
+                  min='1'
                 />
               </div>
             </div>
@@ -777,7 +767,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
               <div className={styles.field}>
                 <label className={styles.label}>중심 좌표 X</label>
                 <input
-                  type="number"
+                  type='number'
                   value={patternConfig.centerX}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -793,7 +783,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
               <div className={styles.field}>
                 <label className={styles.label}>중심 좌표 Y</label>
                 <input
-                  type="number"
+                  type='number'
                   value={patternConfig.centerY}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -808,11 +798,11 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
             </div>
 
             {/* 패턴별 추가 설정 */}
-            {patternConfig.pattern === "circle" && (
+            {patternConfig.pattern === 'circle' && (
               <div className={styles.field}>
                 <label className={styles.label}>반지름</label>
                 <input
-                  type="number"
+                  type='number'
                   value={patternConfig.radius}
                   onClick={(e) => e.currentTarget.select()}
                   onChange={(e) =>
@@ -826,12 +816,12 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
               </div>
             )}
 
-            {patternConfig.pattern === "line" && (
+            {patternConfig.pattern === 'line' && (
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label className={styles.label}>각도 (도)</label>
                   <input
-                    type="number"
+                    type='number'
                     value={patternConfig.angle}
                     onClick={(e) => e.currentTarget.select()}
                     onChange={(e) =>
@@ -847,7 +837,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
                 <div className={styles.field}>
                   <label className={styles.label}>간격</label>
                   <input
-                    type="number"
+                    type='number'
                     value={patternConfig.spacing}
                     onClick={(e) => e.currentTarget.select()}
                     onChange={(e) =>
@@ -866,17 +856,12 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
 
         {/* 버튼 */}
         <div className={styles.buttonContainer}>
-          <button
-            onClick={() => setIsOpen(false)}
-            className={styles.cancelButton}
-          >
+          <button onClick={() => setIsOpen(false)} className={styles.cancelButton}>
             취소
           </button>
 
           <button
-            onClick={
-              activeTab === "grid" ? handleCreateGrid : handleCreatePattern
-            }
+            onClick={activeTab === 'grid' ? handleCreateGrid : handleCreatePattern}
             className={styles.createButton}
           >
             생성
@@ -884,11 +869,11 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
         </div>
 
         {/* 사용법 안내 */}
-        {(objectConfig.type === "rect" || objectConfig.type === "circle") &&
+        {(objectConfig.type === 'rect' || objectConfig.type === 'circle') &&
           objectConfig.includeText && (
             <div
               className={styles.info}
-              style={{ marginTop: "10px", fontSize: "12px", color: "#666" }}
+              style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}
             >
               💡 Tip: 생성된 도형을 더블클릭하면 텍스트를 편집할 수 있습니다.
             </div>

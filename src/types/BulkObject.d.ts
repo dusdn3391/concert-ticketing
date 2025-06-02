@@ -1,3 +1,7 @@
+export type ObjectType = 'rect' | 'circle' | 'text'; // 생성 객체 유형
+export type PatternType = 'grid' | 'circle' | 'line'; // 생성 패턴 유형
+export type TabType = 'grid' | 'pattern';
+
 export interface ObjectConfig {
   type: ObjectType;
   fill: string;

@@ -1,4 +1,4 @@
-import * as fabric from "fabric";
+import * as fabric from 'fabric';
 
 /**
  * 원 + 텍스트 그룹을 생성하여 캔버스에 추가합니다.
@@ -12,23 +12,23 @@ export const addCircleFn = (
   canvas: fabric.Canvas,
   x: number,
   y: number,
-  setSelectedTool: (tool: "circle" | null) => void
+  setSelectedTool: (tool: 'circle' | null) => void,
 ) => {
   const circle = new fabric.Circle({
     radius: 30,
-    fill: "#ffffff",
-    stroke: "#000000",
+    fill: '#ffffff',
+    stroke: '#000000',
     strokeWidth: 1,
     strokeUniform: true,
-    originX: "center",
-    originY: "center",
+    originX: 'center',
+    originY: 'center',
   }) as fabric.Circle & { id: string };
 
-  const label = new fabric.IText("label", {
+  const label = new fabric.IText('label', {
     fontSize: 16,
-    fill: "#000000",
-    originX: "center",
-    originY: "center",
+    fill: '#000000',
+    originX: 'center',
+    originY: 'center',
     editable: true,
     selectable: true,
     left: 0,
@@ -38,10 +38,10 @@ export const addCircleFn = (
   const group = new fabric.Group([circle, label], {
     left: x,
     top: y,
-    originX: "center",
-    originY: "center",
+    originX: 'center',
+    originY: 'center',
     selectable: true,
-    stroke: "#000000",
+    stroke: '#000000',
     strokeWidth: 1,
     strokeUniform: true,
     subTargetCheck: true,
@@ -50,7 +50,7 @@ export const addCircleFn = (
   // 그룹 내부의 객체에 strokeUniform 적용
   group.getObjects().find((obj) => {
     if (obj instanceof fabric.Circle) {
-      obj.set("strokeUniform", true);
+      obj.set('strokeUniform', true);
     }
   });
 

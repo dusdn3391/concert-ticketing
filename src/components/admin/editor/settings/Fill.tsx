@@ -1,8 +1,7 @@
-import React from "react";
+import React from 'react';
+import * as fabric from 'fabric';
 
-import * as fabric from "fabric";
-
-import { getColorString } from "@/utils/getColorString";
+import { getColorString } from '@/utils/getColorString';
 
 interface FillProps {
   canvas: fabric.Canvas;
@@ -12,36 +11,28 @@ interface FillProps {
   disabled: boolean;
 }
 
-export function Fill({
-  canvas,
-  selectedObject,
-  color,
-  setColor,
-  disabled,
-}: FillProps) {
+export function Fill({ canvas, selectedObject, color, setColor, disabled }: FillProps) {
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const { value } = e.target;
 
     if (!selectedObject) return;
 
     const applyFill = (obj: fabric.Object) => {
       // 텍스트가 아닌 객체만 처리
-      if (obj.type !== "i-text") {
-        obj.set("fill", value);
+      if (obj.type !== 'i-text') {
+        obj.set('fill', value);
       }
     };
 
-    if (selectedObject.type === "activeSelection") {
+    if (selectedObject.type === 'activeSelection') {
       const selection = selectedObject as fabric.ActiveSelection;
       selection.getObjects().forEach(applyFill);
-    } else if (selectedObject.type === "group") {
+    } else if (selectedObject.type === 'group') {
       const group = selectedObject as fabric.Group;
       group.getObjects().forEach(applyFill);
-    } else {
+    } else if (selectedObject.type !== 'i-text') {
       // 선택된 객체가 텍스트가 아닐 때만 적용
-      if (selectedObject.type !== "i-text") {
-        applyFill(selectedObject);
-      }
+      applyFill(selectedObject);
     }
 
     canvas.requestRenderAll();
@@ -52,7 +43,7 @@ export function Fill({
     <>
       <label>배경색</label>
       <input
-        type="color"
+        type='color'
         value={getColorString(color)}
         onChange={handleColorChange}
         disabled={disabled}

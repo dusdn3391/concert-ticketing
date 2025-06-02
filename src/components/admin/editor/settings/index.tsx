@@ -1,21 +1,21 @@
-import React, { useState, useEffect, useCallback } from "react";
-import * as fabric from "fabric";
+import React, { useState, useEffect, useCallback } from 'react';
+import * as fabric from 'fabric';
 
-import { LockToggle } from "./LockToggle";
-import { ObjectId } from "./ObjectId";
-import { Position } from "./Position";
-import { Angle } from "./Angle";
-import { Opacity } from "./Opacity";
-import { StrokeWidth } from "./StrokeWidth";
-import { Fill } from "./Fill";
-import { StrokeColor } from "./StrokeFill";
-import { RectSize } from "./RectSize";
-import { CircleDiameter } from "./CircleDiameter";
-import { TextObject } from "./TextObject";
-import { TextColor } from "./TextColor";
+import { getColorString } from '@/utils/getColorString';
 
-import styles from "../canvas.module.css";
-import { getColorString } from "@/utils/getColorString";
+import { LockToggle } from './LockToggle';
+import { ObjectId } from './ObjectId';
+import { Position } from './Position';
+import { Angle } from './Angle';
+import { Opacity } from './Opacity';
+import { StrokeWidth } from './StrokeWidth';
+import { Fill } from './Fill';
+import { StrokeColor } from './StrokeFill';
+import { RectSize } from './RectSize';
+import { CircleDiameter } from './CircleDiameter';
+import { TextObject } from './TextObject';
+import { TextColor } from './TextColor';
+import styles from '../canvas.module.css';
 
 interface SettingProps {
   canvas: fabric.Canvas;
@@ -27,14 +27,12 @@ interface TextState {
 }
 
 export default function Settings({ canvas }: SettingProps) {
-  const [selectedObject, setSelectedObject] = useState<fabric.Object | null>(
-    null
-  );
-  const [width, setWidth] = useState<string | number>("");
-  const [height, setHeight] = useState<string | number>("");
-  const [diameter, setDiameter] = useState<string | number>("");
-  const [color, setColor] = useState<string>("#ffffff");
-  const [textColor, setTextColor] = useState<string>("#000000");
+  const [selectedObject, setSelectedObject] = useState<fabric.Object | null>(null);
+  const [width, setWidth] = useState<string | number>('');
+  const [height, setHeight] = useState<string | number>('');
+  const [diameter, setDiameter] = useState<string | number>('');
+  const [color, setColor] = useState<string>('#ffffff');
+  const [textColor, setTextColor] = useState<string>('#000000');
   const [text, setText] = useState<Record<string, TextState>>({});
   const [position, setPosition] = useState<{ x: number; y: number }>({
     x: 0,
@@ -42,22 +40,22 @@ export default function Settings({ canvas }: SettingProps) {
   });
   const [angle, setAngle] = useState<number>(0);
   const [opacity, setOpacity] = useState<number>(1);
-  const [strokeColor, setStrokeColor] = useState<string>("#ffffff");
+  const [strokeColor, setStrokeColor] = useState<string>('#ffffff');
   const [strokeWidth, setStrokeWidth] = useState<number>(0);
   const [isLocked, setIsLocked] = useState<boolean>(false);
 
   // 값 초기화
   const clearSettings = useCallback(() => {
-    setWidth("");
-    setHeight("");
-    setColor("#ffffff");
-    setTextColor("#000000");
-    setDiameter("");
+    setWidth('');
+    setHeight('');
+    setColor('#ffffff');
+    setTextColor('#000000');
+    setDiameter('');
     setPosition({ x: 0, y: 0 });
     setAngle(0);
     setOpacity(1);
     setStrokeWidth(0);
-    setStrokeColor("#000000"); // 테두리색도 검은색으로 초기화
+    setStrokeColor('#000000'); // 테두리색도 검은색으로 초기화
     setSelectedObject(null);
   }, []);
 
@@ -68,7 +66,7 @@ export default function Settings({ canvas }: SettingProps) {
         obj.lockMovementY &&
         obj.lockRotation &&
         obj.lockScalingX &&
-        obj.lockScalingY
+        obj.lockScalingY,
     );
   }, []);
 
@@ -78,11 +76,11 @@ export default function Settings({ canvas }: SettingProps) {
     setText((prev) => ({
       ...prev,
       [textObj.id]: {
-        text: textObj.text || "",
+        text: textObj.text || '',
         fontSize: textObj.fontSize || 20,
       },
     }));
-    setColor((obj.fill as string) || "#ffffff");
+    setColor((obj.fill as string) || '#ffffff');
   }, []);
 
   // 원의 지름 계산 함수
@@ -96,22 +94,20 @@ export default function Settings({ canvas }: SettingProps) {
 
       return Math.round(effectiveRadius * 2);
     },
-    []
+    [],
   );
 
   // 그룹 객체 처리
   const handleGroupObject = useCallback(
     (obj: fabric.Object, updateDiameter: boolean = true) => {
-      if (obj.type === "group") {
+      if (obj.type === 'group') {
         const group = obj as fabric.Group;
 
         // 그룹 내에서 Circle과 Rect 찾기
         const circle = group
           .getObjects()
-          .find((o) => o.type === "circle") as fabric.Circle;
-        const rect = group
-          .getObjects()
-          .find((o) => o.type === "rect") as fabric.Rect;
+          .find((o) => o.type === 'circle') as fabric.Circle;
+        const rect = group.getObjects().find((o) => o.type === 'rect') as fabric.Rect;
 
         if (circle && updateDiameter) {
           const calculatedDiameter = calculateCircleDiameter(circle, group);
@@ -121,14 +117,10 @@ export default function Settings({ canvas }: SettingProps) {
         if (rect) {
           // Rect가 있으면 크기 설정
           setWidth(
-            Math.round(
-              (rect.width || 0) * (rect.scaleX || 1) * (group.scaleX || 1)
-            )
+            Math.round((rect.width || 0) * (rect.scaleX || 1) * (group.scaleX || 1)),
           );
           setHeight(
-            Math.round(
-              (rect.height || 0) * (rect.scaleY || 1) * (group.scaleY || 1)
-            )
+            Math.round((rect.height || 0) * (rect.scaleY || 1) * (group.scaleY || 1)),
           );
         }
 
@@ -139,7 +131,7 @@ export default function Settings({ canvas }: SettingProps) {
         }
       }
     },
-    [calculateCircleDiameter]
+    [calculateCircleDiameter],
   );
 
   // 메인 객체 선택 핸들러 (크기 업데이트 포함)
@@ -151,7 +143,7 @@ export default function Settings({ canvas }: SettingProps) {
 
       // ActiveSelection 처리
       let targetObject = obj;
-      if (obj.type === "activeSelection") {
+      if (obj.type === 'activeSelection') {
         const first = (obj as fabric.ActiveSelection).getObjects()[0];
         if (!first) return;
         targetObject = first;
@@ -166,7 +158,7 @@ export default function Settings({ canvas }: SettingProps) {
       setStrokeColor(getColorString(targetObject.stroke));
 
       // 텍스트 객체면 textColor에, 나머지는 color에 설정
-      if (targetObject.type === "i-text") {
+      if (targetObject.type === 'i-text') {
         setTextColor(getColorString(targetObject.fill));
       } else {
         setColor(getColorString(targetObject.fill));
@@ -174,68 +166,53 @@ export default function Settings({ canvas }: SettingProps) {
 
       // 객체 타입별 처리
       switch (targetObject.type) {
-        case "i-text":
+        case 'i-text':
           handleTextObject(targetObject);
           break;
-        case "rect":
+        case 'rect':
           if (updateSizes) {
-            setWidth(
-              Math.round((targetObject.width || 0) * (targetObject.scaleX || 1))
-            );
+            setWidth(Math.round((targetObject.width || 0) * (targetObject.scaleX || 1)));
             setHeight(
-              Math.round(
-                (targetObject.height || 0) * (targetObject.scaleY || 1)
-              )
+              Math.round((targetObject.height || 0) * (targetObject.scaleY || 1)),
             );
           }
           break;
-        case "circle":
+        case 'circle':
           if (updateSizes) {
             const circle = targetObject as fabric.Circle;
             const calculatedDiameter = calculateCircleDiameter(circle);
             setDiameter(calculatedDiameter);
           }
           break;
-        case "group":
+        case 'group':
           handleGroupObject(targetObject, updateSizes);
           break;
         default:
           if (updateSizes) {
-            setWidth("");
-            setHeight("");
-            setDiameter("");
+            setWidth('');
+            setHeight('');
+            setDiameter('');
           }
           setText({});
           break;
       }
     },
-    [
-      checkObjectLockState,
-      handleTextObject,
-      handleGroupObject,
-      calculateCircleDiameter,
-    ]
+    [checkObjectLockState, handleTextObject, handleGroupObject, calculateCircleDiameter],
   );
 
   // 위치/각도만 업데이트하는 핸들러 (크기는 업데이트하지 않음)
-  const handleObjectPositionChange = useCallback(
-    (obj: fabric.Object | undefined) => {
-      if (!obj) return;
+  const handleObjectPositionChange = useCallback((obj: fabric.Object | undefined) => {
+    if (!obj) return;
 
-      // 위치와 각도만 업데이트
-      setPosition({ x: obj.left || 0, y: obj.top || 0 });
-      setAngle(obj.angle || 0);
-    },
-    []
-  );
+    // 위치와 각도만 업데이트
+    setPosition({ x: obj.left || 0, y: obj.top || 0 });
+    setAngle(obj.angle || 0);
+  }, []);
 
   // 선택 해제 처리
   const handleSelectionCleared = useCallback(() => {
     const active = selectedObject;
-    if (
-      active?.type === "i-text" &&
-      (active as fabric.IText & { id: string }).id
-    ) {
+    if (active?.type === 'i-text' && (active as fabric.IText & { id: string }).id) {
       setText((prev) => {
         const newText = { ...prev };
         delete newText[(active as fabric.IText & { id: string }).id];
@@ -252,11 +229,11 @@ export default function Settings({ canvas }: SettingProps) {
 
       if (e.target) {
         const obj = e.target;
-        if (obj.type === "group") {
+        if (obj.type === 'group') {
           const group = obj as fabric.Group;
-          const circle = group._objects.find(
-            (o) => o.type === "circle"
-          ) as fabric.Circle;
+          const circle = group
+            .getObjects()
+            .find((o) => o.type === 'circle') as fabric.Circle;
           if (circle) {
             const calculatedDiameter = calculateCircleDiameter(circle, group);
             setDiameter(calculatedDiameter);
@@ -264,7 +241,7 @@ export default function Settings({ canvas }: SettingProps) {
         }
       }
     },
-    [handleObjectSelection, calculateCircleDiameter]
+    [handleObjectSelection, calculateCircleDiameter],
   );
 
   // 스케일링 처리
@@ -273,21 +250,21 @@ export default function Settings({ canvas }: SettingProps) {
       const obj = e.target;
       if (!obj) return;
 
-      if (obj.type === "rect" || obj.type === "group") {
+      if (obj.type === 'rect' || obj.type === 'group') {
         setWidth(Math.round((obj.width || 0) * (obj.scaleX || 1)));
         setHeight(Math.round((obj.height || 0) * (obj.scaleY || 1)));
 
-        if (obj.type === "group") {
+        if (obj.type === 'group') {
           const group = obj as fabric.Group;
           const circle = group
             .getObjects()
-            .find((o) => o.type === "circle") as fabric.Circle;
+            .find((o) => o.type === 'circle') as fabric.Circle;
           if (circle) {
             const calculatedDiameter = calculateCircleDiameter(circle, group);
             setDiameter(calculatedDiameter);
           }
         }
-      } else if (obj.type === "circle") {
+      } else if (obj.type === 'circle') {
         const circle = obj as fabric.Circle;
         const calculatedDiameter = calculateCircleDiameter(circle);
         setDiameter(calculatedDiameter);
@@ -295,19 +272,15 @@ export default function Settings({ canvas }: SettingProps) {
 
       canvas.requestRenderAll();
     },
-    [canvas, calculateCircleDiameter]
+    [canvas, calculateCircleDiameter],
   );
 
   // 더블클릭 처리 (텍스트 편집)
   const handleDoubleClick = useCallback(
     (e: { target?: fabric.Object; subTargets?: fabric.Object[] }) => {
-      const target = e.target;
+      const { target } = e;
 
-      if (
-        target instanceof fabric.Group &&
-        target.subTargetCheck &&
-        e.subTargets
-      ) {
+      if (target instanceof fabric.Group && target.subTargetCheck && e.subTargets) {
         const subTarget = e.subTargets[0];
         if (subTarget instanceof fabric.IText) {
           canvas.setActiveObject(subTarget as fabric.Object);
@@ -319,7 +292,7 @@ export default function Settings({ canvas }: SettingProps) {
         target.selectAll();
       }
     },
-    [canvas]
+    [canvas],
   );
 
   // 캔버스 이벤트 리스너 설정
@@ -340,25 +313,25 @@ export default function Settings({ canvas }: SettingProps) {
     };
 
     // 이벤트 리스너 등록
-    canvas.on("selection:created", selectionCreatedHandler);
-    canvas.on("selection:updated", selectionUpdatedHandler);
-    canvas.on("selection:cleared", handleSelectionCleared);
-    canvas.on("object:modified", handleObjectModified);
-    canvas.on("object:scaling", handleObjectScaling);
-    canvas.on("object:moving", objectMovingHandler);
-    canvas.on("object:rotating", objectRotatingHandler);
-    canvas.on("mouse:dblclick", handleDoubleClick);
+    canvas.on('selection:created', selectionCreatedHandler);
+    canvas.on('selection:updated', selectionUpdatedHandler);
+    canvas.on('selection:cleared', handleSelectionCleared);
+    canvas.on('object:modified', handleObjectModified);
+    canvas.on('object:scaling', handleObjectScaling);
+    canvas.on('object:moving', objectMovingHandler);
+    canvas.on('object:rotating', objectRotatingHandler);
+    canvas.on('mouse:dblclick', handleDoubleClick);
 
     // 클린업 함수
     return () => {
-      canvas.off("selection:created", selectionCreatedHandler);
-      canvas.off("selection:updated", selectionUpdatedHandler);
-      canvas.off("selection:cleared", handleSelectionCleared);
-      canvas.off("object:modified", handleObjectModified);
-      canvas.off("object:scaling", handleObjectScaling);
-      canvas.off("object:moving", objectMovingHandler);
-      canvas.off("object:rotating", objectRotatingHandler);
-      canvas.off("mouse:dblclick", handleDoubleClick);
+      canvas.off('selection:created', selectionCreatedHandler);
+      canvas.off('selection:updated', selectionUpdatedHandler);
+      canvas.off('selection:cleared', handleSelectionCleared);
+      canvas.off('object:modified', handleObjectModified);
+      canvas.off('object:scaling', handleObjectScaling);
+      canvas.off('object:moving', objectMovingHandler);
+      canvas.off('object:rotating', objectRotatingHandler);
+      canvas.off('mouse:dblclick', handleDoubleClick);
     };
   }, [
     canvas,
@@ -372,13 +345,13 @@ export default function Settings({ canvas }: SettingProps) {
 
   // 그룹 내 자식 객체 렌더링
   const renderGroupChildren = useCallback(() => {
-    if (selectedObject?.type !== "group") return null;
+    if (selectedObject?.type !== 'group') return null;
 
     const group = selectedObject as fabric.Group;
 
-    return group._objects.map((child, index) => (
-      <div className={styles.group} key={index}>
-        {child.type === "rect" && (
+    return group.getObjects().map((child) => (
+      <div className={styles.group} key={child.id}>
+        {child.type === 'rect' && (
           <RectSize
             selectedObject={selectedObject}
             width={width}
@@ -389,7 +362,7 @@ export default function Settings({ canvas }: SettingProps) {
             canvas={canvas}
           />
         )}
-        {child.type === "circle" && (
+        {child.type === 'circle' && (
           <CircleDiameter
             selectedObject={selectedObject}
             diameter={diameter}
@@ -398,7 +371,7 @@ export default function Settings({ canvas }: SettingProps) {
             canvas={canvas}
           />
         )}
-        {child.type === "i-text" && (
+        {child.type === 'i-text' && (
           <TextObject
             selectedObject={selectedObject}
             text={text}
@@ -466,7 +439,7 @@ export default function Settings({ canvas }: SettingProps) {
 
       <div className={styles.flexGroup}>
         {/* 배경 색상 */}
-        {selectedObject && selectedObject.type !== "i-text" && (
+        {selectedObject && selectedObject.type !== 'i-text' && (
           <>
             <Fill
               color={color}
@@ -486,7 +459,7 @@ export default function Settings({ canvas }: SettingProps) {
           </>
         )}
 
-        {selectedObject && selectedObject.type === "i-text" && (
+        {selectedObject && selectedObject.type === 'i-text' && (
           <TextColor
             textColor={textColor}
             setTextColor={setTextColor}

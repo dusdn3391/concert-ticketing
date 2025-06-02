@@ -1,4 +1,4 @@
-import * as fabric from "fabric";
+import * as fabric from 'fabric';
 
 interface Point {
   x: number;
@@ -13,14 +13,14 @@ let isShiftPressed: boolean = false;
 
 // Shift 키 상태 추적을 위한 이벤트 리스너
 function setupKeyListeners(): void {
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Shift") {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Shift') {
       isShiftPressed = true;
     }
   });
 
-  document.addEventListener("keyup", (e) => {
-    if (e.key === "Shift") {
+  document.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift') {
       isShiftPressed = false;
     }
   });
@@ -64,11 +64,7 @@ function snapToAngle(startPoint: Point, currentPoint: Point): Point {
     const wrappedDifference = Math.abs(currentAngle - snapAngle + 2 * Math.PI);
     const wrappedDifference2 = Math.abs(currentAngle - snapAngle - 2 * Math.PI);
 
-    const actualDifference = Math.min(
-      difference,
-      wrappedDifference,
-      wrappedDifference2
-    );
+    const actualDifference = Math.min(difference, wrappedDifference, wrappedDifference2);
 
     if (actualDifference < minDifference) {
       minDifference = actualDifference;
@@ -88,8 +84,8 @@ export function addPolygonFn(
   x: number,
   y: number,
   setSelectedTool: (
-    tool: "rect" | "circle" | "text" | "group" | "polygon" | null
-  ) => void
+    tool: 'rect' | 'circle' | 'text' | 'group' | 'polygon' | null,
+  ) => void,
 ): void {
   // 키 리스너가 설정되지 않았다면 설정
   setupKeyListeners();
@@ -110,11 +106,7 @@ export function addPolygonFn(
   }
 }
 
-function startPolygonDrawing(
-  canvas: fabric.Canvas,
-  x: number,
-  y: number
-): void {
+function startPolygonDrawing(canvas: fabric.Canvas, x: number, y: number): void {
   isDrawingPolygon = true;
   polygonPoints = [{ x, y }];
 
@@ -123,16 +115,16 @@ function startPolygonDrawing(
     left: x - 3,
     top: y - 3,
     radius: 3,
-    fill: "red",
-    stroke: "red",
+    fill: 'red',
+    stroke: 'red',
     strokeWidth: 1,
     selectable: false,
     evented: false,
-    hoverCursor: "pointer",
+    hoverCursor: 'pointer',
   });
 
   // id 속성을 별도로 설정
-  (firstPoint as fabric.Object & { id?: string }).id = "polygon-point-first";
+  (firstPoint as fabric.Object & { id?: string }).id = 'polygon-point-first';
 
   canvas.add(firstPoint);
   canvas.renderAll();
@@ -146,9 +138,7 @@ function startPolygonDrawing(
 
     // Shift 키가 눌렸다면 각도 스냅 적용
     const lastPoint = polygonPoints[polygonPoints.length - 1];
-    const snappedPointer = isShiftPressed
-      ? snapToAngle(lastPoint, pointer)
-      : pointer;
+    const snappedPointer = isShiftPressed ? snapToAngle(lastPoint, pointer) : pointer;
 
     // 기존 프리뷰 라인 제거
     if (previewLine) {
@@ -159,24 +149,22 @@ function startPolygonDrawing(
     previewLine = new fabric.Line(
       [lastPoint.x, lastPoint.y, snappedPointer.x, snappedPointer.y],
       {
-        stroke: isShiftPressed
-          ? "rgba(0, 255, 0, 0.7)"
-          : "rgba(255, 0, 0, 0.5)", // Shift시 녹색으로 표시
+        stroke: isShiftPressed ? 'rgba(0, 255, 0, 0.7)' : 'rgba(255, 0, 0, 0.5)', // Shift시 녹색으로 표시
         strokeWidth: 2,
         strokeDashArray: [5, 5],
         selectable: false,
         evented: false,
-      }
+      },
     );
 
     // id 속성을 별도로 설정
-    (previewLine as fabric.Object & { id?: string }).id = "preview-line";
+    (previewLine as fabric.Object & { id?: string }).id = 'preview-line';
 
     canvas.add(previewLine);
     canvas.renderAll();
   };
 
-  canvas.on("mouse:move", boundMouseMoveHandler);
+  canvas.on('mouse:move', boundMouseMoveHandler);
 }
 
 function addPointToPolygon(
@@ -184,17 +172,15 @@ function addPointToPolygon(
   x: number,
   y: number,
   setSelectedTool: (
-    tool: "rect" | "circle" | "text" | "group" | "polygon" | null
-  ) => void
+    tool: 'rect' | 'circle' | 'text' | 'group' | 'polygon' | null,
+  ) => void,
 ): void {
   const firstPoint = polygonPoints[0];
   const threshold = 10; // 첫 점과의 거리 임계값
 
   // 첫 점 근처를 클릭하면 폴리곤 완성
   if (polygonPoints.length >= 3) {
-    const distance = Math.sqrt(
-      Math.pow(x - firstPoint.x, 2) + Math.pow(y - firstPoint.y, 2)
-    );
+    const distance = Math.sqrt((x - firstPoint.x) ** 2 + (y - firstPoint.y) ** 2);
 
     if (distance < threshold) {
       finishPolygon(canvas, setSelectedTool);
@@ -209,7 +195,7 @@ function addPointToPolygon(
   if (polygonPoints.length > 1) {
     const prevPoint = polygonPoints[polygonPoints.length - 2];
     const line = new fabric.Line([prevPoint.x, prevPoint.y, x, y], {
-      stroke: "red",
+      stroke: 'red',
       strokeWidth: 2,
       selectable: false,
       evented: false,
@@ -228,17 +214,15 @@ function addPointToPolygon(
     left: x - 3,
     top: y - 3,
     radius: 3,
-    fill: "#ff0000",
-    stroke: "#ff0000",
+    fill: '#ff0000',
+    stroke: '#ff0000',
     strokeWidth: 1,
     selectable: false,
     evented: false,
   });
 
   // id 속성을 별도로 설정
-  (
-    point as fabric.Object & { id?: string }
-  ).id = `polygon-point-${polygonPoints.length}`;
+  (point as fabric.Object & { id?: string }).id = `polygon-point-${polygonPoints.length}`;
 
   canvas.add(point);
   canvas.renderAll();
@@ -247,8 +231,8 @@ function addPointToPolygon(
 function finishPolygon(
   canvas: fabric.Canvas,
   setSelectedTool: (
-    tool: "rect" | "circle" | "text" | "group" | "polygon" | null
-  ) => void
+    tool: 'rect' | 'circle' | 'text' | 'group' | 'polygon' | null,
+  ) => void,
 ): void {
   if (polygonPoints.length < 3) return;
 
@@ -259,8 +243,8 @@ function finishPolygon(
   const polygon = new fabric.Polygon(polygonPoints, {
     left: Math.min(...polygonPoints.map((p) => p.x)),
     top: Math.min(...polygonPoints.map((p) => p.y)),
-    fill: "#ffffff",
-    stroke: "#000000",
+    fill: '#ffffff',
+    stroke: '#000000',
     strokeWidth: 1,
     selectable: true,
     evented: true,
@@ -282,9 +266,9 @@ function cleanupTempElements(canvas: fabric.Canvas): void {
     const objectWithId = obj as fabric.Object & { id?: string };
     return (
       objectWithId.id &&
-      (objectWithId.id.startsWith("polygon-point") ||
-        objectWithId.id.startsWith("polygon-line") ||
-        objectWithId.id === "preview-line")
+      (objectWithId.id.startsWith('polygon-point') ||
+        objectWithId.id.startsWith('polygon-line') ||
+        objectWithId.id === 'preview-line')
     );
   });
 
@@ -298,7 +282,7 @@ function resetPolygonState(canvas: fabric.Canvas): void {
 
   // 이벤트 리스너 제거
   if (boundMouseMoveHandler) {
-    canvas.off("mouse:move", boundMouseMoveHandler);
+    canvas.off('mouse:move', boundMouseMoveHandler);
     boundMouseMoveHandler = null;
   }
 }
@@ -307,8 +291,8 @@ function resetPolygonState(canvas: fabric.Canvas): void {
 export function cancelPolygonDrawing(
   canvas: fabric.Canvas,
   setSelectedTool: (
-    tool: "rect" | "circle" | "text" | "group" | "polygon" | null
-  ) => void
+    tool: 'rect' | 'circle' | 'text' | 'group' | 'polygon' | null,
+  ) => void,
 ): void {
   if (isDrawingPolygon) {
     cleanupTempElements(canvas);

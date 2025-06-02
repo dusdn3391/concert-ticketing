@@ -1,57 +1,54 @@
-import React from "react";
-import Image from "next/image";
+import React from 'react';
+import Image from 'next/image';
 
-import styles from "./canvas.module.css";
+import styles from './canvas.module.css';
 import {
   circleIcon,
   pointerIcon,
   polygonIcon,
   squareIcon,
   textIcon,
-} from "@public/icons";
+} from '@public/icons';
 
 interface ToolbarProps {
   setSelectedTool: (
-    tool: "rect" | "circle" | "text" | "group" | "polygon" | null
+    tool: 'rect' | 'circle' | 'text' | 'group' | 'polygon' | null,
   ) => void;
-  selectedTool: "rect" | "circle" | "text" | "group" | "polygon" | null;
+  selectedTool: 'rect' | 'circle' | 'text' | 'group' | 'polygon' | null;
 }
 
-export default function Toolbar({
-  setSelectedTool,
-  selectedTool,
-}: ToolbarProps) {
+export default function Toolbar({ setSelectedTool, selectedTool }: ToolbarProps) {
   return (
     <div className={styles.toolbar}>
       <button
-        onClick={() => setSelectedTool("rect")}
-        className={selectedTool === "rect" ? styles.active : ""}
+        onClick={() => setSelectedTool('rect')}
+        className={selectedTool === 'rect' ? styles.active : ''}
       >
-        <Image src={squareIcon} alt="square icon" priority />
+        <Image src={squareIcon} alt='square icon' priority />
       </button>
       <button
-        onClick={() => setSelectedTool("circle")}
-        className={selectedTool === "circle" ? styles.active : ""}
+        onClick={() => setSelectedTool('circle')}
+        className={selectedTool === 'circle' ? styles.active : ''}
       >
-        <Image src={circleIcon} alt="circle icon" priority />
+        <Image src={circleIcon} alt='circle icon' priority />
       </button>
       <button
-        onClick={() => setSelectedTool("text")}
-        className={selectedTool === "text" ? styles.active : ""}
+        onClick={() => setSelectedTool('text')}
+        className={selectedTool === 'text' ? styles.active : ''}
       >
-        <Image src={textIcon} alt="text icon" priority />
+        <Image src={textIcon} alt='text icon' priority />
       </button>
       <button
-        onClick={() => setSelectedTool("polygon")}
-        className={selectedTool === "polygon" ? styles.active : ""}
+        onClick={() => setSelectedTool('polygon')}
+        className={selectedTool === 'polygon' ? styles.active : ''}
       >
-        <Image src={polygonIcon} alt="polygon icon" priority />
+        <Image src={polygonIcon} alt='polygon icon' priority />
       </button>
       <button
         onClick={() => setSelectedTool(null)}
-        className={selectedTool === null ? styles.active : ""}
+        className={selectedTool === null ? styles.active : ''}
       >
-        <Image src={pointerIcon} alt="pointer icon" priority />
+        <Image src={pointerIcon} alt='pointer icon' priority />
       </button>
     </div>
   );

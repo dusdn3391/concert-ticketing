@@ -1,6 +1,5 @@
-import React from "react";
-
-import * as fabric from "fabric";
+import React from 'react';
+import * as fabric from 'fabric';
 
 interface CircleDiameterProps {
   selectedObject: fabric.Object | null;
@@ -18,13 +17,13 @@ export function CircleDiameter({
   canvas,
 }: CircleDiameterProps) {
   const handleDiameterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/,/g, "");
+    const value = e.target.value.replace(/,/g, '');
     const parsed = parseInt(value, 10);
     const newDiameter = Number.isNaN(parsed) ? 1 : Math.max(1, parsed);
     setDiameter(newDiameter); // 로컬 상태 업데이트
 
     if (selectedObject) {
-      if (selectedObject.type === "circle") {
+      if (selectedObject.type === 'circle') {
         // 단일 원형 객체 처리
         const circle = selectedObject as fabric.Circle;
         circle.set({
@@ -33,12 +32,12 @@ export function CircleDiameter({
           scaleY: 1,
         });
         circle.setCoords(); // 객체 경계 상자 업데이트
-      } else if (selectedObject.type === "group") {
+      } else if (selectedObject.type === 'group') {
         // 그룹 내 원형 객체 처리
         const group = selectedObject as fabric.Group;
         const circleInGroup = group
           .getObjects()
-          .find((obj) => obj.type === "circle") as fabric.Circle;
+          .find((obj) => obj.type === 'circle') as fabric.Circle;
 
         if (circleInGroup) {
           // 현재 원형의 유효 반경 계산 (그룹 및 원형 자체 스케일 모두 고려)
@@ -71,7 +70,7 @@ export function CircleDiameter({
     <>
       <label>지름</label>
       <input
-        type="number"
+        type='number'
         value={diameter}
         onClick={(e) => e.currentTarget.select()}
         onChange={handleDiameterChange}

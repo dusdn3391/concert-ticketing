@@ -1,6 +1,5 @@
-import React from "react";
-
-import * as fabric from "fabric";
+import React from 'react';
+import * as fabric from 'fabric';
 
 interface OpacityProps {
   opacity: number;
@@ -19,7 +18,7 @@ export function Opacity({
 }: OpacityProps) {
   const handleOpacityChange = (value: number) => {
     if (selectedObject && canvas) {
-      selectedObject.set("opacity", value);
+      selectedObject.set('opacity', value);
       canvas.requestRenderAll();
       setOpacity(value);
     }
@@ -29,9 +28,9 @@ export function Opacity({
     <>
       <label>투명도(%)</label>
       <input
-        type="number"
-        min="0"
-        max="100"
+        type='number'
+        min='0'
+        max='100'
         value={Math.round(opacity * 100)}
         onClick={(e) => e.currentTarget.select()}
         onChange={(e) => {

@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react';
 
-import FabricEditor from "@/components/admin/editor";
+import FabricEditor from '@/components/admin/editor';
 
 export default function AdminEditorPage() {
   return <FabricEditor />;

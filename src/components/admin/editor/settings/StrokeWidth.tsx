@@ -1,6 +1,5 @@
-import React from "react";
-
-import * as fabric from "fabric";
+import React from 'react';
+import * as fabric from 'fabric';
 
 interface StrokeWidthProps {
   strokeWidth: number;
@@ -17,30 +16,29 @@ export function StrokeWidth({
   canvas,
   disabled,
 }: StrokeWidthProps) {
-  if (selectedObject?.type === "i-text") return null;
+  if (selectedObject?.type === 'i-text') return null;
 
   const handleStrokeWidthChange = (value: number | string) => {
-    const parsed = parseInt(value as string);
+    const parsed = Number(value as string);
     const newStrokeWidth = !isNaN(parsed) && parsed >= 0 ? parsed : 0;
 
     setStrokeWidth(newStrokeWidth);
 
     if (selectedObject) {
-      if (selectedObject.type === "group") {
+      if (selectedObject.type === 'group') {
         const group = selectedObject as fabric.Group;
-        group._objects.forEach((obj) => {
+        group.getObjects().forEach((obj) => {
           // 그룹 내 모든 객체에 strokeWidth 적용 (텍스트 제외)
-          if (obj.type !== "i-text") {
-            obj.set("strokeWidth", newStrokeWidth);
+          if (obj.type !== 'i-text') {
+            obj.set('strokeWidth', newStrokeWidth);
           }
         });
-        group.set("strokeWidth", newStrokeWidth);
-      } else {
+        group.set('strokeWidth', newStrokeWidth);
+      } else if (selectedObject.type !== 'i-text') {
         // 모든 fabric 객체에 strokeWidth 적용 (텍스트 제외)
-        if (selectedObject.type !== "i-text") {
-          selectedObject.set("strokeWidth", newStrokeWidth);
-        }
+        selectedObject.set('strokeWidth', newStrokeWidth);
       }
+
       canvas?.requestRenderAll();
     }
   };
@@ -49,7 +47,7 @@ export function StrokeWidth({
     <>
       <label>테두리 두께 (px)</label>
       <input
-        type="number"
+        type='number'
         value={strokeWidth}
         onClick={(e) => e.currentTarget.select()}
         onChange={(e) => handleStrokeWidthChange(e.target.value)}

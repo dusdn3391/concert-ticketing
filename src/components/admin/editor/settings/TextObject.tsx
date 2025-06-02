@@ -1,6 +1,5 @@
-import React from "react";
-
-import * as fabric from "fabric";
+import React from 'react';
+import * as fabric from 'fabric';
 
 interface TextObjectProps {
   selectedObject: fabric.Object | null;
@@ -35,10 +34,10 @@ export function TextObject({
 }: TextObjectProps) {
   // 텍스트 내용
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const { value } = e.target;
     const activeObject = canvas.getActiveObject();
 
-    if (activeObject && activeObject.type === "i-text") {
+    if (activeObject && activeObject.type === 'i-text') {
       const id = activeObject.id as string;
       setText((prev) => ({
         ...prev,
@@ -47,18 +46,18 @@ export function TextObject({
           text: value,
         },
       }));
-      activeObject.set("text", value);
+      activeObject.set('text', value);
       canvas.requestRenderAll();
     }
   };
 
   // 글자 크기
   const handleFontSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/,/g, "");
+    const value = e.target.value.replace(/,/g, '');
     const intValue = parseInt(value, 10);
     const activeObject = canvas.getActiveObject();
 
-    if (activeObject && activeObject.type === "i-text" && intValue > 0) {
+    if (activeObject && activeObject.type === 'i-text' && intValue > 0) {
       const id = activeObject.id as string;
       setText((prev) => ({
         ...prev,
@@ -67,12 +66,12 @@ export function TextObject({
           fontSize: intValue,
         },
       }));
-      activeObject.set("fontSize", intValue);
+      activeObject.set('fontSize', intValue);
       canvas.requestRenderAll();
     }
   };
 
-  if (!selectedObject || selectedObject.type !== "i-text") {
+  if (!selectedObject || selectedObject.type !== 'i-text') {
     return null;
   }
 
@@ -82,20 +81,20 @@ export function TextObject({
     <>
       <label>텍스트 내용</label>
       <input
-        type="text"
-        value={text[id]?.text || ""}
+        type='text'
+        value={text[id]?.text || ''}
         onClick={(e) => e.currentTarget.select()}
         onChange={handleTextChange}
-        placeholder="텍스트 입력"
+        placeholder='텍스트 입력'
         disabled={isLocked}
       />
       <label>글자 크기</label>
       <input
-        type="number"
-        value={text[id]?.fontSize || ""}
+        type='number'
+        value={text[id]?.fontSize || ''}
         onClick={(e) => e.currentTarget.select()}
         onChange={handleFontSizeChange}
-        placeholder="글자 크기 입력"
+        placeholder='글자 크기 입력'
         disabled={isLocked}
       />
     </>

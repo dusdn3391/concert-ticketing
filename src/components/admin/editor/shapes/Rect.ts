@@ -1,4 +1,4 @@
-import * as fabric from "fabric";
+import * as fabric from 'fabric';
 
 /**
  * 사각형 + 텍스트 그룹을 생성하여 캔버스에 추가합니다.
@@ -12,24 +12,24 @@ export const addRectangleFn = (
   canvas: fabric.Canvas,
   x: number,
   y: number,
-  setSelectedTool: (tool: "rect" | null) => void
+  setSelectedTool: (tool: 'rect' | null) => void,
 ) => {
   const rect = new fabric.Rect({
     width: 60,
     height: 60,
-    fill: "#ffffff",
+    fill: '#ffffff',
     strokeWidth: 1,
-    stroke: "#000000",
+    stroke: '#000000',
     strokeUniform: true,
-    originX: "center",
-    originY: "center",
+    originX: 'center',
+    originY: 'center',
   }) as fabric.Rect & { id: string };
 
-  const label = new fabric.IText("label", {
+  const label = new fabric.IText('label', {
     fontSize: 16,
-    fill: "#000000",
-    originX: "center",
-    originY: "center",
+    fill: '#000000',
+    originX: 'center',
+    originY: 'center',
     editable: true,
     selectable: true,
     left: 0,
@@ -39,10 +39,10 @@ export const addRectangleFn = (
   const group = new fabric.Group([rect, label], {
     left: x,
     top: y,
-    originX: "center",
-    originY: "center",
+    originX: 'center',
+    originY: 'center',
     selectable: true,
-    stroke: "#000000",
+    stroke: '#000000',
     strokeWidth: 1,
     strokeUniform: true,
     subTargetCheck: true,
@@ -50,7 +50,7 @@ export const addRectangleFn = (
 
   group.getObjects().find((obj) => {
     if (obj instanceof fabric.Rect) {
-      obj.set("strokeUniform", true);
+      obj.set('strokeUniform', true);
     }
   });
 

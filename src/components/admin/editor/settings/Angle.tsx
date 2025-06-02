@@ -1,3 +1,5 @@
+import React from "react";
+
 import * as fabric from "fabric";
 
 interface AngleProps {
@@ -17,8 +19,9 @@ export function Angle({
 }: AngleProps) {
   // selectedObject가 circle이면서 정비율(scaleX === scaleY)이면 각도 입력 숨김
   if (
-    selectedObject?.type === "circle" || selectedObject?.type === "group" &&
-    selectedObject.scaleX === selectedObject.scaleY
+    selectedObject?.type === "circle" ||
+    (selectedObject?.type === "group" &&
+      selectedObject.scaleX === selectedObject.scaleY)
   ) {
     return null;
   }

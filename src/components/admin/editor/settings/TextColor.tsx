@@ -1,3 +1,5 @@
+import React from "react";
+
 import { getColorString } from "@/utils/getColorString";
 import * as fabric from "fabric";
 

@@ -34,6 +34,7 @@
   border-radius: 8px;
   padding: 24px;
   min-width: 500px;
+  height: 80vh;
   overflow-y: auto;
 }
 
@@ -128,7 +129,6 @@
 }
 
 .input {
-  width: 100%;
   padding: 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 4px;

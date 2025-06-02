@@ -1,3 +1,5 @@
+import React from "react";
+
 import * as fabric from "fabric";
 
 interface CircleDiameterProps {

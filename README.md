@@ -1,3 +1,8 @@
+## 📋 목차
+| [🏠 홈](README.md) | [⚙️ ESLint 설정](ESLINT.md)
+
+---
+
 # 콘서트 티켓팅 플랫폼
 
 이 프로젝트는 [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app)으로 생성된 [Next.js](https://nextjs.org) 프로젝트입니다.

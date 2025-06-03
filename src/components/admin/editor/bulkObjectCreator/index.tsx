@@ -1,15 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import * as fabric from 'fabric';
 
-import {
-  ObjectConfig,
-  GridConfig,
-  PatternConfig,
-  TabType,
-  ObjectType,
-  PatternType,
-} from '@/types/BulkObject';
+import { ObjectConfig, GridConfig, PatternConfig, TabType } from '@/types/BulkObject';
 
+import ObjectSettings from './options/ObjectSettings';
+import GridSettings from './options/GridSettings';
+import PatternSettings from './options/PatternSettings';
 import styles from './bulkObject.module.css';
 
 interface BulkObjectCreatorProps {
@@ -20,7 +16,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('grid');
 
-  // 객체 설정
+  // 객체 설정 (초기 상태)
   const [objectConfig, setObjectConfig] = useState<ObjectConfig>({
     type: 'rect',
     fill: '#3b82f6',
@@ -32,14 +28,13 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
     borderRadius: 0,
     text: 'Text',
     fontSize: 16,
-    // 도형 내 텍스트 설정
     includeText: false,
     textContent: '텍스트',
     textColor: '#ffffff',
     textFontSize: 14,
   });
 
-  // 그리드 설정
+  // 그리드 설정 (초기 상태)
   const [gridConfig, setGridConfig] = useState<GridConfig>({
     rows: 3,
     cols: 3,
@@ -49,7 +44,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
     startY: 100,
   });
 
-  // 패턴 설정
+  // 패턴 설정 (초기 상태)
   const [patternConfig, setPatternConfig] = useState<PatternConfig>({
     pattern: 'circle',
     count: 8,
@@ -62,7 +57,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
     areaHeight: 300,
   });
 
-  // 객체 생성 함수
+  // Settings 호환 객체 생성 함수
   const createObject = useCallback(
     (x: number, y: number, index: number): fabric.FabricObject => {
       const id = `bulk_${objectConfig.type}_${Date.now()}_${index}`;
@@ -75,14 +70,14 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
           fill: objectConfig.fill,
           stroke: objectConfig.stroke,
           strokeWidth: objectConfig.strokeWidth,
-        });
+        }) as fabric.IText & { id: string };
 
-        (textObj as fabric.FabricObject & { id?: string }).id = id;
+        textObj.id = id;
         return textObj as fabric.FabricObject;
       }
 
       // 도형 객체 생성
-      let shape: fabric.FabricObject;
+      let shape: fabric.FabricObject & { id: string };
 
       if (objectConfig.type === 'rect') {
         shape = new fabric.Rect({
@@ -95,7 +90,9 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
           strokeWidth: objectConfig.strokeWidth,
           rx: objectConfig.borderRadius,
           ry: objectConfig.borderRadius,
-        });
+          strokeUniform: true, // Settings에서 사용하는 속성
+        }) as fabric.Rect & { id: string };
+        shape.id = `${id}_rect`;
       } else {
         shape = new fabric.Circle({
           left: 0,
@@ -104,7 +101,9 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
           fill: objectConfig.fill,
           stroke: objectConfig.stroke,
           strokeWidth: objectConfig.strokeWidth,
-        });
+          strokeUniform: true, // Settings에서 사용하는 속성
+        }) as fabric.Circle & { id: string };
+        shape.id = `${id}_circle`;
       }
 
       // 텍스트를 포함하지 않는 경우 도형만 반환
@@ -113,12 +112,11 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
           left: x,
           top: y,
         });
-
-        (shape as fabric.FabricObject & { id?: string }).id = id;
+        shape.id = id; // 단일 객체일 때는 메인 id 사용
         return shape;
       }
 
-      // 도형 내부에 텍스트 추가 - 수정된 부분
+      // 도형 내부에 텍스트 추가
       const textObj = new fabric.IText(`${objectConfig.textContent} ${index + 1}`, {
         fontSize: objectConfig.textFontSize,
         fill: objectConfig.textColor,
@@ -126,9 +124,14 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
         originX: 'center',
         originY: 'center',
         editable: true,
-      });
+        selectable: true,
+        left: 0,
+        top: 0,
+      }) as fabric.IText & { id: string };
 
-      // 도형의 중심에 텍스트 배치 - 수정된 부분
+      textObj.id = `${id}_text`;
+
+      // 도형의 중심에 텍스트 배치
       if (objectConfig.type === 'rect') {
         const rectWidth = objectConfig.width || 60;
         const rectHeight = objectConfig.height || 60;
@@ -148,76 +151,28 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
       const group = new fabric.Group([shape, textObj as fabric.FabricObject], {
         left: x,
         top: y,
-      });
+        originX: 'center',
+        originY: 'center',
+        selectable: true,
+        strokeUniform: true,
+        subTargetCheck: true, // Settings의 더블클릭과 그룹 내 객체 접근을 위해 필수
+      }) as fabric.Group & { id: string };
 
-      (group as fabric.FabricObject & { id?: string }).id = id;
+      group.id = id;
 
-      group.on('mousedblclick', (e) => {
-        // 이벤트 전파 방지
-        e.e.preventDefault();
-        e.e.stopPropagation();
+      // Settings 호환 더블클릭 이벤트 - Settings의 handleDoubleClick과 동일한 로직
+      group.on('mousedblclick', (e: any) => {
+        e.e?.preventDefault();
+        e.e?.stopPropagation();
 
-        // 현재 그룹의 위치와 변환 정보 저장
-        const groupLeft = group.left || 0;
-        const groupTop = group.top || 0;
-        const groupScaleX = group.scaleX || 1;
-        const groupScaleY = group.scaleY || 1;
-        const groupAngle = group.angle || 0;
-
-        // 그룹 제거
-        canvas.remove(group);
-
-        // 그룹 내 객체들을 개별적으로 추가
-        const objects = group.getObjects();
-        let textObject: fabric.IText | null = null;
-
-        objects.forEach((obj: fabric.FabricObject) => {
-          // 그룹 내 상대 좌표를 절대 좌표로 변환
-          const objLeft = (obj.left || 0) * groupScaleX;
-          const objTop = (obj.top || 0) * groupScaleY;
-
-          // 회전이 있는 경우 회전 변환 적용
-          let finalLeft = objLeft;
-          let finalTop = objTop;
-
-          if (groupAngle !== 0) {
-            const rad = (groupAngle * Math.PI) / 180;
-            const cos = Math.cos(rad);
-            const sin = Math.sin(rad);
-
-            finalLeft = objLeft * cos - objTop * sin;
-            finalTop = objLeft * sin + objTop * cos;
+        // Settings의 더블클릭 핸들러와 동일한 동작
+        if (group.subTargetCheck && e.subTargets) {
+          const subTarget = e.subTargets[0];
+          if (subTarget instanceof fabric.IText) {
+            canvas.setActiveObject(subTarget as fabric.Object);
+            subTarget.enterEditing();
+            subTarget.selectAll();
           }
-
-          obj.set({
-            left: groupLeft + finalLeft,
-            top: groupTop + finalTop,
-            scaleX: (obj.scaleX || 1) * groupScaleX,
-            scaleY: (obj.scaleY || 1) * groupScaleY,
-            angle: (obj.angle || 0) + groupAngle,
-          });
-
-          canvas.add(obj);
-
-          // 텍스트 객체 찾기
-          if (obj instanceof fabric.IText) {
-            textObject = obj;
-          }
-        });
-
-        // 텍스트 객체가 있으면 편집 모드로 전환
-        if (textObject) {
-          canvas.setActiveObject(textObject as any);
-          canvas.renderAll();
-
-          // 약간의 지연 후 편집 모드 진입 (렌더링 완료 후)
-          setTimeout(() => {
-            if (textObject) {
-              textObject.enterEditing();
-            }
-          }, 50);
-        } else {
-          canvas.renderAll();
         }
       });
 
@@ -289,7 +244,7 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
     }
   }, [patternConfig, createCirclePattern, createLinePattern]);
 
-  // 객체들을 캔버스에 추가
+  // Settings 호환성을 보장하는 객체 추가 함수
   const addObjectsToCanvas = useCallback(
     (objects: fabric.FabricObject[]) => {
       objects.forEach((obj) => {
@@ -313,20 +268,6 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
     addObjectsToCanvas(objects);
     setIsOpen(false);
   }, [createPatternObjects, addObjectsToCanvas]);
-
-  const handleObjectTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setObjectConfig((prev) => ({
-      ...prev,
-      type: e.target.value as ObjectType,
-    }));
-  };
-
-  const handlePatternTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPatternConfig((prev) => ({
-      ...prev,
-      pattern: e.target.value as PatternType,
-    }));
-  };
 
   if (!isOpen) {
     return (
@@ -363,495 +304,19 @@ export default function BulkObjectCreator({ canvas }: BulkObjectCreatorProps) {
         </div>
 
         {/* 객체 설정 */}
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>객체 설정</h3>
-
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label className={styles.label}>타입</label>
-              <select
-                value={objectConfig.type}
-                onChange={handleObjectTypeChange}
-                className={styles.select}
-              >
-                <option value='rect'>사각형</option>
-                <option value='circle'>원</option>
-                <option value='text'>텍스트</option>
-              </select>
-            </div>
-
-            <div className={styles.field}>
-              <label className={styles.label}>채우기</label>
-              <input
-                type='color'
-                value={objectConfig.fill}
-                onChange={(e) =>
-                  setObjectConfig((prev) => ({ ...prev, fill: e.target.value }))
-                }
-                className={styles.colorInput}
-              />
-            </div>
-          </div>
-
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label className={styles.label}>테두리 색</label>
-              <input
-                type='color'
-                value={objectConfig.stroke}
-                onChange={(e) =>
-                  setObjectConfig((prev) => ({
-                    ...prev,
-                    stroke: e.target.value,
-                  }))
-                }
-                className={styles.colorInput}
-              />
-            </div>
-
-            <div className={styles.field}>
-              <label className={styles.label}>테두리 두께</label>
-              <input
-                type='number'
-                value={objectConfig.strokeWidth}
-                onClick={(e) => e.currentTarget.select()}
-                onChange={(e) =>
-                  setObjectConfig((prev) => ({
-                    ...prev,
-                    strokeWidth: Number(e.target.value),
-                  }))
-                }
-                className={styles.input}
-                min='0'
-              />
-            </div>
-          </div>
-
-          {/* 도형 내 텍스트 설정 (사각형, 원일 때만) */}
-          {(objectConfig.type === 'rect' || objectConfig.type === 'circle') && (
-            <div className={styles.section}>
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  <input
-                    type='checkbox'
-                    checked={objectConfig.includeText}
-                    onChange={(e) =>
-                      setObjectConfig((prev) => ({
-                        ...prev,
-                        includeText: e.target.checked,
-                      }))
-                    }
-                    style={{ marginRight: '8px' }}
-                  />
-                  도형 안에 텍스트 포함
-                </label>
-              </div>
-
-              {objectConfig.includeText && (
-                <>
-                  <div className={styles.row}>
-                    <div className={styles.field}>
-                      <label className={styles.label}>텍스트 내용</label>
-                      <input
-                        type='text'
-                        value={objectConfig.textContent}
-                        onChange={(e) =>
-                          setObjectConfig((prev) => ({
-                            ...prev,
-                            textContent: e.target.value,
-                          }))
-                        }
-                        className={styles.input}
-                      />
-                    </div>
-
-                    <div className={styles.field}>
-                      <label className={styles.label}>텍스트 색상</label>
-                      <input
-                        type='color'
-                        value={objectConfig.textColor}
-                        onChange={(e) =>
-                          setObjectConfig((prev) => ({
-                            ...prev,
-                            textColor: e.target.value,
-                          }))
-                        }
-                        className={styles.colorInput}
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.field}>
-                    <label className={styles.label}>텍스트 크기</label>
-                    <input
-                      type='number'
-                      value={objectConfig.textFontSize}
-                      onChange={(e) =>
-                        setObjectConfig((prev) => ({
-                          ...prev,
-                          textFontSize: Number(e.target.value),
-                        }))
-                      }
-                      className={styles.input}
-                      min='8'
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* 객체별 설정 */}
-          {objectConfig.type === 'rect' && (
-            <>
-              <div className={styles.row}>
-                <div className={styles.field}>
-                  <label className={styles.label}>너비</label>
-                  <input
-                    type='number'
-                    value={objectConfig.width}
-                    onClick={(e) => e.currentTarget.select()}
-                    onChange={(e) =>
-                      setObjectConfig((prev) => ({
-                        ...prev,
-                        width: Number(e.target.value),
-                      }))
-                    }
-                    className={styles.input}
-                  />
-                </div>
-
-                <div className={styles.field}>
-                  <label className={styles.label}>높이</label>
-                  <input
-                    type='number'
-                    value={objectConfig.height}
-                    onClick={(e) => e.currentTarget.select()}
-                    onChange={(e) =>
-                      setObjectConfig((prev) => ({
-                        ...prev,
-                        height: Number(e.target.value),
-                      }))
-                    }
-                    className={styles.input}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>모서리</label>
-                <input
-                  type='number'
-                  value={objectConfig.borderRadius}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setObjectConfig((prev) => ({
-                      ...prev,
-                      borderRadius: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                  min='0'
-                />
-              </div>
-            </>
-          )}
-
-          {objectConfig.type === 'circle' && (
-            <div className={styles.field}>
-              <label className={styles.label}>반지름</label>
-              <input
-                type='number'
-                value={objectConfig.radius}
-                onClick={(e) => e.currentTarget.select()}
-                onChange={(e) =>
-                  setObjectConfig((prev) => ({
-                    ...prev,
-                    radius: Number(e.target.value),
-                  }))
-                }
-                className={styles.input}
-              />
-            </div>
-          )}
-
-          {objectConfig.type === 'text' && (
-            <div className={styles.row}>
-              <div className={styles.field}>
-                <label className={styles.label}>텍스트 내용</label>
-                <input
-                  type='text'
-                  value={objectConfig.text}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setObjectConfig((prev) => ({
-                      ...prev,
-                      text: e.target.value,
-                    }))
-                  }
-                  className={styles.input}
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>폰트 크기</label>
-                <input
-                  type='number'
-                  value={objectConfig.fontSize}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setObjectConfig((prev) => ({
-                      ...prev,
-                      fontSize: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        <ObjectSettings objectConfig={objectConfig} setObjectConfig={setObjectConfig} />
 
         {/* 그리드 설정 */}
         {activeTab === 'grid' && (
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>그리드 설정</h3>
-
-            <div className={styles.row}>
-              <div className={styles.field}>
-                <label className={styles.label}>행 수</label>
-                <input
-                  type='number'
-                  value={gridConfig.rows}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setGridConfig((prev) => ({
-                      ...prev,
-                      rows: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                  min='1'
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>열 수</label>
-                <input
-                  type='number'
-                  value={gridConfig.cols}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setGridConfig((prev) => ({
-                      ...prev,
-                      cols: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                  min='1'
-                />
-              </div>
-            </div>
-
-            <div className={styles.row}>
-              <div className={styles.field}>
-                <label className={styles.label}>가로 간격</label>
-                <input
-                  type='number'
-                  value={gridConfig.spacingX}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setGridConfig((prev) => ({
-                      ...prev,
-                      spacingX: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>세로 간격</label>
-                <input
-                  type='number'
-                  value={gridConfig.spacingY}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setGridConfig((prev) => ({
-                      ...prev,
-                      spacingY: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                />
-              </div>
-            </div>
-
-            <div className={styles.row}>
-              <div className={styles.field}>
-                <label className={styles.label}>시작 좌표 X</label>
-                <input
-                  type='number'
-                  value={gridConfig.startX}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setGridConfig((prev) => ({
-                      ...prev,
-                      startX: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>시작 좌표 Y</label>
-                <input
-                  type='number'
-                  value={gridConfig.startY}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setGridConfig((prev) => ({
-                      ...prev,
-                      startY: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                />
-              </div>
-            </div>
-
-            <div className={styles.info}>
-              총 {gridConfig.rows * gridConfig.cols}개 객체가 생성됩니다.
-            </div>
-          </div>
+          <GridSettings gridConfig={gridConfig} setGridConfig={setGridConfig} />
         )}
 
         {/* 패턴 설정 */}
         {activeTab === 'pattern' && (
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>패턴 설정</h3>
-
-            <div className={styles.row}>
-              <div className={styles.field}>
-                <label className={styles.label}>패턴</label>
-                <select
-                  value={patternConfig.pattern}
-                  onChange={handlePatternTypeChange}
-                  className={styles.select}
-                >
-                  <option value='circle'>원형</option>
-                  <option value='line'>직선</option>
-                </select>
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>개수</label>
-                <input
-                  type='number'
-                  value={patternConfig.count}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setPatternConfig((prev) => ({
-                      ...prev,
-                      count: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                  min='1'
-                />
-              </div>
-            </div>
-
-            <div className={styles.row}>
-              <div className={styles.field}>
-                <label className={styles.label}>중심 좌표 X</label>
-                <input
-                  type='number'
-                  value={patternConfig.centerX}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setPatternConfig((prev) => ({
-                      ...prev,
-                      centerX: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>중심 좌표 Y</label>
-                <input
-                  type='number'
-                  value={patternConfig.centerY}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setPatternConfig((prev) => ({
-                      ...prev,
-                      centerY: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                />
-              </div>
-            </div>
-
-            {/* 패턴별 추가 설정 */}
-            {patternConfig.pattern === 'circle' && (
-              <div className={styles.field}>
-                <label className={styles.label}>반지름</label>
-                <input
-                  type='number'
-                  value={patternConfig.radius}
-                  onClick={(e) => e.currentTarget.select()}
-                  onChange={(e) =>
-                    setPatternConfig((prev) => ({
-                      ...prev,
-                      radius: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                />
-              </div>
-            )}
-
-            {patternConfig.pattern === 'line' && (
-              <div className={styles.row}>
-                <div className={styles.field}>
-                  <label className={styles.label}>각도 (도)</label>
-                  <input
-                    type='number'
-                    value={patternConfig.angle}
-                    onClick={(e) => e.currentTarget.select()}
-                    onChange={(e) =>
-                      setPatternConfig((prev) => ({
-                        ...prev,
-                        angle: Number(e.target.value),
-                      }))
-                    }
-                    className={styles.input}
-                  />
-                </div>
-
-                <div className={styles.field}>
-                  <label className={styles.label}>간격</label>
-                  <input
-                    type='number'
-                    value={patternConfig.spacing}
-                    onClick={(e) => e.currentTarget.select()}
-                    onChange={(e) =>
-                      setPatternConfig((prev) => ({
-                        ...prev,
-                        spacing: Number(e.target.value),
-                      }))
-                    }
-                    className={styles.input}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+          <PatternSettings
+            patternConfig={patternConfig}
+            setPatternConfig={setPatternConfig}
+          />
         )}
 
         {/* 버튼 */}

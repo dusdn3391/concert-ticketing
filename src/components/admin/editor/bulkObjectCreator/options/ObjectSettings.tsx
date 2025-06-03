@@ -22,7 +22,52 @@ export default function ObjectSettings({
 
   return (
     <div className={styles.section}>
-      <h3 className={styles.sectionTitle}>객체 설정</h3>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
+        }}
+      >
+        <h3 className={styles.sectionTitle} style={{ margin: 0 }}>
+          객체 설정
+        </h3>
+
+        {/* 도형일 때만 텍스트 포함 체크박스 표시 */}
+        {(objectConfig.type === 'rect' || objectConfig.type === 'circle') && (
+          <label
+            className={styles.label}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: objectConfig.includeText ? '#3b82f6' : '#666666',
+              transition: 'color 0.2s ease',
+              margin: 0,
+            }}
+          >
+            <input
+              type='checkbox'
+              checked={objectConfig.includeText}
+              onChange={(e) =>
+                setObjectConfig((prev) => ({
+                  ...prev,
+                  includeText: e.target.checked,
+                }))
+              }
+              style={{
+                marginRight: '8px',
+                accentColor: '#3b82f6',
+                transform: 'scale(1.1)',
+              }}
+            />
+            <span>도형 안에 텍스트 포함</span>
+          </label>
+        )}
+      </div>
 
       <div className={styles.row}>
         <div className={styles.field}>
@@ -81,83 +126,10 @@ export default function ObjectSettings({
             }
             className={styles.input}
             min='0'
+            max='20'
           />
         </div>
       </div>
-
-      {/* 도형 내 텍스트 설정 (사각형, 원일 때만) */}
-      {(objectConfig.type === 'rect' || objectConfig.type === 'circle') && (
-        <div className={styles.section}>
-          <div className={styles.field}>
-            <label className={styles.label}>
-              <input
-                type='checkbox'
-                checked={objectConfig.includeText}
-                onChange={(e) =>
-                  setObjectConfig((prev) => ({
-                    ...prev,
-                    includeText: e.target.checked,
-                  }))
-                }
-                style={{ marginRight: '8px' }}
-              />
-              도형 안에 텍스트 포함
-            </label>
-          </div>
-
-          {objectConfig.includeText && (
-            <>
-              <div className={styles.row}>
-                <div className={styles.field}>
-                  <label className={styles.label}>텍스트 내용</label>
-                  <input
-                    type='text'
-                    value={objectConfig.textContent}
-                    onChange={(e) =>
-                      setObjectConfig((prev) => ({
-                        ...prev,
-                        textContent: e.target.value,
-                      }))
-                    }
-                    className={styles.input}
-                  />
-                </div>
-
-                <div className={styles.field}>
-                  <label className={styles.label}>텍스트 색상</label>
-                  <input
-                    type='color'
-                    value={objectConfig.textColor}
-                    onChange={(e) =>
-                      setObjectConfig((prev) => ({
-                        ...prev,
-                        textColor: e.target.value,
-                      }))
-                    }
-                    className={styles.colorInput}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>텍스트 크기</label>
-                <input
-                  type='number'
-                  value={objectConfig.textFontSize}
-                  onChange={(e) =>
-                    setObjectConfig((prev) => ({
-                      ...prev,
-                      textFontSize: Number(e.target.value),
-                    }))
-                  }
-                  className={styles.input}
-                  min='8'
-                />
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
       {/* 객체별 설정 */}
       {objectConfig.type === 'rect' && (
@@ -176,6 +148,7 @@ export default function ObjectSettings({
                   }))
                 }
                 className={styles.input}
+                min='10'
               />
             </div>
 
@@ -192,12 +165,13 @@ export default function ObjectSettings({
                   }))
                 }
                 className={styles.input}
+                min='10'
               />
             </div>
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>모서리</label>
+            <label className={styles.label}>모서리 둥글기</label>
             <input
               type='number'
               value={objectConfig.borderRadius}
@@ -210,6 +184,7 @@ export default function ObjectSettings({
               }
               className={styles.input}
               min='0'
+              max='50'
             />
           </div>
         </>
@@ -229,9 +204,75 @@ export default function ObjectSettings({
               }))
             }
             className={styles.input}
+            min='5'
           />
         </div>
       )}
+
+      {/* 텍스트 설정 (체크박스가 활성화된 경우만) */}
+      {(objectConfig.type === 'rect' || objectConfig.type === 'circle') &&
+        objectConfig.includeText && (
+          <div
+            className={styles.section}
+            style={{
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}
+          >
+            <div className={styles.row}>
+              <div className={styles.field}>
+                <label className={styles.label}>텍스트 내용</label>
+                <input
+                  type='text'
+                  value={objectConfig.textContent}
+                  onChange={(e) =>
+                    setObjectConfig((prev) => ({
+                      ...prev,
+                      textContent: e.target.value,
+                    }))
+                  }
+                  className={styles.input}
+                  placeholder='텍스트를 입력하세요'
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>텍스트 색상</label>
+                <input
+                  type='color'
+                  value={objectConfig.textColor}
+                  onChange={(e) =>
+                    setObjectConfig((prev) => ({
+                      ...prev,
+                      textColor: e.target.value,
+                    }))
+                  }
+                  className={styles.colorInput}
+                />
+              </div>
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>텍스트 크기</label>
+              <input
+                type='number'
+                value={objectConfig.textFontSize}
+                onChange={(e) =>
+                  setObjectConfig((prev) => ({
+                    ...prev,
+                    textFontSize: Number(e.target.value),
+                  }))
+                }
+                className={styles.input}
+                min='8'
+                max='72'
+              />
+            </div>
+          </div>
+        )}
 
       {objectConfig.type === 'text' && (
         <div className={styles.row}>
@@ -248,6 +289,7 @@ export default function ObjectSettings({
                 }))
               }
               className={styles.input}
+              placeholder='텍스트를 입력하세요'
             />
           </div>
 
@@ -264,6 +306,8 @@ export default function ObjectSettings({
                 }))
               }
               className={styles.input}
+              min='8'
+              max='72'
             />
           </div>
         </div>

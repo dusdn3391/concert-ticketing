@@ -33,7 +33,7 @@
   background-color: white;
   border-radius: 8px;
   padding: 24px;
-  min-width: 500px;
+  min-width: 600px;
   height: 80vh;
   overflow-y: auto;
 }
@@ -103,8 +103,8 @@
 
 .sectionTitle {
   font-weight: 600;
-  margin-bottom: 12px;
   margin-top: 0;
+  margin-bottom: 24px;
 }
 
 /* Form elements */
@@ -121,7 +121,8 @@
 }
 
 .label {
-  display: block;
+  display: flex;
+  align-items: center;
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 4px;
@@ -213,4 +214,21 @@
 
 .field:not(.row .field) {
   margin-bottom: 12px;
+}
+
+.autoButton {
+  width: 100%;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: all .2s ease;
+}
+
+.autoButton:hover {
+  opacity: .85;
+  transform: translateY(-1px);
 }

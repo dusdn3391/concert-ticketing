@@ -15,7 +15,7 @@ export interface ObjectConfig {
   fontSize?: number;
   // 도형 내 텍스트 관련 설정
   includeText: boolean;
-  textContent: string;
+  textContent?: string;
   textColor: string;
   textFontSize: number;
 }

@@ -246,6 +246,7 @@ function finishPolygon(
     fill: '#ffffff',
     stroke: '#000000',
     strokeWidth: 1,
+    strokeUniform: true,
     selectable: true,
     evented: true,
   });

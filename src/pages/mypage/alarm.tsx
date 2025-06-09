@@ -1,16 +1,12 @@
-import React, { useState } from "react";
-import styles from "./Alarm.module.css";
-import MypageNav from "../../components/user/MypageNav";
-import Pagination from "@/components/user/Pagination";
-import AlarmModal from "../../components/user/AlarmModal";
+import React, { useState } from 'react';
+
+import MypageNav from '../../components/user/MypageNav';
+import Pagination from '@/components/user/Pagination';
+import AlarmModal from '../../components/user/AlarmModal';
+import styles from './Alarm.module.css';
 
 export default function Alarm() {
   const totalAlarms = 13;
-
-  const today = new Date();
-  const formattedDate = `${today.getFullYear()}년 ${
-    today.getMonth() + 1
-  }월 ${today.getDate()}일`;
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedAlarm, setSelectedAlarm] = useState<null | {
@@ -29,7 +25,7 @@ export default function Alarm() {
     content: `이것은 ${
       i + 1
     }번째 알림의 본문입니다. 공연 일정 변경 또는 티켓 안내 내용 등이 들어갈 수 있습니다.`,
-    date: `2025-05-${String((i % 31) + 1).padStart(2, "0")}`,
+    date: `2025-05-${String((i % 31) + 1).padStart(2, '0')}`,
   }));
 
   const indexOfLastAlarm = currentPage * alarmsPerPage;
@@ -64,7 +60,7 @@ export default function Alarm() {
                     {currentAlarms.map((alarm) => (
                       <tr
                         key={alarm.id}
-                        style={{ cursor: "pointer" }}
+                        style={{ cursor: 'pointer' }}
                         onClick={() => openModal(alarm)}
                       >
                         <td>{alarm.title}</td>
@@ -87,11 +83,7 @@ export default function Alarm() {
 
       {/* 모달 컴포넌트 */}
       {selectedAlarm && (
-        <AlarmModal
-          isOpen={!!selectedAlarm}
-          alarm={selectedAlarm}
-          onClose={closeModal}
-        />
+        <AlarmModal isOpen={!!selectedAlarm} alarm={selectedAlarm} onClose={closeModal} />
       )}
     </div>
   );

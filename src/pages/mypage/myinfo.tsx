@@ -1,49 +1,64 @@
-import React, { useState } from "react";
-import styles from "./MyInfo.module.css";
-import MypageNav from "@/components/user/MypageNav";
+import React, { useState } from 'react';
 
-const mockUserData = {
-  email: "dusdn3391@naver.com",
-  nickname: "페아키",
-  phone: "010-1234-5678",
-  birthday: "1998년 4월 29일",
-  provider: "kakao",
-  gender: "여",
+import styles from './MyInfo.module.css';
+import MypageNav from '@/components/user/MypageNav';
+
+interface User {
+  email: string;
+  nickname: string;
+  phone: string;
+  birthday: string;
+  provider: string;
+  gender: string;
+  emailAgree: boolean;
+  smsAgree: boolean;
+}
+const mockUserData: User = {
+  email: 'dusdn3391@naver.com',
+  nickname: '페아키',
+  phone: '010-1234-5678',
+  birthday: '1998년 4월 29일',
+  provider: 'kakao',
+  gender: '여',
   emailAgree: true,
   smsAgree: false,
 };
 
 const maskEmail = (email: string) => {
-  const [local, domain] = email.split("@");
+  const [local, domain] = email.split('@');
   if (local.length <= 2) return `${local[0]}*@${domain}`;
-  const masked =
-    local[0] + "*".repeat(local.length - 2) + local[local.length - 1];
+  const masked = local[0] + '*'.repeat(local.length - 2) + local[local.length - 1];
   return `${masked}@${domain}`;
 };
 
 const maskPhone = (phone: string) => {
-  return phone.replace(/(\d{3}-\d{4})-\d{4}/, "$1-****");
+  return phone.replace(/(\d{3}-\d{4})-\d{4}/, '$1-****');
 };
 
 export default function MyInfo() {
   const [emailAgree, setEmailAgree] = useState(mockUserData.emailAgree);
   const [smsAgree, setSmsAgree] = useState(mockUserData.smsAgree);
-  const [modalMessage, setModalMessage] = useState("");
+  const [modalMessage, setModalMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
 
-  const handleAgreeClick = (type: "email" | "sms", agree: boolean) => {
-    if (type === "email") {
+  const handleAgreeClick = (type: 'email' | 'sms', agree: boolean) => {
+    if (type === 'email') {
       setEmailAgree(agree);
-      setModalMessage(`이메일 수신 ${agree ? "동의" : "거부"}를 하였습니다.`);
+      setModalMessage(`이메일 수신 ${agree ? '동의' : '거부'}를 하였습니다.`);
     } else {
       setSmsAgree(agree);
-      setModalMessage(`SMS 수신 ${agree ? "동의" : "거부"}를 하였습니다.`);
+      setModalMessage(`SMS 수신 ${agree ? '동의' : '거부'}를 하였습니다.`);
     }
     setShowModal(true);
   };
 
   const closeModal = () => setShowModal(false);
 
+  const getProviderColor = (provider: string): string => {
+    if (provider === 'naver') return '#1EC800';
+    if (provider === 'kakao') return '#FEE500';
+    return '#ffffff';
+  };
   return (
     <div className={styles.all}>
       <div className={styles.margin}>
@@ -66,8 +81,8 @@ export default function MyInfo() {
                       <th>닉네임</th>
                       <td>
                         <input
-                          type="text"
-                          placeholder="닉네임"
+                          type='text'
+                          placeholder='닉네임'
                           defaultValue={mockUserData.nickname}
                           className={styles.input}
                         />
@@ -90,14 +105,9 @@ export default function MyInfo() {
                         <span
                           className={styles.providerDot}
                           style={{
-                            backgroundColor:
-                              mockUserData.provider === "naver"
-                                ? "#1EC800"
-                                : mockUserData.provider === "kakao"
-                                ? "#FEE500"
-                                : "#ffffff",
+                            backgroundColor: getProviderColor(mockUserData.provider),
                           }}
-                        ></span>
+                        />
                         {mockUserData.provider}
                       </td>
                     </tr>
@@ -107,18 +117,18 @@ export default function MyInfo() {
                         <button
                           className={styles.agree}
                           style={{
-                            backgroundColor: emailAgree ? "#f5f5f5" : "white",
+                            backgroundColor: emailAgree ? '#f5f5f5' : 'white',
                           }}
-                          onClick={() => handleAgreeClick("email", true)}
+                          onClick={() => handleAgreeClick('email', true)}
                         >
                           동의
                         </button>
                         <button
                           className={styles.disagree}
                           style={{
-                            backgroundColor: !emailAgree ? "#f5f5f5" : "white",
+                            backgroundColor: !emailAgree ? '#f5f5f5' : 'white',
                           }}
-                          onClick={() => handleAgreeClick("email", false)}
+                          onClick={() => handleAgreeClick('email', false)}
                         >
                           거부
                         </button>
@@ -130,18 +140,18 @@ export default function MyInfo() {
                         <button
                           className={styles.agree}
                           style={{
-                            backgroundColor: smsAgree ? "#f5f5f5" : "white",
+                            backgroundColor: smsAgree ? '#f5f5f5' : 'white',
                           }}
-                          onClick={() => handleAgreeClick("sms", true)}
+                          onClick={() => handleAgreeClick('sms', true)}
                         >
                           동의
                         </button>
                         <button
                           className={styles.disagree}
                           style={{
-                            backgroundColor: !smsAgree ? "#f5f5f5" : "white",
+                            backgroundColor: !smsAgree ? '#f5f5f5' : 'white',
                           }}
-                          onClick={() => handleAgreeClick("sms", false)}
+                          onClick={() => handleAgreeClick('sms', false)}
                         >
                           거부
                         </button>

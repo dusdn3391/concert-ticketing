@@ -1,8 +1,10 @@
-import React from "react";
-import styles from "./Mypage.module.css";
-import MypageNav from "@/components/user/MypageNav";
+import React from 'react';
+
+import styles from './Mypage.module.css';
+import MypageNav from '@/components/user/MypageNav';
 
 interface Reservation {
+  id: number;
   date: string;
   number: string;
   title: string;
@@ -14,20 +16,22 @@ interface Reservation {
 export default function Mypage() {
   const reservationData: Reservation[] = [
     {
-      date: "2025-05-01",
-      number: "A123456",
-      title: "뮤지컬 위키드",
-      showTime: "2025-06-01 19:00",
+      id: 1,
+      date: '2025-05-01',
+      number: 'A123456',
+      title: '뮤지컬 위키드',
+      showTime: '2025-06-01 19:00',
       count: 2,
-      status: "예매완료",
+      status: '예매완료',
     },
     {
-      date: "2025-04-28",
-      number: "B987654",
-      title: "콘서트 블랙핑크",
-      showTime: "2025-06-10 18:00",
+      id: 2,
+      date: '2025-04-28',
+      number: 'B987654',
+      title: '콘서트 블랙핑크',
+      showTime: '2025-06-10 18:00',
       count: 1,
-      status: "예매완료",
+      status: '예매완료',
     },
   ];
 
@@ -44,16 +48,14 @@ export default function Mypage() {
             <div className={styles.noticeBox}>
               <div className={styles.tabs}>
                 <div className={styles.notice}>NOTICE</div>
-                <div className={styles.recentNotice}>
-                  최신 공지사항 or 이벤트
-                </div>
+                <div className={styles.recentNotice}>최신 공지사항 or 이벤트</div>
               </div>
             </div>
 
             {/* 예매 내역 */}
             <div className={styles.historyBox}>
               <div className={styles.sectionHeader}>
-                <div className={styles.border}></div>
+                <div className={styles.border} />
                 <h3>최근 예매내역</h3>
                 <button className={styles.moreButton}>더보기</button>
               </div>
@@ -75,7 +77,7 @@ export default function Mypage() {
                     </tr>
                   ) : (
                     reservationData.map((item, index) => (
-                      <tr key={index}>
+                      <tr key={item.id}>
                         <td>{item.date}</td>
                         <td>{item.number}</td>
                         <td>{item.title}</td>
@@ -92,7 +94,7 @@ export default function Mypage() {
             {/* 문의 내역 */}
             <div className={styles.inquiryBox}>
               <div className={styles.sectionHeader}>
-                <div className={styles.border}></div>
+                <div className={styles.border} />
                 <h3>1:1 문의 내역</h3>
                 <button className={styles.moreButton}>더보기</button>
               </div>

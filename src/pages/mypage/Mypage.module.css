@@ -1,5 +1,6 @@
 .all {
-  width: 1400px;
+  min-width: 1400px;
+  width: 100%;
 }
 .margin {
   padding: 20px 20%;

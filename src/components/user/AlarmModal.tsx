@@ -1,5 +1,6 @@
-import React from "react";
-import styles from "./AlarmModal.module.css";
+import React from 'react';
+
+import styles from './AlarmModal.module.css';
 
 type AlarmModalProps = {
   isOpen: boolean;
@@ -12,11 +13,7 @@ type AlarmModalProps = {
   } | null;
 };
 
-export default function AlarmModal({
-  isOpen,
-  onClose,
-  alarm,
-}: AlarmModalProps) {
+export default function AlarmModal({ isOpen, onClose, alarm }: AlarmModalProps) {
   if (!isOpen || !alarm) return null;
 
   return (

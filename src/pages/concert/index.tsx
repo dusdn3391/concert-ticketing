@@ -1,8 +1,9 @@
 // pages/concert/concert.tsx
-import { useState } from "react";
-import Pagination from "@/components/user/Pagination";
-import styles from "./Concert.module.css";
-import { useRouter } from "next/router";
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
+
+import Pagination from '@/components/user/Pagination';
+import styles from './Concert.module.css';
 
 type Concert = {
   id: number;
@@ -15,18 +16,18 @@ const mockData: Concert[] = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
   title: `title title title ${i + 1}`,
   singer: `singer ${i + 1}`,
-  date: `2025-05-${(30 - (i % 30)).toString().padStart(2, "0")}`,
+  date: `2025-05-${(30 - (i % 30)).toString().padStart(2, '0')}`,
 }));
 
 export default function ConcertPage() {
   const router = useRouter();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortOption, setSortOption] = useState("latest");
+  const [sortOption, setSortOption] = useState('latest');
   const perPage = 9;
 
   const sortedData = [...mockData].sort((a, b) => {
-    if (sortOption === "latest") {
+    if (sortOption === 'latest') {
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     } else {
       return a.id - b.id;
@@ -36,7 +37,7 @@ export default function ConcertPage() {
   const totalPages = Math.ceil(sortedData.length / perPage);
   const currentData = sortedData.slice(
     (currentPage - 1) * perPage,
-    currentPage * perPage
+    currentPage * perPage,
   );
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -52,10 +53,10 @@ export default function ConcertPage() {
           className={styles.sortSelect}
           value={sortOption}
           onChange={handleSortChange}
-          aria-label="정렬 방식 선택"
+          aria-label='정렬 방식 선택'
         >
-          <option value="latest">최신순</option>
-          <option value="popular">인기순</option>
+          <option value='latest'>최신순</option>
+          <option value='popular'>인기순</option>
         </select>
       </div>
       <div className={styles.list}>

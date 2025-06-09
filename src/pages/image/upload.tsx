@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 type Zone = {
   id: string;
@@ -37,12 +37,6 @@ export default function UploadSVGPage() {
             el.setAttribute("data-name", name);
 
             setZones((prev) => [...prev, { id, name }]);
-
-            console.log("✅ 도형 구역 지정:");
-            console.log("도형 타입:", el.tagName);
-            console.log("도형 ID:", id);
-            console.log("구역 이름:", name);
-            console.log("도형 전체 데이터:", el.outerHTML);
           }
         });
       });

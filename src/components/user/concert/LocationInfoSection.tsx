@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export default function LocationInfoSection() {
   return (
@@ -6,14 +6,15 @@ export default function LocationInfoSection() {
       <h3>장소 정보</h3>
       <p>서울 송파구 올림픽로 25, 올림픽공원 내 올림픽홀</p>
       <iframe
-        src="https://www.google.com/maps/embed?..."
-        width="100%"
-        height="300"
+        src='https://www.google.com/maps/embed?...'
+        width='100%'
+        height='300'
+        title='지도'
         style={{ border: 0 }}
         allowFullScreen
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-      ></iframe>
+        loading='lazy'
+        referrerPolicy='no-referrer-when-downgrade'
+      />
     </div>
   );
 }

@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import Pagination from "@/components/user/Pagination";
-import MypageNav from "../../components/user/MypageNav";
-import styles from "./Ticketing.module.css";
+import React, { useState } from 'react';
+
+import Pagination from '@/components/user/Pagination';
+import MypageNav from '../../components/user/MypageNav';
+import styles from './Ticketing.module.css';
 
 interface Ticket {
   id: number;
@@ -17,22 +18,22 @@ interface Ticket {
 const mockTickets: Ticket[] = [
   {
     id: 1,
-    concertName: "1 콘서트 이름",
-    reservationNumber: "a10123456789",
-    concertHall: "abc콘서트장",
-    viewDate: "2025.05.13",
-    seats: "좌석(3)",
-    status: "결제완료",
+    concertName: '1 콘서트 이름',
+    reservationNumber: 'a10123456789',
+    concertHall: 'abc콘서트장',
+    viewDate: '2025.05.13',
+    seats: '좌석(3)',
+    status: '결제완료',
     canReview: false,
   },
   {
     id: 2,
-    concertName: "2 콘서트 이름",
-    reservationNumber: "b20456879012",
-    concertHall: "xyz콘서트장",
-    viewDate: "2025.06.21",
-    seats: "좌석(2)",
-    status: "결제완료",
+    concertName: '2 콘서트 이름',
+    reservationNumber: 'b20456879012',
+    concertHall: 'xyz콘서트장',
+    viewDate: '2025.06.21',
+    seats: '좌석(2)',
+    status: '결제완료',
     canReview: true,
   },
 ];
@@ -52,7 +53,7 @@ export default function Ticketing() {
   const [currentPage, setCurrentPage] = useState(1);
   const paginatedTickets = mockTickets.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   return (
@@ -70,22 +71,22 @@ export default function Ticketing() {
                 <div className={styles.reservationSearch}>
                   <div className={styles.reservationReview}>
                     <div className={styles.reservatonCount}>
-                      사용자의 예매 건은 총{" "}
-                      <span className={styles.highlight}>{totalReviews}</span>건
-                      입니다. ({formattedDate} 기준) / 관람후기 작성{" "}
-                      {writtenReviews}건, 미작성 {unwrittenReviews}건
+                      사용자의 예매 건은 총{' '}
+                      <span className={styles.highlight}>{totalReviews}</span>건 입니다. (
+                      {formattedDate} 기준) / 관람후기 작성 {writtenReviews}건, 미작성{' '}
+                      {unwrittenReviews}건
                     </div>
                   </div>
                   <div className={styles.reservationDateSearchBox}>
                     <div className={styles.searchBoxTitle}>기간별</div>
-                    <input type="text" placeholder="날짜" /> ~
-                    <input type="text" placeholder="날짜" />
-                    <button aria-label="검색">조회</button>
+                    <input type='text' placeholder='날짜' /> ~
+                    <input type='text' placeholder='날짜' />
+                    <button aria-label='검색'>조회</button>
                   </div>
                   <div className={styles.reservationSearchBox}>
                     <div className={styles.searchBoxTitle}>콘서트명</div>
-                    <input type="text" placeholder="concert-ticketing" />
-                    <button aria-label="검색">조회</button>
+                    <input type='text' placeholder='concert-ticketing' />
+                    <button aria-label='검색'>조회</button>
                   </div>
                 </div>
               </div>
@@ -104,25 +105,19 @@ export default function Ticketing() {
                       </div>
                       <div className={styles.infoRow}>
                         <span>예매상태: {ticket.status}</span>
-                        <span style={{ color: "red" }}>{ticket.seats}</span>
+                        <span style={{ color: 'red' }}>{ticket.seats}</span>
                       </div>
                       <div className={styles.infoRow}>
                         <span>콘서트장: {ticket.concertHall}</span>
                         <span>
-                          후기작성:{" "}
-                          {ticket.canReview
-                            ? "작성 가능"
-                            : "작성기간이 아닙니다"}
+                          후기작성:{' '}
+                          {ticket.canReview ? '작성 가능' : '작성기간이 아닙니다'}
                         </span>
                       </div>
                     </div>
                     <div className={styles.ticketbutton}>
-                      <button className={styles.ticketButton}>
-                        콘서트정보
-                      </button>
-                      <button className={styles.ticketCancelButton}>
-                        취소하기
-                      </button>
+                      <button className={styles.ticketButton}>콘서트정보</button>
+                      <button className={styles.ticketCancelButton}>취소하기</button>
                     </div>
                   </div>
                 </div>

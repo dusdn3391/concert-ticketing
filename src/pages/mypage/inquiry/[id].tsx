@@ -1,8 +1,10 @@
-import { useRouter } from "next/router";
-import styles from "@/pages/mypage/inquiry/inquiryDetail.module.css";
-import MypageNav from "@/components/user/MypageNav";
-import React, { useEffect } from "react";
-import { GetServerSideProps } from "next";
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { GetServerSideProps } from 'next';
+
+import styles from '@/pages/mypage/inquiry/inquiryDetail.module.css';
+
+import MypageNav from '@/components/user/MypageNav';
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params ?? {};
@@ -10,7 +12,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   if (!id || Array.isArray(id) || !/^\d+$/.test(id as string)) {
     return {
       redirect: {
-        destination: "/mypage/inquiry",
+        destination: '/mypage/inquiry',
         permanent: false,
       },
     };
@@ -24,13 +26,13 @@ export default function InquiryDetail() {
   const router = useRouter();
   const { id } = router.query;
   useEffect(() => {
-    if (typeof id !== "string") return;
+    if (typeof id !== 'string') return;
 
     if (!/^\d+$/.test(id)) {
-      alert("유효하지 않은 페이지입니다.");
-      router.push("/mypage/inquiry");
+      alert('유효하지 않은 페이지입니다.');
+      router.push('/mypage/inquiry');
     }
-  }, [id]);
+  }, [id, router]);
 
   return (
     <div className={styles.all}>
@@ -44,10 +46,7 @@ export default function InquiryDetail() {
               <div className={styles.chating}>
                 <div className={styles.chatBox}>
                   <div className={styles.messageWrapper}>
-                    <div
-                      className={styles.messageRow}
-                      style={{ justifyContent: "flex-end" }}
-                    >
+                    <div className={styles.messageRow}>
                       <span className={styles.date}>2025-05-25</span>
                       <div className={styles.answer}>
                         <p>이 상품은 언제 배송되나요?</p>

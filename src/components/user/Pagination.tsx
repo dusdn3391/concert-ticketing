@@ -1,4 +1,6 @@
-import styles from "./Pagination.module.css";
+import React from 'react';
+
+import styles from './Pagination.module.css';
 
 type PaginationProps = {
   currentPage: number;
@@ -25,17 +27,13 @@ export default function Pagination({
         <button
           key={page}
           onClick={() => onPageChange(page)}
-          className={`${styles.pageButton} ${
-            page === currentPage ? styles.active : ""
-          }`}
+          className={`${styles.pageButton} ${page === currentPage ? styles.active : ''}`}
         >
           {page}
         </button>
       ))}
       <button
-        onClick={() =>
-          currentPage < totalPages && onPageChange(currentPage + 1)
-        }
+        onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
         className={styles.pageArrowButton}
       >
         &gt;

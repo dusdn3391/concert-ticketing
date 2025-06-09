@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import styles from "./Review.module.css";
-import MypageNav from "../../components/user/MypageNav";
-import Pagination from "@/components/user/Pagination";
+import React, { useState } from 'react';
+
+import styles from './Review.module.css';
+import MypageNav from '../../components/user/MypageNav';
+import Pagination from '@/components/user/Pagination';
 
 export default function Review() {
   const totalReviews = 13;
@@ -16,7 +17,15 @@ export default function Review() {
   const [currentPage, setCurrentPage] = useState(1);
   const reviewsPerPage = 5;
 
-  const reviewData = Array.from({ length: totalReviews }, (_, i) => ({
+  interface Reviews {
+    id: number;
+    concert: string;
+    content: string;
+    date: string;
+  }
+
+  const reviewData: Reviews[] = Array.from({ length: totalReviews }, (_, i) => ({
+    id: i + 1,
     concert: `콘서트 ${i + 1}`,
     content: `후기내용 ${i + 1}`,
     date: `2025-05-${(i % 31) + 1}`,
@@ -24,10 +33,7 @@ export default function Review() {
 
   const indexOfLastReview = currentPage * reviewsPerPage;
   const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
-  const currentReviews = reviewData.slice(
-    indexOfFirstReview,
-    indexOfLastReview
-  );
+  const currentReviews = reviewData.slice(indexOfFirstReview, indexOfLastReview);
 
   const totalPages = Math.ceil(reviewData.length / reviewsPerPage);
 
@@ -45,24 +51,22 @@ export default function Review() {
               <div className={styles.reviewContent}>
                 <div className={styles.reviewSearch}>
                   <div className={styles.reviewCount}>
-                    사용자의 예매 건은 총{" "}
-                    <span className={styles.highlight}>{totalReviews}</span>건
-                    입니다. ({formattedDate} 기준) / 관람후기 작성{" "}
-                    {writtenReviews}건, 미작성 {unwrittenReviews}건
+                    사용자의 예매 건은 총{' '}
+                    <span className={styles.highlight}>{totalReviews}</span>건 입니다. (
+                    {formattedDate} 기준) / 관람후기 작성 {writtenReviews}건, 미작성{' '}
+                    {unwrittenReviews}건
                   </div>
                   <div className={styles.restReview}>
+                    <span>고객님께서 남겨주신 후기를 확인하실 수 있습니다.</span>
                     <span>
-                      고객님께서 남겨주신 후기를 확인하실 수 있습니다.
-                    </span>
-                    <span>
-                      운영정책에 위반되거나, 후기의 맞지 않는 글은 고객님께 사전
-                      통보없이 삭제될 수 있습니다.
+                      운영정책에 위반되거나, 후기의 맞지 않는 글은 고객님께 사전 통보없이
+                      삭제될 수 있습니다.
                     </span>
                   </div>
                   <div className={styles.reviewSearchBox}>
                     <div className={styles.searchBoxTitle}>콘서트명</div>
-                    <input type="text" placeholder="concert-ticketing" />
-                    <button aria-label="검색">조회</button>
+                    <input type='text' placeholder='concert-ticketing' />
+                    <button aria-label='검색'>조회</button>
                   </div>
                 </div>
               </div>
@@ -78,7 +82,7 @@ export default function Review() {
                   </thead>
                   <tbody>
                     {currentReviews.map((review, index) => (
-                      <tr key={index}>
+                      <tr key={review.id}>
                         <td>{review.concert}</td>
                         <td>{review.content}</td>
                         <td>{review.date}</td>

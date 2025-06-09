@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import styles from "@/styles/Home.module.css";
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+
+import styles from '@/styles/Home.module.css';
 
 const slides = [
-  { id: 1, text: "Slide 1", image: "/slides/slide-1.png" },
-  { id: 2, text: "Slide 2", image: "/slides/slide-2.png" },
-  { id: 3, text: "Slide 3", image: "/slides/slide-3.png" },
-  { id: 4, text: "Slide 4", image: "/slides/slide-4.png" },
-  { id: 5, text: "Slide 5", image: "/slides/slide-5.png" },
-  { id: 6, text: "Slide 6", image: "/slides/slide-6.png" },
+  { id: 1, text: 'Slide 1', image: '/slides/slide-1.png' },
+  { id: 2, text: 'Slide 2', image: '/slides/slide-2.png' },
+  { id: 3, text: 'Slide 3', image: '/slides/slide-3.png' },
+  { id: 4, text: 'Slide 4', image: '/slides/slide-4.png' },
+  { id: 5, text: 'Slide 5', image: '/slides/slide-5.png' },
+  { id: 6, text: 'Slide 6', image: '/slides/slide-6.png' },
 ];
 
 const events = Array.from({ length: 10 }, (_, i) => ({
@@ -49,7 +50,7 @@ export default function HomePage() {
     id: i + 1,
     title: `콘서트 제목 ${i + 1}`,
     date: `2024.0${i + 1} ~ 2024.1${i + 1}`,
-    image: "/concerts.png",
+    image: '/concerts.png',
   }));
 
   return (
@@ -80,14 +81,10 @@ export default function HomePage() {
           <span>
             {currentSlide + 1} / {slides.length}
           </span>
-          <button onClick={togglePlay} aria-label="슬라이드 재생/정지">
+          <button onClick={togglePlay} aria-label='슬라이드 재생/정지'>
             <Image
-              src={
-                isPlaying
-                  ? "/free-icon-video-stop-16252813.png"
-                  : "/play-button.png"
-              }
-              alt={isPlaying ? "정지" : "재생"}
+              src={isPlaying ? '/free-icon-video-stop-16252813.png' : '/play-button.png'}
+              alt={isPlaying ? '정지' : '재생'}
               width={20}
               height={20}
             />
@@ -124,25 +121,15 @@ export default function HomePage() {
             <div className={styles.pageButtons}>
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
-                aria-label="이전 페이지"
+                aria-label='이전 페이지'
               >
-                <Image
-                  src="/Group 686leftarrow.png"
-                  alt="이전"
-                  width={12}
-                  height={12}
-                />
+                <Image src='/Group 686leftarrow.png' alt='이전' width={12} height={12} />
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(1, p + 1))}
-                aria-label="다음 페이지"
+                aria-label='다음 페이지'
               >
-                <Image
-                  src="/Group 687rightarrow.png"
-                  alt="다음"
-                  width={12}
-                  height={12}
-                />
+                <Image src='/Group 687rightarrow.png' alt='다음' width={12} height={12} />
               </button>
             </div>
           </div>
@@ -158,7 +145,7 @@ export default function HomePage() {
                   alt={concert.title}
                   className={styles.concertImage}
                   fill
-                  style={{ objectFit: "cover" }}
+                  style={{ objectFit: 'cover' }}
                 />
               </div>
               <h4 className={styles.concertTitle}>{concert.title}</h4>

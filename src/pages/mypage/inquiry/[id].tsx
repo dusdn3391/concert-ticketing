@@ -4,7 +4,7 @@ import { GetServerSideProps } from 'next';
 
 import styles from '@/pages/mypage/inquiry/inquiryDetail.module.css';
 
-import MypageNav from '@/components/user/MypageNav';
+import MypageNav from '@/components/user/mypage/MypageNav';
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params ?? {};

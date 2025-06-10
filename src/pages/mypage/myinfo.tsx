@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import styles from './MyInfo.module.css';
-import MypageNav from '@/components/user/MypageNav';
+import MypageNav from '@/components/user/mypage/MypageNav';
 
 interface User {
   email: string;

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
 import styles from './Review.module.css';
-import MypageNav from '../../components/user/MypageNav';
-import Pagination from '@/components/user/Pagination';
+import MypageNav from '../../components/user/mypage/MypageNav';
+import Pagination from '@/components/user/common/Pagination';
 
 export default function Review() {
   const totalReviews = 13;

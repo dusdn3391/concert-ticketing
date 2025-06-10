@@ -1,7 +1,7 @@
 import React from 'react';
 
 import styles from './Withdraw.module.css';
-import MypageNav from '@/components/user/MypageNav';
+import MypageNav from '@/components/user/mypage/MypageNav';
 
 export default function WithDraw() {
   return (

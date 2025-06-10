@@ -1,0 +1,18 @@
+.all{
+    width:100%;
+    min-width: 1400px;
+}
+.center{
+    width:300px;
+    margin:0 auto;
+}
+.socialButtons{
+    display: flex;
+    align-items: center;
+}
+
+.socialButtons button{
+    display: block;
+    border:none;
+    background-color: #fff;
+}

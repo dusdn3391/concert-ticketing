@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
-import MypageNav from '../../components/user/MypageNav';
-import Pagination from '@/components/user/Pagination';
-import AlarmModal from '../../components/user/AlarmModal';
+import MypageNav from '../../components/user/mypage/MypageNav';
+import Pagination from '@/components/user/common/Pagination';
+import AlarmModal from '../../components/user/mypage/alarm/AlarmModal';
 import styles from './Alarm.module.css';
 
 export default function Alarm() {

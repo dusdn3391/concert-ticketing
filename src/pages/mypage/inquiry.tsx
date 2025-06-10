@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
-import Pagination from '@/components/user/Pagination';
-import MypageNav from '@/components/user/MypageNav';
+import Pagination from '@/components/user/common/Pagination';
+import MypageNav from '@/components/user/mypage/MypageNav';
 import styles from './Inquiry.module.css';
 
 export default function Inquiry() {

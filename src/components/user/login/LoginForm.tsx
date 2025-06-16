@@ -6,9 +6,9 @@ import style from './LoginForm.module.css';
 const REDIRECT_URI = 'http://localhost:3000/api/callback';
 
 const CLIENT_IDS = {
-  kakao: '카카오 키',
-  naver: '네이버 키',
-  google: '구글 키',
+  kakao: '',
+  naver: '',
+  google: '',
 };
 
 export default function LoginForm() {
@@ -30,31 +30,27 @@ export default function LoginForm() {
   return (
     <div className={style.all}>
       <div className={style.center}>
-         <h1>소셜 로그인</h1>
-      <div className={style.socialButtons}>
-        <button onClick={() => handleLogin('kakao')} aria-label="카카오 로그인">
-        <Image
-          src="/login/kakao_login_large_narrow.png"
-          alt="카카오 로그인"
-          width={222}
-          height={49}
-        />
-      </button>
-      <button onClick={() => handleLogin('naver')} aria-label="네이버 로그인">
-        <Image
-          src="/login/btnG_완성형.png"
-          alt="네이버 로그인"
-          width={222}
-          height={49}
-        />
-      </button>
-      <button onClick={() => handleLogin('google')}>
-        구글 로그인
-      </button>
+        <h1>소셜 로그인</h1>
+        <div className={style.socialButtons}>
+          <button onClick={() => handleLogin('kakao')} aria-label='카카오 로그인'>
+            <Image
+              src='/login/kakao_login_large_narrow.png'
+              alt='카카오 로그인'
+              width={222}
+              height={49}
+            />
+          </button>
+          <button onClick={() => handleLogin('naver')} aria-label='네이버 로그인'>
+            <Image
+              src='/login/btnG_완성형.png'
+              alt='네이버 로그인'
+              width={222}
+              height={49}
+            />
+          </button>
+          <button onClick={() => handleLogin('google')}>구글 로그인</button>
+        </div>
       </div>
-      </div>
-     
-      
     </div>
   );
 }

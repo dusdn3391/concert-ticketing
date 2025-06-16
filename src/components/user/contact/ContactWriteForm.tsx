@@ -1,16 +1,13 @@
-'use client';
-
 import React, { useState } from 'react';
-import { useRouter } from 'next/router'; // ✅ 추가
+import { useRouter } from 'next/router'; 
 
 import ContactSidebar from '@/components/user/contact/ContactNav';
 import styles from './ContactWrite.module.css';
 
 const CustomerInquiryForm: React.FC = () => {
-  const router = useRouter(); // ✅ 추가
+  const router = useRouter(); 
   const [category, setCategory] = useState<string>('예매');
   const [title, setTitle] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const [files, setFiles] = useState<FileList | null>(null);
   const [phoneConsent, setPhoneConsent] = useState<boolean>(false);
@@ -28,7 +25,6 @@ const CustomerInquiryForm: React.FC = () => {
     console.log('문의 제출:', {
       category,
       title,
-      email,
       content,
       files,
       phoneConsent,

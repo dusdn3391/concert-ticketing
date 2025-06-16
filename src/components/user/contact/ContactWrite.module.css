@@ -8,46 +8,8 @@
 }
 .layout {
   display: flex;
-  gap: 30px;
+  gap: 20px;
   margin-top: 20px;
-}
-.sidebar {
-  width: 180px;
-  min-width: 180px;
-  padding: 20px;
-  border: 1px solid #000;
-  border-radius: 10px;
-  height: fit-content;
-}
-.sidebarTitle {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #333;
-}
-.sidebarSectionTitle {
-  font-size: 14px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-.sidebarList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.sidebarList li {
-  font-size: 13px;
-}
-.sidebarList li a {
-  color: #666;
-  text-decoration: none;
-  padding: 2px 0;
-  display: block;
-}
-.sidebarList li a:hover,
-.sidebarList li.active a {
-  color: #007bff;
-  font-weight: bold;
 }
 
 /* main */
@@ -195,7 +157,7 @@
   height: 16px;
 }
 .inputs{
-    width: 300px;
+    width: 200px;
   padding: 12px 15px;
   border: 1px solid #ccc;
   border-radius: 4px;

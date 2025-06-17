@@ -3,6 +3,8 @@ import Image from 'next/image';
 
 import styles from '@/styles/Home.module.css';
 
+import ConcertCard from '@/components/user/concert/ConcertCard';
+
 const slides = [
   { id: 1, text: 'Slide 1', image: '/slides/slide-1.png' },
   { id: 2, text: 'Slide 2', image: '/slides/slide-2.png' },
@@ -46,12 +48,15 @@ export default function HomePage() {
   const startIdx = page * 5;
   const currentPageEvents = events.slice(startIdx, startIdx + 5);
 
-  const concerts = Array.from({ length: 6 }, (_, i) => ({
+  const concerts = Array.from({ length: 20 }, (_, i) => ({
     id: i + 1,
     title: `콘서트 제목 ${i + 1}`,
-    date: `2024.0${i + 1} ~ 2024.1${i + 1}`,
+    singer: `가수 ${i + 1}`,
+    date: `2024.0${i + 1}`,
     image: '/concerts.png',
   }));
+
+  const limitedConcerts = concerts.slice(0, 6);
 
   return (
     <div className={styles.container}>
@@ -136,21 +141,10 @@ export default function HomePage() {
         </div>
       </section>
       <section className={styles.concerts}>
+        <h2>콘서트</h2>
         <div className={styles.concertGrid}>
-          {concerts.map((concert) => (
-            <div className={styles.concertItem} key={concert.id}>
-              <div className={styles.concertImageWrapper}>
-                <Image
-                  src={concert.image}
-                  alt={concert.title}
-                  className={styles.concertImage}
-                  fill
-                  style={{ objectFit: 'cover' }}
-                />
-              </div>
-              <h4 className={styles.concertTitle}>{concert.title}</h4>
-              <p className={styles.concertDate}>{concert.date}</p>
-            </div>
+          {limitedConcerts.map((concert) => (
+            <ConcertCard key={concert.id} concert={concert} />
           ))}
         </div>
       </section>

@@ -1,4 +1,4 @@
-// pages/contact/faq/[category].tsx
+import React from 'react';
 import { useRouter } from 'next/router';
 
 import CustomerSidebar from '@/components/user/contact/ContactNav';

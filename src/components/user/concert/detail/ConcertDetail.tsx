@@ -1,49 +1,29 @@
-// pages/concert/[id].tsx
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import Image from 'next/image';
-import { GetServerSideProps } from 'next';
 
-import ConcertDetailSection from '@/components/user/concert/ConcertDetailSection';
-import ReviewSection from '@/components/user/concert/ReviewSection';
-import LocationInfoSection from '@/components/user/concert/LocationInfoSection';
-import NoticeSection from '@/components/user/concert/NoticeSection';
+import ConcertDetailSection from './ConcertDetailSection';
+import ReviewSection from './ReviewSection';
+import LocationInfoSection from './LocationInfoSection';
+import NoticeSection from './NoticeSection';
 import styles from './ConcertDetail.module.css';
 
 const TABS = ['상세보기', '관람후기', '장소정보', '예매 / 취소 안내'];
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { id } = context.params ?? {};
+interface ConcertDetailProps {
+  id: string;
+}
 
-  if (!id || Array.isArray(id) || !/^\d+$/.test(id as string)) {
-    return {
-      redirect: {
-        destination: '/concert',
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: { id },
-  };
-};
-export default function ConcertDetail() {
-  const router = useRouter();
-  const { id } = router.query;
-
+export default function ConcertDetail({ id }: ConcertDetailProps) {
   useEffect(() => {
-    if (typeof id !== 'string') return;
-
     if (!/^\d+$/.test(id)) {
       alert('유효하지 않은 페이지입니다.');
-      router.push('/concert');
+      window.location.href = '/concert'; // 클라이언트 라우팅이 필요하면 router.push 사용 가능
     }
-  }, [id, router]);
+  }, [id]);
 
   const mockData = {
     image: '/events/event-2.png',
-    title: '콘서트 타이틀',
+    title: `콘서트 타이틀 (id: ${id})`,
     location: '서울 올림픽홀',
     duration: '120',
     date: '2025.06.01 ~ 2025.06.10',
@@ -72,7 +52,7 @@ export default function ConcertDetail() {
     <div className={styles.container}>
       <div className={styles.topSection}>
         <div className={styles.imageBox}>
-          <Image src={mockData.image} alt='concert' className={styles.image} />
+          <Image src={mockData.image} alt='concert' className={styles.image} fill />
         </div>
         <div className={styles.detailBox}>
           <h1 className={styles.title}>{mockData.title}</h1>

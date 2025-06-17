@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
 
-import ConcertDetail from '@/components/user/concert/detail/ConcertDetail';
+import NoticeDetailForm from '@/components/user/contact/notice/NoticeDetailForm';
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params ?? {};
@@ -8,7 +8,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   if (!id || Array.isArray(id) || !/^\d+$/.test(id as string)) {
     return {
       redirect: {
-        destination: '/concert',
+        destination: '/contact/notice',
         permanent: false,
       },
     };
@@ -19,6 +19,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   };
 };
 
-export default function ConcertDetailPage({ id }: { id: string }) {
-  return <ConcertDetail id={id} />;
+export default function NoticeFormDetailPage({ id }: { id: string }) {
+  return <NoticeDetailForm id={id} />;
 }

@@ -18,7 +18,6 @@ export default function Alarm() {
 
   const alarmsPerPage = 5;
 
-  // ✅ 가데이터: id, title, content, date 포함
   const alarmData = Array.from({ length: totalAlarms }, (_, i) => ({
     id: i + 1,
     title: `알림 제목 ${i + 1}`,

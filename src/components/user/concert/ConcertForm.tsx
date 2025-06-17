@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 
+import ConcertCard from '@/components/user/concert/ConcertCard';
 import Pagination from '@/components/user/common/Pagination';
 import styles from './Concert.module.css';
 
@@ -61,18 +62,7 @@ export default function ConcertPage() {
       </div>
       <div className={styles.list}>
         {currentData.map((concert) => (
-          <div
-            onClick={() => router.push(`/concert/${concert.id}`)}
-            key={concert.id}
-            className={styles.card}
-          >
-            <div className={styles.image}>image</div>
-            <div className={styles.cardTitle}>{concert.title}</div>
-            <div className={styles.cardSinger}>{concert.singer}</div>
-            <div className={styles.cardDate}>
-              {concert.date} ~ {concert.date}
-            </div>
-          </div>
+          <ConcertCard key={concert.id} concert={concert} />
         ))}
       </div>
       <Pagination

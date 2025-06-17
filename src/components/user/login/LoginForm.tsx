@@ -6,9 +6,9 @@ import style from './LoginForm.module.css';
 const REDIRECT_URI = 'http://localhost:3000/api/callback';
 
 const CLIENT_IDS = {
-  kakao: '',
-  naver: '',
-  google: '',
+  kakao: process.env.NEXT_PUBLIC_KAKAO_KEY as string,
+  naver: process.env.NEXT_PUBLIC_NAVER_KEY as string,
+  google: process.env.NEXT_PUBLIC_GOOGLE_KEY as string,
 };
 
 export default function LoginForm() {

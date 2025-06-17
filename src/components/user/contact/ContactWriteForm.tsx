@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useRouter } from 'next/router'; 
+import { useRouter } from 'next/router';
 
 import ContactSidebar from '@/components/user/contact/ContactNav';
 import styles from './ContactWrite.module.css';
 
 const CustomerInquiryForm: React.FC = () => {
-  const router = useRouter(); 
+  const router = useRouter();
   const [category, setCategory] = useState<string>('예매');
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
@@ -56,20 +56,22 @@ const CustomerInquiryForm: React.FC = () => {
       <div className={styles.wrapper}>
         <h1 className={styles.title}>고객센터</h1>
         <div className={styles.layout}>
-          <ContactSidebar />
+          <ContactSidebar activeMenu='inquiry' />
           <div className={styles.mainContent}>
             <h1 className={styles.pageTitle}>1:1 문의하기</h1>
 
             <div className={styles.form}>
               <div className={styles.formGroup}>
                 <select
-                  title="카테고리 선택"
+                  title='카테고리 선택'
                   className={styles.select}
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 >
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -77,11 +79,11 @@ const CustomerInquiryForm: React.FC = () => {
               <div className={styles.formGroup}>
                 <label className={styles.label}>문의제목</label>
                 <input
-                  type="text"
+                  type='text'
                   className={styles.input}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="문의제목을 입력해주세요"
+                  placeholder='문의제목을 입력해주세요'
                 />
               </div>
 
@@ -91,7 +93,7 @@ const CustomerInquiryForm: React.FC = () => {
                   className={styles.textarea}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="문의 내용을 자세히 적어주세요"
+                  placeholder='문의 내용을 자세히 적어주세요'
                 />
               </div>
 
@@ -99,20 +101,26 @@ const CustomerInquiryForm: React.FC = () => {
                 <label className={styles.label}>파일첨부</label>
                 <div className={styles.fileUpload}>
                   <input
-                    type="file"
+                    type='file'
                     multiple
                     onChange={handleFileChange}
                     className={styles.fileInput}
-                    id="fileUpload"
+                    id='fileUpload'
                   />
-                  <label htmlFor="fileUpload" className={styles.fileLabel}>
+                  <label htmlFor='fileUpload' className={styles.fileLabel}>
                     파일첨부
                   </label>
                 </div>
                 <div className={styles.fileInfo}>
-                  <p>첨부가능 파일용량: 파일당 10MB(총합계100MB)이하로 제한, 총 5개 파일 업로드 가능합니다.</p>
+                  <p>
+                    첨부가능 파일용량: 파일당 10MB(총합계100MB)이하로 제한, 총 5개 파일
+                    업로드 가능합니다.
+                  </p>
                   <p>첨부가능 파일 확장자: jpg, png, PDF등 일반적.</p>
-                  <p>캡쳐파일 및 개인정보가 포함되어있는 파일은 첨부 시 주의하여, 차후 삭제 처리됩니다. 사용자의 답변요청.</p>
+                  <p>
+                    캡쳐파일 및 개인정보가 포함되어있는 파일은 첨부 시 주의하여, 차후 삭제
+                    처리됩니다. 사용자의 답변요청.
+                  </p>
                 </div>
               </div>
 
@@ -123,16 +131,16 @@ const CustomerInquiryForm: React.FC = () => {
                     <div className={styles.formGroup}>
                       <label className={styles.label}>알림 받을 이메일</label>
                       <input
-                        type="email"
+                        type='email'
                         className={styles.inputs}
                         value={notificationEmail}
                         onChange={(e) => setNotificationEmail(e.target.value)}
-                        placeholder="알림을 받을 이메일 주소를 입력해주세요"
+                        placeholder='알림을 받을 이메일 주소를 입력해주세요'
                         disabled={!phoneConsent}
                       />
                       <label className={styles.checkboxLabel}>
                         <input
-                          type="checkbox"
+                          type='checkbox'
                           checked={phoneConsent}
                           onChange={(e) => handlePhoneConsentChange(e.target.checked)}
                         />
@@ -145,16 +153,16 @@ const CustomerInquiryForm: React.FC = () => {
                     <div className={styles.formGroup}>
                       <label className={styles.label}>휴대폰 번호</label>
                       <input
-                        type="tel"
+                        type='tel'
                         className={styles.inputs}
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder="휴대폰 번호를 입력해주세요 (예: 010-1234-5678)"
+                        placeholder='휴대폰 번호를 입력해주세요 (예: 010-1234-5678)'
                         disabled={!smsConsent}
                       />
                       <label className={styles.checkboxLabel}>
                         <input
-                          type="checkbox"
+                          type='checkbox'
                           checked={smsConsent}
                           onChange={(e) => handleSmsConsentChange(e.target.checked)}
                         />
@@ -168,9 +176,15 @@ const CustomerInquiryForm: React.FC = () => {
               <div className={styles.privacySection}>
                 <h3 className={styles.privacyTitle}>(필수)개인정보 수집 및 이용 동의</h3>
                 <div className={styles.privacyContent}>
-                  <p>고객님의 개인정보를 안전하게 처리할 수 있도록 개인정보를 수집 및 이용합니다. 고객문의 처리에만 수집 및 이용 목적으로 이용됩니다.</p>
+                  <p>
+                    고객님의 개인정보를 안전하게 처리할 수 있도록 개인정보를 수집 및
+                    이용합니다. 고객문의 처리에만 수집 및 이용 목적으로 이용됩니다.
+                  </p>
                   <p>□ 개인정보 항목: 수집정보등의 항목정보</p>
-                  <p>수집정보: 이메일, 이름, 전화번호, 비밀번호 등의 정보, 문의 시 작성시, 첨부한 파일등</p>
+                  <p>
+                    수집정보: 이메일, 이름, 전화번호, 비밀번호 등의 정보, 문의 시 작성시,
+                    첨부한 파일등
+                  </p>
                   <p>□ 이용목적: 고객문의 및 회신답변</p>
                   <p>보유기간: 3년</p>
                 </div>
@@ -180,8 +194,8 @@ const CustomerInquiryForm: React.FC = () => {
                 <button className={styles.cancelButton} onClick={handleCancel}>
                   취소
                 </button>
-                <button 
-                  className={styles.submitButton} 
+                <button
+                  className={styles.submitButton}
                   onClick={handleSubmit}
                   disabled={!phoneConsent && !smsConsent}
                 >

@@ -14,6 +14,7 @@
 
 .imageBox {
   flex: 1.5;
+  position: relative;
   border: 1px solid #ccc;
   border-radius: 12px;
   display: flex;
@@ -178,6 +179,7 @@
   margin-top: 70px;
 }
 
-.detailImage img {
+.detailImages img{
   width: 100%;
+   height:auto
 }

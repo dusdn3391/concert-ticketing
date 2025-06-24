@@ -1,0 +1,26 @@
+.leftPanel {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding:20px;
+  min-height: 530px;
+}
+
+.cocertVenue{
+    display: flex;
+    gap:5px;
+    align-items: center;
+}
+
+.line{
+    height:10px;
+    width:1px;
+    background-color:#d9d9d9;
+}
+
+.seats{
+  background-color: #d9d9d9;
+  padding:20px;
+  height:400px;
+}

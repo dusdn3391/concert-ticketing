@@ -1,5 +1,6 @@
 import '@/styles/globals.css';
 import { useRouter } from 'next/router';
+import { useEffect } from 'react'; // 🔹 useEffect import 필요
 
 import type { AppProps } from 'next/app';
 
@@ -8,13 +9,17 @@ import Footer from '@/components/user/common/Footer';
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
-  const isAdminRoute = router.pathname.startsWith('/admin');
+
+  const hiddenLayoutPaths = ['/admin', '/waitroom', '/reserve'];
+  const isHiddenLayoutRoute = hiddenLayoutPaths.some((path) =>
+    router.pathname.startsWith(path),
+  );
 
   return (
     <>
-      {!isAdminRoute && <Header />}
+      {!isHiddenLayoutRoute && <Header />}
       <Component {...pageProps} />
-      {!isAdminRoute && <Footer />}
+      {!isHiddenLayoutRoute && <Footer />}
     </>
   );
 }

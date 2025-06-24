@@ -48,6 +48,9 @@ export default function ConcertDetail({ id }: ConcertDetailProps) {
     }
   };
 
+  const handleReserveClick = () => {
+    window.open('/reserve/select-date', '_blank', 'width=1000,height=600,resizable=no');
+  };
   return (
     <div className={styles.container}>
       <div className={styles.topSection}>
@@ -75,7 +78,7 @@ export default function ConcertDetail({ id }: ConcertDetailProps) {
         <div>예매 준비중</div>
       </button>
 
-      <button className={styles.reserveButton}>
+      <button className={styles.reserveButton} onClick={handleReserveClick}>
         예매하기
         <div>(예매 열림)</div>
       </button>

@@ -1,172 +1,146 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import * as fabric from 'fabric';
 
-import {
-  useBulkCreatorStore,
-  calculateOptimalSpacing,
-  calculatePatternSpacing,
-  createGridObjects,
-  createCirclePattern,
-  createLinePattern,
-} from '@/core/bulkCreatorStore';
+import { useCanvasStore } from '@/core/canvasStore';
+import { GridConfig, PatternConfig, SeatConfig } from '@/types/seat';
 
-import ObjectSettings from './options/ObjectSettings';
-import GridSettings from './options/GridSettings';
-import PatternSettings from './options/PatternSettings';
+import { Icons } from '@/components/admin/common/ui/Icons';
 import styles from './bulk.module.css';
 
 interface BulkObjectCreatorProps {
-  canvas: fabric.Canvas;
+  seatConfig: SeatConfig;
 }
 
-export default function BulkCreator({ canvas }: BulkObjectCreatorProps) {
-  const {
-    isOpen,
-    activeTab,
-    autoSpacing,
-    objectConfig,
-    gridConfig,
-    patternConfig,
-    setIsOpen,
-    setActiveTab,
-    setAutoSpacing,
-    setObjectConfig,
-    setGridConfig,
-    setPatternConfig,
-  } = useBulkCreatorStore();
+type TabType = 'grid' | 'pattern';
 
-  // 실시간 자동 간격 조정
-  useEffect(() => {
-    if (!autoSpacing) return;
+export default function BulkObjectCreator({ seatConfig }: BulkObjectCreatorProps) {
+  const { canvas } = useCanvasStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('grid');
 
-    const { optimalSpacingX, optimalSpacingY } = calculateOptimalSpacing(
-      objectConfig,
-      gridConfig,
-    );
+  // 그리드 설정 (통일된 간격)
+  const [gridConfig, setGridConfig] = useState<GridConfig>({
+    rows: 3,
+    cols: 3,
+    spacingX: 80,
+    spacingY: 80,
+  });
 
-    // 현재 간격과 차이가 클 때만 업데이트
-    const currentSpacingX = gridConfig.spacingX;
-    const currentSpacingY = gridConfig.spacingY;
+  // 패턴 설정 (통일된 간격)
+  const [patternConfig, setPatternConfig] = useState<PatternConfig>({
+    pattern: 'circle',
+    count: 6,
+    radius: 120,
+    angle: 0,
+    spacing: 80,
+  });
 
-    if (
-      Math.abs(currentSpacingX - optimalSpacingX) > 10 ||
-      Math.abs(currentSpacingY - optimalSpacingY) > 10
-    ) {
-      setGridConfig((prev) => ({
-        ...prev,
-        spacingX: optimalSpacingX,
-        spacingY: optimalSpacingY,
-      }));
-    }
-  }, [
-    objectConfig.type,
-    objectConfig.width,
-    objectConfig.height,
-    objectConfig.radius,
-    objectConfig.fontSize,
-    objectConfig.text,
-    objectConfig.includeText,
-    objectConfig.textContent,
-    objectConfig.textFontSize,
-    autoSpacing,
-    gridConfig.spacingX,
-    gridConfig.spacingY,
-    setGridConfig,
-    objectConfig,
-    gridConfig,
-  ]);
-
-  // 패턴에도 자동 간격 적용
-  useEffect(() => {
-    if (!autoSpacing || activeTab !== 'pattern') return;
-
-    const optimalConfig = calculatePatternSpacing(objectConfig, patternConfig);
-
-    // 패턴별 최적 간격 적용
-    if (patternConfig.pattern === 'circle' && optimalConfig.radius) {
-      if (Math.abs((patternConfig.radius || 150) - optimalConfig.radius) > 20) {
-        setPatternConfig((prev) => ({
-          ...prev,
-          radius: optimalConfig.radius!,
-        }));
-      }
-    } else if (patternConfig.pattern === 'line' && optimalConfig.spacing) {
-      if (Math.abs((patternConfig.spacing || 80) - optimalConfig.spacing) > 10) {
-        setPatternConfig((prev) => ({
-          ...prev,
-          spacing: optimalConfig.spacing!,
-        }));
-      }
-    }
-  }, [
-    objectConfig.type,
-    objectConfig.width,
-    objectConfig.height,
-    objectConfig.radius,
-    objectConfig.includeText,
-    objectConfig.textContent,
-    objectConfig.textFontSize,
-    patternConfig.count,
-    patternConfig.pattern,
-    patternConfig.radius,
-    patternConfig.spacing,
-    autoSpacing,
-    activeTab,
-    setPatternConfig,
-    objectConfig,
-    patternConfig,
-  ]);
-
-  // 텍스트 편집 관련 캔버스 이벤트 핸들러 추가
-  useEffect(() => {
-    if (!canvas) return;
-
-    // 텍스트 편집 완료 시 그룹 복원 핸들러
-    const handleTextEditingExited = (e: any) => {
-      const textObj = e.target;
-      if (!textObj || !(textObj instanceof fabric.IText)) return;
-
-      // 편집 완료 후 그룹을 다시 선택하도록 처리
-      setTimeout(() => {
-        const objects = canvas.getObjects();
-        const parentGroup = objects.find((obj) => {
-          if (obj.type === 'group') {
-            const group = obj as fabric.Group;
-            return group.getObjects().some((child) => child === textObj);
-          }
-          return false;
-        });
-
-        if (parentGroup) {
-          canvas.setActiveObject(parentGroup);
-          canvas.renderAll();
-        }
-      }, 100);
-    };
-
-    // 전역 텍스트 편집 완료 이벤트 리스너
-    canvas.on('text:editing:exited', handleTextEditingExited);
-
-    return () => {
-      canvas.off('text:editing:exited', handleTextEditingExited);
-    };
+  // 캔버스 중앙 좌표 가져오기
+  const getCanvasCenter = useCallback(() => {
+    if (!canvas) return { x: 0, y: 0 };
+    const center = canvas.getCenter();
+    return { x: center.left, y: center.top };
   }, [canvas]);
 
-  // 패턴별 객체 생성
-  const createPatternObjects = useCallback(() => {
-    switch (patternConfig.pattern) {
-      case 'circle':
-        return createCirclePattern(objectConfig, patternConfig, canvas);
-      case 'line':
-        return createLinePattern(objectConfig, patternConfig, canvas);
-      default:
-        return [];
+  // 좌석 객체 생성 함수 (사각형으로 통일)
+  const createSeatObject = useCallback(
+    (x: number, y: number, index: number) => {
+      const id = `seat-${Date.now()}-${index}`;
+
+      const seat = new fabric.Rect({
+        left: x,
+        top: y,
+        width: seatConfig.width,
+        height: seatConfig.height,
+        fill: seatConfig.fill,
+        stroke: seatConfig.stroke,
+        strokeWidth: seatConfig.strokeWidth,
+        rx: seatConfig.rx,
+        ry: seatConfig.ry,
+        originX: 'center',
+        originY: 'center',
+        strokeUniform: true,
+      }) as fabric.Rect & { id: string };
+
+      seat.id = id;
+      return seat;
+    },
+    [seatConfig],
+  );
+
+  // 그리드 생성 함수
+  const createGridSeats = useCallback(() => {
+    if (!canvas) return [];
+
+    const seats: fabric.FabricObject[] = [];
+    const center = getCanvasCenter();
+
+    // 전체 그리드 크기 계산
+    const totalWidth = (gridConfig.cols - 1) * gridConfig.spacingX;
+    const totalHeight = (gridConfig.rows - 1) * gridConfig.spacingY;
+
+    // 시작 위치 (중앙 기준)
+    const startX = center.x - totalWidth / 2;
+    const startY = center.y - totalHeight / 2;
+
+    let index = 0;
+    for (let row = 0; row < gridConfig.rows; row++) {
+      for (let col = 0; col < gridConfig.cols; col++) {
+        const x = startX + col * gridConfig.spacingX;
+        const y = startY + row * gridConfig.spacingY;
+
+        seats.push(createSeatObject(x, y, index));
+        index++;
+      }
     }
-  }, [objectConfig, patternConfig, canvas]);
+
+    return seats;
+  }, [canvas, gridConfig, getCanvasCenter, createSeatObject]);
+
+  // 원형 패턴 생성 함수
+  const createCircleSeats = useCallback(() => {
+    if (!canvas) return [];
+
+    const seats: fabric.FabricObject[] = [];
+    const center = getCanvasCenter();
+    const angleStep = (2 * Math.PI) / patternConfig.count;
+
+    for (let i = 0; i < patternConfig.count; i++) {
+      const angle = i * angleStep;
+      const x = center.x + Math.cos(angle) * (patternConfig.radius || 120);
+      const y = center.y + Math.sin(angle) * (patternConfig.radius || 120);
+
+      seats.push(createSeatObject(x, y, i));
+    }
+
+    return seats;
+  }, [canvas, patternConfig, getCanvasCenter, createSeatObject]);
+
+  // 직선 패턴 생성 함수
+  const createLineSeats = useCallback(() => {
+    if (!canvas) return [];
+
+    const seats: fabric.FabricObject[] = [];
+    const center = getCanvasCenter();
+    const angle = ((patternConfig.angle || 0) * Math.PI) / 180;
+    const spacing = patternConfig.spacing || 80;
+
+    for (let i = 0; i < patternConfig.count; i++) {
+      const distance = i * spacing;
+      const x = center.x + Math.cos(angle) * distance;
+      const y = center.y + Math.sin(angle) * distance;
+
+      seats.push(createSeatObject(x, y, i));
+    }
+
+    return seats;
+  }, [canvas, patternConfig, getCanvasCenter, createSeatObject]);
 
   // 객체들을 캔버스에 추가
   const addObjectsToCanvas = useCallback(
     (objects: fabric.FabricObject[]) => {
+      if (!canvas) return;
+
       objects.forEach((obj) => {
         canvas.add(obj);
       });
@@ -177,25 +151,36 @@ export default function BulkCreator({ canvas }: BulkObjectCreatorProps) {
 
   // 그리드 생성 실행
   const handleCreateGrid = useCallback(() => {
-    const objects = createGridObjects(objectConfig, gridConfig, canvas);
+    const objects = createGridSeats();
     addObjectsToCanvas(objects);
     setIsOpen(false);
-  }, [objectConfig, gridConfig, canvas, addObjectsToCanvas, setIsOpen]);
+  }, [createGridSeats, addObjectsToCanvas]);
 
   // 패턴 생성 실행
   const handleCreatePattern = useCallback(() => {
-    const objects = createPatternObjects();
+    let objects: fabric.FabricObject[] = [];
+
+    switch (patternConfig.pattern) {
+      case 'circle':
+        objects = createCircleSeats();
+        break;
+      case 'line':
+        objects = createLineSeats();
+        break;
+      default:
+        break;
+    }
+
     addObjectsToCanvas(objects);
     setIsOpen(false);
-  }, [createPatternObjects, addObjectsToCanvas, setIsOpen]);
+  }, [patternConfig.pattern, createCircleSeats, createLineSeats, addObjectsToCanvas]);
 
   if (!isOpen) {
     return (
-      <div className={styles.container}>
-        <button onClick={() => setIsOpen(true)} className={styles.openButton}>
-          대량 객체 생성
-        </button>
-      </div>
+      <button onClick={() => setIsOpen(true)} className={styles.openButton}>
+        <Icons.Grid />
+        대량 좌석 생성
+      </button>
     );
   }
 
@@ -203,9 +188,9 @@ export default function BulkCreator({ canvas }: BulkObjectCreatorProps) {
     <div className={styles.overlay}>
       <div className={styles.modal}>
         <div className={styles.header}>
-          <h2 className={styles.title}>대량 객체 생성</h2>
+          <h2 className={styles.title}>대량 좌석 생성</h2>
           <button onClick={() => setIsOpen(false)} className={styles.closeButton}>
-            ✕
+            <Icons.X />
           </button>
         </div>
 
@@ -215,6 +200,7 @@ export default function BulkCreator({ canvas }: BulkObjectCreatorProps) {
             onClick={() => setActiveTab('grid')}
             className={`${styles.tab} ${activeTab === 'grid' ? styles.activeTab : ''}`}
           >
+            <Icons.Grid />
             그리드
           </button>
           <button
@@ -225,55 +211,204 @@ export default function BulkCreator({ canvas }: BulkObjectCreatorProps) {
           </button>
         </div>
 
-        {/* 스크롤 가능한 콘텐츠 영역 */}
-        <div className={styles.content}>
-          {/* 객체 설정 */}
-          <ObjectSettings objectConfig={objectConfig} setObjectConfig={setObjectConfig} />
+        {/* 그리드 탭 */}
+        {activeTab === 'grid' && (
+          <div className={styles.content}>
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>그리드 설정</h3>
 
-          {/* 그리드 설정 */}
-          {activeTab === 'grid' && (
-            <GridSettings
-              gridConfig={gridConfig}
-              setGridConfig={setGridConfig}
-              objectConfig={objectConfig}
-              autoSpacing={autoSpacing}
-              setAutoSpacing={setAutoSpacing}
-            />
-          )}
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label className={styles.label}>행 수</label>
+                  <input
+                    type='number'
+                    min='1'
+                    max='20'
+                    value={gridConfig.rows}
+                    onChange={(e) =>
+                      setGridConfig((prev) => ({
+                        ...prev,
+                        rows: parseInt(e.target.value, 10) || 1,
+                      }))
+                    }
+                    className={styles.input}
+                  />
+                </div>
 
-          {/* 패턴 설정 */}
-          {activeTab === 'pattern' && (
-            <PatternSettings
-              patternConfig={patternConfig}
-              setPatternConfig={setPatternConfig}
-              autoSpacing={autoSpacing}
-              setAutoSpacing={setAutoSpacing}
-            />
-          )}
-
-          {/* 사용법 안내 */}
-          {(objectConfig.type === 'rect' || objectConfig.type === 'circle') &&
-            objectConfig.includeText && (
-              <div className={styles.info}>
-                💡 Tip: 생성된 도형을 더블클릭하면 텍스트를 편집할 수 있습니다.
+                <div className={styles.field}>
+                  <label className={styles.label}>열 수</label>
+                  <input
+                    type='number'
+                    min='1'
+                    max='20'
+                    value={gridConfig.cols}
+                    onChange={(e) =>
+                      setGridConfig((prev) => ({
+                        ...prev,
+                        cols: parseInt(e.target.value, 10) || 1,
+                      }))
+                    }
+                    className={styles.input}
+                  />
+                </div>
               </div>
-            )}
-        </div>
 
-        {/* 버튼 영역 (고정) */}
-        <div className={styles.footer}>
-          <div className={styles.buttonContainer}>
-            <button onClick={() => setIsOpen(false)} className={styles.cancelButton}>
-              취소
-            </button>
-            <button
-              onClick={activeTab === 'grid' ? handleCreateGrid : handleCreatePattern}
-              className={styles.createButton}
-            >
-              생성
-            </button>
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label className={styles.label}>가로 간격</label>
+                  <input
+                    type='number'
+                    min='60'
+                    max='200'
+                    value={gridConfig.spacingX}
+                    onChange={(e) =>
+                      setGridConfig((prev) => ({
+                        ...prev,
+                        spacingX: parseInt(e.target.value, 10) || 80,
+                      }))
+                    }
+                    className={styles.input}
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>세로 간격</label>
+                  <input
+                    type='number'
+                    min='60'
+                    max='200'
+                    value={gridConfig.spacingY}
+                    onChange={(e) =>
+                      setGridConfig((prev) => ({
+                        ...prev,
+                        spacingY: parseInt(e.target.value, 10) || 80,
+                      }))
+                    }
+                    className={styles.input}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.actions}>
+              <button onClick={handleCreateGrid} className={styles.createButton}>
+                <Icons.Plus />
+                그리드 생성 ({gridConfig.rows * gridConfig.cols}개)
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* 패턴 탭 */}
+        {activeTab === 'pattern' && (
+          <div className={styles.content}>
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>패턴 설정</h3>
+
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label className={styles.label}>패턴 유형</label>
+                  <select
+                    value={patternConfig.pattern}
+                    onChange={(e) =>
+                      setPatternConfig((prev) => ({
+                        ...prev,
+                        pattern: e.target.value as 'circle' | 'line',
+                      }))
+                    }
+                    className={styles.select}
+                  >
+                    <option value='circle'>원형</option>
+                    <option value='line'>직선</option>
+                  </select>
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>객체 수</label>
+                  <input
+                    type='number'
+                    min='2'
+                    max='50'
+                    value={patternConfig.count}
+                    onChange={(e) =>
+                      setPatternConfig((prev) => ({
+                        ...prev,
+                        count: parseInt(e.target.value, 10) || 2,
+                      }))
+                    }
+                    className={styles.input}
+                  />
+                </div>
+              </div>
+
+              {patternConfig.pattern === 'circle' && (
+                <div className={styles.row}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>반지름</label>
+                    <input
+                      type='number'
+                      min='50'
+                      max='300'
+                      value={patternConfig.radius}
+                      onChange={(e) =>
+                        setPatternConfig((prev) => ({
+                          ...prev,
+                          radius: parseInt(e.target.value, 10) || 120,
+                        }))
+                      }
+                      className={styles.input}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {patternConfig.pattern === 'line' && (
+                <div className={styles.row}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>각도</label>
+                    <input
+                      type='number'
+                      min='0'
+                      max='360'
+                      value={patternConfig.angle}
+                      onChange={(e) =>
+                        setPatternConfig((prev) => ({
+                          ...prev,
+                          angle: parseInt(e.target.value, 10) || 0,
+                        }))
+                      }
+                      className={styles.input}
+                    />
+                  </div>
+
+                  <div className={styles.field}>
+                    <label className={styles.label}>간격</label>
+                    <input
+                      type='number'
+                      min='60'
+                      max='200'
+                      value={patternConfig.spacing}
+                      onChange={(e) =>
+                        setPatternConfig((prev) => ({
+                          ...prev,
+                          spacing: parseInt(e.target.value, 10) || 80,
+                        }))
+                      }
+                      className={styles.input}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.actions}>
+              <button onClick={handleCreatePattern} className={styles.createButton}>
+                <Icons.Plus />
+                패턴 생성 ({patternConfig.count}개)
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

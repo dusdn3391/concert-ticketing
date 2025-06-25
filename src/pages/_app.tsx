@@ -1,5 +1,6 @@
 import '@/styles/globals.css';
 import { useRouter } from 'next/router';
+import { useEffect } from 'react'; // 🔹 useEffect import 필요
 
 import type { AppProps } from 'next/app';
 import { NextPageWithLayout } from '@/types/layout';
@@ -13,7 +14,11 @@ type AppPropsWithLayout = AppProps & {
 
 export default function App({ Component, pageProps }: AppPropsWithLayout) {
   const router = useRouter();
-  const isAdminRoute = router.pathname.startsWith('/admin');
+
+  const hiddenLayoutPaths = ['/admin', '/waitroom', '/reserve'];
+  const isHiddenLayoutRoute = hiddenLayoutPaths.some((path) =>
+    router.pathname.startsWith(path),
+  );
 
   // Admin 페이지에서 getLayout이 있으면 사용
   if (isAdminRoute && Component.getLayout) {
@@ -23,9 +28,9 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   // User 페이지 UI
   return (
     <>
-      {!isAdminRoute && <Header />}
+      {!isHiddenLayoutRoute && <Header />}
       <Component {...pageProps} />
-      {!isAdminRoute && <Footer />}
+      {!isHiddenLayoutRoute && <Footer />}
     </>
   );
 }

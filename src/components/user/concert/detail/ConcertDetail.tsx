@@ -17,7 +17,7 @@ export default function ConcertDetail({ id }: ConcertDetailProps) {
   useEffect(() => {
     if (!/^\d+$/.test(id)) {
       alert('유효하지 않은 페이지입니다.');
-      window.location.href = '/concert'; // 클라이언트 라우팅이 필요하면 router.push 사용 가능
+      window.location.href = '/concert';
     }
   }, [id]);
 
@@ -26,12 +26,12 @@ export default function ConcertDetail({ id }: ConcertDetailProps) {
     title: `콘서트 타이틀 (id: ${id})`,
     location: '서울 올림픽홀',
     duration: '120',
-    date: '2025.06.01 ~ 2025.06.10',
+    date: '2025.06.01 ~ 2025.07.15',
     age: '12세 이상',
     price: '99,000원',
   };
 
-  const [activeTab, setActiveTab] = useState('상세보기');
+  const [activeTab, setActiveTab] = useState<string>('상세보기');
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -51,6 +51,35 @@ export default function ConcertDetail({ id }: ConcertDetailProps) {
   const handleReserveClick = () => {
     window.open('/reserve/select-date', '_blank', 'width=1000,height=600,resizable=no');
   };
+
+  // 🔹 예매 가능 여부 계산
+  const isReservable = (() => {
+    const [startStr, endStr] = mockData.date
+      .split('~')
+      .map((s) => s.trim().replace(/\./g, '-'));
+    const startDate = new Date(startStr);
+    const endDate = new Date(endStr);
+    const today = new Date();
+
+    return today >= startDate && today <= endDate;
+  })();
+
+  const today = new Date();
+  const [startStr, endStr] = mockData.date
+    .split('~')
+    .map((s) => s.trim().replace(/\./g, '-'));
+  const startDate = new Date(startStr);
+  const endDate = new Date(endStr);
+
+  let reservationStatus: 'before' | 'active' | 'ended';
+  if (today < startDate) {
+    reservationStatus = 'before';
+  } else if (today > endDate) {
+    reservationStatus = 'ended';
+  } else {
+    reservationStatus = 'active';
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.topSection}>
@@ -73,16 +102,31 @@ export default function ConcertDetail({ id }: ConcertDetailProps) {
         </div>
       </div>
 
-      <button className={styles.noticeButton} disabled>
-        예매 준비 중입니다
-        <div>예매 준비중</div>
-      </button>
+      {/* 🔹 예매 버튼 */}
+      <div className={styles.Btns}>
+        {reservationStatus === 'active' && (
+          <button className={styles.reserveButton} onClick={handleReserveClick}>
+            예매하기
+            <div>(예매 열림)</div>
+          </button>
+        )}
 
-      <button className={styles.reserveButton} onClick={handleReserveClick}>
-        예매하기
-        <div>(예매 열림)</div>
-      </button>
+        {reservationStatus === 'before' && (
+          <button className={styles.noticeButton} disabled>
+            예매 준비 중입니다
+            <div>예매 준비중</div>
+          </button>
+        )}
 
+        {reservationStatus === 'ended' && (
+          <button className={styles.noticeButton} disabled>
+            예매가 종료되었습니다
+            <div>예매 종료</div>
+          </button>
+        )}
+      </div>
+
+      {/* 🔹 탭 영역 */}
       <div className={styles.tabContainer}>
         <div className={styles.tabWrapper}>
           {TABS.map((tab) => (

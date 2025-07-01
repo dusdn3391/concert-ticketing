@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import styles from './Review.module.css';
-import MypageNav from '../../components/user/mypage/MypageNav';
+import MypageNav from '../MypageNav';
 import Pagination from '@/components/user/common/Pagination';
 
 export default function Review() {

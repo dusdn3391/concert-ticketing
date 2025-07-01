@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import Pagination from '@/components/user/common/Pagination';
-import MypageNav from '../../components/user/mypage/MypageNav';
+import MypageNav from '../MypageNav';
 import styles from './Ticketing.module.css';
 
 interface Ticket {

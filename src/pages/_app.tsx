@@ -1,6 +1,5 @@
 import '@/styles/globals.css';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react'; // 🔹 useEffect import 필요
 
 import type { AppProps } from 'next/app';
 import { NextPageWithLayout } from '@/types/layout';

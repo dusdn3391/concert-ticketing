@@ -1,8 +1,10 @@
 import React from 'react';
 
+import styles from './Section.module.css';
+
 export default function LocationInfoSection() {
   return (
-    <div>
+    <div className={styles.wrap}>
       <h3>장소 정보</h3>
       <p>서울 송파구 올림픽로 25, 올림픽공원 내 올림픽홀</p>
       <iframe

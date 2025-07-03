@@ -6,7 +6,7 @@ import Pagination from '@/components/user/common/Pagination';
 import MypageNav from '@/components/user/mypage/MypageNav';
 import styles from './Inquiry.module.css';
 
-export default function Inquiry() {
+export default function EntireInquiry() {
   const router = useRouter();
   const inquiriesPerPage = 5;
   const inquiryData = Array.from({ length: 5 }, (_, i) => ({

@@ -164,6 +164,9 @@
   "globals": {
     "navigation": "readonly", // 'navigation'을 전역 읽기 전용 변수로 선언
     "globalThis": false, // 'globalThis' 전역 변수 사용을 금지
-    "NodeJS": true // NodeJS 전역 타입을 사용 가능하도록 설정
+    "NodeJS": true, // NodeJS 전역 타입을 사용 가능하도록 설정
+    "RequestInit": true, // RequestInit 타입을 전역에서 사용 가능하도록 설정
+    "ResponseInit": true, // ResponseInit 타입을 전역에서 사용 가능하도록 설정
+    "HeadersInit": true, // HeadersInit 타입을 전역에서 사용 가능하도록 설정
   }
 }

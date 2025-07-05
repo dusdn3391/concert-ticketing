@@ -1,4 +1,3 @@
-// src/services/reservations.ts
 import { createBaseApiService, apiRequest } from './base';
 import {
   Reservation,
@@ -10,7 +9,7 @@ import {
   SeatAvailabilityRequest,
   SeatAvailabilityResponse,
   CancelReservationRequest,
-  ApiResponse
+  ApiResponse,
 } from '@/types';
 
 // 예약 기본 CRUD

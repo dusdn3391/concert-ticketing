@@ -203,7 +203,6 @@
   flex: 1;
   padding: 24px;
   transition: padding 0.2s ease;
-  overflow-y: auto;
 }
 
 .contentMobile {

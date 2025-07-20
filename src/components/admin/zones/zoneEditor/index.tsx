@@ -531,7 +531,7 @@ export default function ZoneEditor({
         </div>
       </div>
 
-      {/* 획기적인 대량 생성 모달 */}
+      {/* 대량 생성 모달 */}
       {isBulkModalOpen && (
         <BulkModal
           availableRows={availableRows}

@@ -1,109 +1,101 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
-import styles from './venueDetail.module.css';
+import { Concert, ConcertDetail as ConcertDetailType } from '@/types/concert';
+import styles from './concertDetail.module.css';
 
-interface Zone {
-  id: string;
-  name: string;
-  svgElementId: string;
-  seatCount: number;
-  priceRange: {
-    min: number;
-    max: number;
-  };
+interface ConcertDetailProps {
+  concertId: string;
 }
 
-interface Venue {
-  id: string;
-  name: string;
-  location: string;
-  description: string;
-  floorCount: number;
-  totalSeats: number;
-  status: 'active' | 'draft' | 'archived';
-  thumbnail: string;
-  createdAt: string;
-  lastModified: string;
-  tags: string[];
-  svgContent: string | null;
-  zones: Zone[];
-}
-
-interface VenueDetailProps {
-  venueId: string;
-}
-
-// VenueList와 동일한 목업 데이터
-const getVenuesData = (): Venue[] => [
+// 콘서트 목업 데이터
+const getConcertsData = (): ConcertDetailType[] => [
   {
-    id: 'seoul-arena',
-    name: '서울 아레나',
-    location: '서울 송파구',
-    description: '올림픽공원 내 대형 콘서트홀로 최대 2만명 수용 가능',
-    floorCount: 3,
-    totalSeats: 18500,
-    status: 'active',
-    thumbnail: '#3b82f6',
-    createdAt: '2024-03-15',
-    lastModified: '2024-06-05 14:30',
-    tags: ['대형', '실내', '서울'],
-    svgContent: null,
-    zones: [],
+    id: 1,
+    title: 'IU 2024 콘서트 [HEREH]',
+    description: '아이유의 2024년 전국 투어 콘서트',
+    location: '서울 잠실 종합운동장 주경기장',
+    location_X: 127.0719,
+    location_y: 37.513,
+    start_date: '2024-08-17',
+    end_date: '2024-08-18',
+    rating: 4.8,
+    admin_id: 1,
+    created_at: '2024-03-15T09:00:00Z',
+    updated_at: '2024-06-05T14:30:00Z',
+    schedules: [
+      {
+        id: 1,
+        concert_id: 1,
+        start_time: '2024-08-17T19:00:00Z',
+        end_time: '2024-08-17T21:30:00Z',
+        created_at: '2024-03-15T09:00:00Z',
+        cast_assignments: [],
+        seat_count: 35000,
+        available_seats: 5000,
+        reserved_seats: 30000,
+        revenue: 4500000000,
+      },
+      {
+        id: 2,
+        concert_id: 1,
+        start_time: '2024-08-18T18:00:00Z',
+        end_time: '2024-08-18T20:30:00Z',
+        created_at: '2024-03-15T09:00:00Z',
+        cast_assignments: [],
+        seat_count: 35000,
+        available_seats: 2000,
+        reserved_seats: 33000,
+        revenue: 4950000000,
+      },
+    ],
+    total_seats: 70000,
+    total_revenue: 9450000000,
+    reservation_count: 63000,
+    average_rating: 4.8,
+    review_count: 1250,
   },
   {
-    id: 'busan-center',
-    name: '부산 문화회관',
-    location: '부산 해운대구',
-    description: '부산 대표 문화공간으로 클래식부터 팝까지 다양한 공연',
-    floorCount: 2,
-    totalSeats: 1200,
-    status: 'active',
-    thumbnail: '#10b981',
-    createdAt: '2024-04-20',
-    lastModified: '2024-06-01 09:15',
-    tags: ['중형', '실내', '부산'],
-    svgContent: null,
-    zones: [],
-  },
-  {
-    id: 'olympic-hall',
-    name: '올림픽공원 체조경기장',
-    location: '서울 송파구',
-    description: '1988 올림픽 체조경기장을 콘서트홀로 리모델링',
-    floorCount: 4,
-    totalSeats: 15000,
-    status: 'draft',
-    thumbnail: '#f59e0b',
-    createdAt: '2024-05-10',
-    lastModified: '2024-05-25 16:45',
-    tags: ['대형', '실내', '역사적'],
-    svgContent: null,
-    zones: [],
-  },
-  {
-    id: 'jeju-arena',
-    name: '제주 야외극장',
-    location: '제주 제주시',
-    description: '자연과 함께하는 야외 콘서트 공간',
-    floorCount: 1,
-    totalSeats: 8000,
-    status: 'archived',
-    thumbnail: '#8b5cf6',
-    createdAt: '2024-02-05',
-    lastModified: '2024-04-10 11:20',
-    tags: ['야외', '자연', '제주'],
-    svgContent: null,
-    zones: [],
+    id: 2,
+    title: 'NewJeans Get Up Tour',
+    description: '뉴진스의 첫 번째 월드투어',
+    location: 'KSPO DOME',
+    location_X: 127.0748,
+    location_y: 37.5145,
+    start_date: '2024-09-01',
+    end_date: '2024-09-03',
+    rating: 4.9,
+    admin_id: 1,
+    created_at: '2024-04-20T10:00:00Z',
+    updated_at: '2024-06-01T09:15:00Z',
+    schedules: [
+      {
+        id: 3,
+        concert_id: 2,
+        start_time: '2024-09-01T19:00:00Z',
+        end_time: '2024-09-01T21:00:00Z',
+        created_at: '2024-04-20T10:00:00Z',
+        cast_assignments: [],
+        seat_count: 12000,
+        available_seats: 1500,
+        reserved_seats: 10500,
+        revenue: 1575000000,
+      },
+    ],
+    total_seats: 12000,
+    total_revenue: 1575000000,
+    reservation_count: 10500,
+    average_rating: 4.9,
+    review_count: 892,
   },
 ];
 
-export default function VenueDetail({ venueId }: VenueDetailProps) {
-  const [venue, setVenue] = useState<Venue | null>(null);
+export default function ConcertDetail({ concertId }: ConcertDetailProps) {
+  const [concert, setConcert] = useState<ConcertDetailType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedZone, setSelectedZone] = useState<string | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [tempZones, setTempZones] = useState<Zone[]>([]);
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'schedules' | 'analytics' | 'settings'
+  >('overview');
 
   // SVG 확대/축소 상태
   const [svgTransform, setSvgTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -121,14 +113,14 @@ export default function VenueDetail({ venueId }: VenueDetailProps) {
         // const venueData = await response.json();
 
         // 현재는 목업 데이터에서 해당 ID로 찾기
-        const venuesData = getVenuesData();
-        const foundVenue = venuesData.find((v) => v.id === venueId);
+        const concertsData = getConcertsData();
+        const foundVenue = concertsData.find((v) => v.id === concertId);
 
         setTimeout(() => {
           if (foundVenue) {
-            setVenue(foundVenue);
+            setConcert(foundVenue);
           } else {
-            setVenue(null);
+            setConcert(null);
           }
           setLoading(false);
         }, 1000);
@@ -139,7 +131,7 @@ export default function VenueDetail({ venueId }: VenueDetailProps) {
     };
 
     fetchVenue();
-  }, [venueId]);
+  }, [concertId]);
 
   // SVG 확대/축소 기능
   const handleZoom = (delta: number, centerX?: number, centerY?: number) => {
@@ -209,10 +201,15 @@ export default function VenueDetail({ venueId }: VenueDetailProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.type !== 'image/svg+xml') {
+      alert('SVG 파일만 업로드 가능합니다.');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       const svgContent = reader.result as string;
-      setVenue((prev) => (prev ? { ...prev, svgContent } : null));
+      setConcert((prev) => (prev ? { ...prev, svgContent } : null));
       setIsEditMode(true);
       setTempZones([]);
     };
@@ -279,7 +276,7 @@ export default function VenueDetail({ venueId }: VenueDetailProps) {
         lastModified: new Date().toISOString().split('T')[0],
       };
 
-      setVenue(updatedVenue);
+      setConcert(updatedVenue);
       setIsEditMode(false);
       setTempZones([]);
 
@@ -437,8 +434,8 @@ export default function VenueDetail({ venueId }: VenueDetailProps) {
       <div className={styles.container}>
         <div className={styles.error}>
           <p>공연장을 찾을 수 없습니다.</p>
-          <Link href='/admin/venues' className={styles.backButton}>
-            공연장 목록으로 돌아가기
+          <Link href='/admin/concerts' className={styles.backButton}>
+            콘서트 목록으로 돌아가기
           </Link>
         </div>
       </div>
@@ -453,7 +450,7 @@ export default function VenueDetail({ venueId }: VenueDetailProps) {
       {/* 헤더 */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <Link href='/admin/venues' className={styles.backButton}>
+          <Link href='/admin/concerts' className={styles.backButton}>
             ← 목록으로
           </Link>
           <div>
@@ -465,20 +462,16 @@ export default function VenueDetail({ venueId }: VenueDetailProps) {
           </div>
         </div>
         <div className={styles.headerRight}>
-          <div className={styles.statusBadge} data-status={venue.status}>
-            {venue.status === 'active'
-              ? '활성'
-              : venue.status === 'draft'
-                ? '임시저장'
-                : '보관됨'}
-          </div>
           <Link
-            href={`/admin/venues/${venueId}/preview`}
+            href={`/admin/concerts/${concertId}/preview`}
             className={styles.previewButton}
           >
             전체 미리보기
           </Link>
-          <Link href={`/admin/venues/${venueId}/zones`} className={styles.manageButton}>
+          <Link
+            href={`/admin/concerts/${concertId}/zones`}
+            className={styles.manageButton}
+          >
             구역 관리
           </Link>
         </div>
@@ -636,13 +629,13 @@ export default function VenueDetail({ venueId }: VenueDetailProps) {
                 <h3>{selectedZoneData.name}</h3>
                 <div className={styles.zoneActions}>
                   <Link
-                    href={`/admin/venues/${venueId}/zones/${selectedZoneData.id}`}
+                    href={`/admin/concerts/${concertId}/zones/${selectedZoneData.id}`}
                     className={styles.detailButton}
                   >
                     상세보기
                   </Link>
                   <Link
-                    href={`/admin/venues/${venueId}/zones/${selectedZoneData.id}/editor`}
+                    href={`/admin/concerts/${concertId}/zones/${selectedZoneData.id}/editor`}
                     className={styles.editButton}
                   >
                     좌석 편집

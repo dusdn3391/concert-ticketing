@@ -50,12 +50,6 @@ export default function Sidebar({ isOpen, onToggle, isMobile = false }: SidebarP
           href: '/admin/venues',
           icon: <Icons.Grid className={styles.iconSvg} />,
         },
-        {
-          id: 'venues-upload',
-          label: 'SVG 업로드',
-          href: '/admin/venues/upload',
-          icon: <Icons.Upload className={styles.iconSvg} />,
-        },
       ],
     },
     {

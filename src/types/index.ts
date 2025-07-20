@@ -18,7 +18,6 @@ export * from './common';
 
 // 기존 타입들
 export * from './venues';
-export * from './seat';
 
 // 새로 추가된 ERD 기반 타입들
 export * from './user';

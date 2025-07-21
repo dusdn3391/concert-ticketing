@@ -27,6 +27,7 @@ export * from './reservation';
 export * from './payment';
 export * from './review';
 export * from './inquiry';
+export * from './concert';
 
 export function isValidUserGender(
   value: string,

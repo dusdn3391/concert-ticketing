@@ -50,12 +50,6 @@ export default function Sidebar({ isOpen, onToggle, isMobile = false }: SidebarP
           href: '/admin/venues',
           icon: <Icons.Grid className={styles.iconSvg} />,
         },
-        {
-          id: 'venues-upload',
-          label: 'SVG 업로드',
-          href: '/admin/venues/upload',
-          icon: <Icons.Upload className={styles.iconSvg} />,
-        },
       ],
     },
     {
@@ -75,26 +69,6 @@ export default function Sidebar({ isOpen, onToggle, isMobile = false }: SidebarP
           label: '출연진 목록',
           href: '/admin/performers',
           icon: <Icons.User className={styles.iconSvg} />,
-        },
-      ],
-    },
-    {
-      id: 'concerts',
-      label: '콘서트 관리',
-      href: '',
-      icon: <Icons.Music className={styles.iconSvg} />,
-      subItems: [
-        {
-          id: 'concerts-create',
-          label: '새 콘서트 생성',
-          href: '/admin/concerts/create',
-          icon: <Icons.Plus className={styles.iconSvg} />,
-        },
-        {
-          id: 'concerts-list',
-          label: '콘서트 목록',
-          href: '/admin/concerts',
-          icon: <Icons.Calendar className={styles.iconSvg} />,
         },
       ],
     },

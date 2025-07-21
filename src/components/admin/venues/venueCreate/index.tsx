@@ -3,21 +3,19 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 
-import { THUMBNAIL_COLORS, PREDEFINED_ICONS, PREDEFINED_TAGS } from './options';
+import { PREDEFINED_TAGS } from './options';
 import styles from './venueCreate.module.css';
 
 interface VenueFormData {
   name: string;
   location: string;
   description: string;
-  thumbnail: string;
   thumbnailImage: string | null;
-  selectedIcon: string;
   tags: string[];
   floorCount: number;
   estimatedSeats: number;
   venueType: 'indoor' | 'outdoor' | 'mixed';
-  capacity: 'small' | 'medium' | 'large' | 'xlarge';
+  capacity: 'default' | 'small' | 'medium' | 'large' | 'xlarge';
 }
 
 interface FormErrors {
@@ -26,6 +24,7 @@ interface FormErrors {
   description?: string;
   floorCount?: string;
   estimatedSeats?: string;
+  thumbnailImage?: string;
 }
 
 export default function VenueCreate() {
@@ -37,14 +36,12 @@ export default function VenueCreate() {
     name: '',
     location: '',
     description: '',
-    thumbnail: THUMBNAIL_COLORS[0],
     thumbnailImage: null,
-    selectedIcon: '🎪',
     tags: [],
     floorCount: 1,
     estimatedSeats: 1000,
     venueType: 'indoor',
-    capacity: 'medium',
+    capacity: 'default',
   });
 
   const updateFormData = <K extends keyof VenueFormData>(
@@ -100,6 +97,10 @@ export default function VenueCreate() {
       newErrors.location = '위치는 최소 2글자 이상이어야 합니다.';
     }
 
+    if (!formData.thumbnailImage?.trim()) {
+      newErrors.thumbnailImage = '썸네일 이미지를 업로드해주세요.';
+    }
+
     if (!formData.description.trim()) {
       newErrors.description = '설명을 입력해주세요.';
     } else if (formData.description.length < 10) {
@@ -112,8 +113,8 @@ export default function VenueCreate() {
       newErrors.floorCount = '층 수는 1~10층 사이여야 합니다.';
     }
 
-    if (formData.estimatedSeats < 100 || formData.estimatedSeats > 100000) {
-      newErrors.estimatedSeats = '예상 좌석 수는 100~100,000석 사이여야 합니다.';
+    if (formData.estimatedSeats < 100 || formData.estimatedSeats > 1000000) {
+      newErrors.estimatedSeats = '예상 좌석 수는 100~1,000,000석 사이여야 합니다.';
     }
 
     setErrors(newErrors);
@@ -133,9 +134,7 @@ export default function VenueCreate() {
         name: formData.name,
         location: formData.location,
         description: formData.description,
-        thumbnail: formData.thumbnail,
         thumbnailImage: formData.thumbnailImage,
-        selectedIcon: formData.selectedIcon,
         tags: formData.tags,
         floorCount: formData.floorCount,
         estimatedSeats: formData.estimatedSeats,
@@ -164,25 +163,11 @@ export default function VenueCreate() {
 
   return (
     <div className={styles.container}>
-      {/* 헤더 */}
-      <div className={styles.header}>
-        <div className={styles.headerContent}>
-          <h1 className={styles.title}>🎪 새 콘서트장 만들기</h1>
-          <p className={styles.subtitle}>
-            새로운 콘서트장의 기본 정보를 입력하고 첫 번째 층을 설계해보세요.
-          </p>
-        </div>
-      </div>
-
       <div className={styles.content}>
         {/* 프리뷰 카드 */}
         <div className={styles.previewSection}>
-          <h3 className={styles.sectionTitle}>📋 미리보기</h3>
           <div className={styles.previewCard}>
-            <div
-              className={styles.previewThumbnail}
-              style={{ backgroundColor: formData.thumbnail }}
-            >
+            <div className={styles.previewThumbnail}>
               {formData.thumbnailImage ? (
                 <Image
                   src={formData.thumbnailImage}
@@ -197,7 +182,7 @@ export default function VenueCreate() {
                   height={200}
                 />
               ) : (
-                <span style={{ fontSize: '24px' }}>{formData.selectedIcon}</span>
+                <span style={{ fontSize: '48px', color: '#9ca3af' }}>🎪</span>
               )}
             </div>
 
@@ -241,8 +226,6 @@ export default function VenueCreate() {
         <div className={styles.form}>
           {/* 기본 정보 */}
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>📝 기본 정보</h3>
-
             <div className={styles.formGrid}>
               {/* 콘서트장 이름 */}
               <div className={styles.formGroup}>
@@ -304,11 +287,9 @@ export default function VenueCreate() {
 
           {/* 시각적 설정 */}
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>🎨 시각적 설정</h3>
-
             {/* 이미지 업로드 */}
             <div className={styles.formGroup}>
-              <label className={styles.label}>썸네일 이미지</label>
+              <label className={styles.label}>썸네일 이미지 *</label>
               <div className={styles.imageUploadSection}>
                 {formData.thumbnailImage ? (
                   <div className={styles.imagePreview}>
@@ -347,63 +328,14 @@ export default function VenueCreate() {
                 )}
               </div>
               <div className={styles.inputHint}>최대 5MB (JPG, PNG, GIF)</div>
-            </div>
-
-            {/* 아이콘 선택 (이미지가 없을 때만 표시) */}
-            {!formData.thumbnailImage && (
-              <div className={styles.formGroup}>
-                <label className={styles.label}>아이콘 선택</label>
-                <div className={styles.iconGrid}>
-                  {PREDEFINED_ICONS.map((icon) => (
-                    <button
-                      key={icon}
-                      type='button'
-                      onClick={() => updateFormData('selectedIcon', icon)}
-                      className={`${styles.iconButton} ${
-                        formData.selectedIcon === icon ? styles.iconButtonActive : ''
-                      }`}
-                      title={icon}
-                    >
-                      {icon}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 테마 색상 */}
-            <div className={styles.formGroup}>
-              <label className={styles.label}>
-                {formData.thumbnailImage ? '배경 색상' : '테마 색상'}
-              </label>
-              <div className={styles.colorGrid}>
-                {THUMBNAIL_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    type='button'
-                    onClick={() => updateFormData('thumbnail', color)}
-                    className={`${styles.colorButton} ${
-                      formData.thumbnail === color ? styles.colorButtonActive : ''
-                    }`}
-                    style={{ backgroundColor: color }}
-                    title={color}
-                  >
-                    {formData.thumbnail === color && '✓'}
-                  </button>
-                ))}
-              </div>
-              {formData.thumbnailImage && (
-                <div className={styles.inputHint}>
-                  이미지 뒤 배경색으로 사용됩니다. (GIF 파일은 불가)
-                </div>
+              {errors.thumbnailImage && (
+                <span className={styles.errorMessage}>{errors.thumbnailImage}</span>
               )}
             </div>
           </div>
 
           {/* 규모 및 타입 */}
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>📊 규모 및 타입</h3>
-
             <div className={styles.formGrid}>
               {/* 층 수 */}
               <div className={styles.formGroup}>
@@ -496,12 +428,15 @@ export default function VenueCreate() {
             <div className={styles.formGroup}>
               <label className={styles.label}>규모 분류</label>
               <select
-                value={formData.capacity}
+                value={formData.capacity || ''}
                 onChange={(e) =>
                   updateFormData('capacity', e.target.value as VenueFormData['capacity'])
                 }
                 className={styles.select}
               >
+                <option value='default' disabled>
+                  콘서트 규모를 선택해주세요.
+                </option>
                 <option value='small'>소형 (100~1,000석)</option>
                 <option value='medium'>중형 (1,000~5,000석)</option>
                 <option value='large'>대형 (5,000~20,000석)</option>
@@ -512,8 +447,6 @@ export default function VenueCreate() {
 
           {/* 태그 */}
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>🏷️ 태그</h3>
-
             <div className={styles.formGroup}>
               <label className={styles.label}>
                 태그 선택 ({formData.tags.length}/10)

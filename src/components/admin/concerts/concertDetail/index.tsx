@@ -1,97 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
-import { Concert, ConcertDetail as ConcertDetailType } from '@/types/concert';
+import { ConcertDetail as ConcertDetailType } from '@/types/concert';
+import { mockConcertDetails } from '@/lib/mockData';
 import styles from './concertDetail.module.css';
 
 interface ConcertDetailProps {
   concertId: string;
 }
 
-// 콘서트 목업 데이터
-const getConcertsData = (): ConcertDetailType[] => [
-  {
-    id: 1,
-    title: 'IU 2024 콘서트 [HEREH]',
-    description: '아이유의 2024년 전국 투어 콘서트',
-    location: '서울 잠실 종합운동장 주경기장',
-    location_X: 127.0719,
-    location_y: 37.513,
-    start_date: '2024-08-17',
-    end_date: '2024-08-18',
-    rating: 4.8,
-    admin_id: 1,
-    created_at: '2024-03-15T09:00:00Z',
-    updated_at: '2024-06-05T14:30:00Z',
-    schedules: [
-      {
-        id: 1,
-        concert_id: 1,
-        start_time: '2024-08-17T19:00:00Z',
-        end_time: '2024-08-17T21:30:00Z',
-        created_at: '2024-03-15T09:00:00Z',
-        cast_assignments: [],
-        seat_count: 35000,
-        available_seats: 5000,
-        reserved_seats: 30000,
-        revenue: 4500000000,
-      },
-      {
-        id: 2,
-        concert_id: 1,
-        start_time: '2024-08-18T18:00:00Z',
-        end_time: '2024-08-18T20:30:00Z',
-        created_at: '2024-03-15T09:00:00Z',
-        cast_assignments: [],
-        seat_count: 35000,
-        available_seats: 2000,
-        reserved_seats: 33000,
-        revenue: 4950000000,
-      },
-    ],
-    total_seats: 70000,
-    total_revenue: 9450000000,
-    reservation_count: 63000,
-    average_rating: 4.8,
-    review_count: 1250,
-  },
-  {
-    id: 2,
-    title: 'NewJeans Get Up Tour',
-    description: '뉴진스의 첫 번째 월드투어',
-    location: 'KSPO DOME',
-    location_X: 127.0748,
-    location_y: 37.5145,
-    start_date: '2024-09-01',
-    end_date: '2024-09-03',
-    rating: 4.9,
-    admin_id: 1,
-    created_at: '2024-04-20T10:00:00Z',
-    updated_at: '2024-06-01T09:15:00Z',
-    schedules: [
-      {
-        id: 3,
-        concert_id: 2,
-        start_time: '2024-09-01T19:00:00Z',
-        end_time: '2024-09-01T21:00:00Z',
-        created_at: '2024-04-20T10:00:00Z',
-        cast_assignments: [],
-        seat_count: 12000,
-        available_seats: 1500,
-        reserved_seats: 10500,
-        revenue: 1575000000,
-      },
-    ],
-    total_seats: 12000,
-    total_revenue: 1575000000,
-    reservation_count: 10500,
-    average_rating: 4.9,
-    review_count: 892,
-  },
-];
-
 export default function ConcertDetail({ concertId }: ConcertDetailProps) {
   const [concert, setConcert] = useState<ConcertDetailType | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [tempZones, setTempZones] = useState<any[]>([]);
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
     'overview' | 'schedules' | 'analytics' | 'settings'
@@ -112,13 +34,13 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
         // const response = await fetch(`/api/venues/${venueId}`);
         // const venueData = await response.json();
 
-        // 현재는 목업 데이터에서 해당 ID로 찾기
-        const concertsData = getConcertsData();
-        const foundVenue = concertsData.find((v) => v.id === concertId);
+        // 목업 데이터에서 해당 ID로 찾기
+        const foundConcert =
+          mockConcertDetails.find((c) => c.id === parseInt(concertId)) || null;
 
         setTimeout(() => {
-          if (foundVenue) {
-            setConcert(foundVenue);
+          if (foundConcert) {
+            setConcert(foundConcert);
           } else {
             setConcert(null);
           }
@@ -208,8 +130,8 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
 
     const reader = new FileReader();
     reader.onload = () => {
-      const svgContent = reader.result as string;
-      setConcert((prev) => (prev ? { ...prev, svgContent } : null));
+      const svg_content = reader.result as string;
+      setConcert((prev) => (prev ? { ...prev, svg_content } : null));
       setIsEditMode(true);
       setTempZones([]);
     };
@@ -266,17 +188,17 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
 
   // 구역 설정 저장
   const handleSaveZones = async () => {
-    if (!venue) return;
+    if (!concert) return;
 
     try {
       // TODO: API 호출로 구역 정보 저장
-      const updatedVenue = {
-        ...venue,
+      const updatedConcert = {
+        ...concert,
         zones: tempZones,
         lastModified: new Date().toISOString().split('T')[0],
       };
 
-      setConcert(updatedVenue);
+      setConcert(updatedConcert);
       setIsEditMode(false);
       setTempZones([]);
 
@@ -293,7 +215,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
     setTempZones([]);
     setSelectedZone(null);
     // SVG 다시 렌더링하여 기존 구역 복원
-    if (venue?.svgContent && svgContainerRef.current) {
+    if (concert?.svg_content && svgContainerRef.current) {
       // 모든 data-zone-configured 속성 제거
       const svgEl = svgContainerRef.current.querySelector('svg');
       if (svgEl) {
@@ -312,9 +234,9 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
 
   // SVG 렌더링 및 이벤트 설정
   const renderSVG = () => {
-    if (!venue?.svgContent || !svgContainerRef.current) return;
+    if (!concert?.svg_content || !svgContainerRef.current) return;
 
-    svgContainerRef.current.innerHTML = venue.svgContent;
+    svgContainerRef.current.innerHTML = concert.svg_content;
     const svgEl = svgContainerRef.current.querySelector('svg');
 
     if (svgEl) {
@@ -379,7 +301,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
           });
       } else {
         // 일반 모드일 때 - 기존 구역들만 클릭 가능
-        venue.zones.forEach((zone) => {
+        concert.zones?.forEach((zone) => {
           const element = newSvgEl.querySelector(`#${zone.svgElementId}`);
           if (element) {
             const clickHandler = () => {
@@ -416,7 +338,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
 
   useEffect(() => {
     renderSVG();
-  }, [venue, selectedZone, isEditMode]);
+  }, [concert, selectedZone, isEditMode]);
 
   if (loading) {
     return (
@@ -429,7 +351,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
     );
   }
 
-  if (!venue) {
+  if (!concert) {
     return (
       <div className={styles.container}>
         <div className={styles.error}>
@@ -442,8 +364,8 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
     );
   }
 
-  const selectedZoneData = venue.zones.find((zone) => zone.id === selectedZone);
-  const displayZones = isEditMode ? tempZones : venue.zones;
+  const selectedZoneData = concert.zones?.find((zone) => zone.id === selectedZone);
+  const displayZones = isEditMode ? tempZones : concert.zones || [];
 
   return (
     <div className={styles.container}>
@@ -454,10 +376,10 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
             ← 목록으로
           </Link>
           <div>
-            <h1 className={styles.title}>{venue.name}</h1>
-            <p className={styles.subtitle}>{venue.location}</p>
-            {venue.description && (
-              <p className={styles.description}>{venue.description}</p>
+            <h1 className={styles.title}>{concert.title}</h1>
+            <p className={styles.subtitle}>{concert.location}</p>
+            {concert.description && (
+              <p className={styles.description}>{concert.description}</p>
             )}
           </div>
         </div>
@@ -485,7 +407,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
               <h2>공연장 레이아웃</h2>
               {isEditMode ? (
                 <p>SVG 도형 요소를 클릭하여 구역을 설정하세요 (텍스트 제외)</p>
-              ) : venue.svgContent ? (
+              ) : concert.svg_content ? (
                 <p>Shift + 마우스휠로 확대/축소, 드래그로 이동 가능합니다</p>
               ) : (
                 <p>SVG 파일을 업로드하여 공연장 레이아웃을 설정하세요</p>
@@ -493,7 +415,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
             </div>
 
             <div className={styles.svgActions}>
-              {!venue.svgContent ? (
+              {!concert.svg_content ? (
                 // SVG 업로드
                 <label className={styles.uploadButton}>
                   📁 SVG 업로드
@@ -560,7 +482,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
             </div>
           </div>
 
-          {venue.svgContent ? (
+          {concert.svg_content ? (
             <div className={styles.svgWrapper}>
               <div
                 ref={svgWrapperRef}
@@ -599,7 +521,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
                 </div>
               )}
 
-              {!isEditMode && venue.svgContent && (
+              {!isEditMode && concert.svg_content && (
                 <div className={styles.controlHints}>
                   <div className={styles.zoomInfo}>
                     확대/축소: {Math.round(svgTransform.scale * 100)}%
@@ -715,33 +637,27 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
             <div className={styles.infoGrid}>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>생성일</span>
-                <span className={styles.infoValue}>{venue.createdAt}</span>
+                <span className={styles.infoValue}>{concert.created_at}</span>
               </div>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>수정일</span>
-                <span className={styles.infoValue}>{venue.lastModified}</span>
-              </div>
-              <div className={styles.infoItem}>
-                <span className={styles.infoLabel}>층수</span>
-                <span className={styles.infoValue}>{venue.floorCount}층</span>
+                <span className={styles.infoValue}>{concert.updated_at}</span>
               </div>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>총 좌석 수</span>
-                <span className={styles.infoValue}>{venue.totalSeats}석</span>
+                <span className={styles.infoValue}>{concert.total_seats}석</span>
               </div>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>총 구역 수</span>
-                <span className={styles.infoValue}>{venue.zones.length}개</span>
+                <span className={styles.infoValue}>{concert.zones?.length || 0}개</span>
               </div>
               <div className={styles.infoItem}>
-                <span className={styles.infoLabel}>태그</span>
-                <span className={styles.infoValue}>
-                  {venue.tags.map((tag, index) => (
-                    <span key={index} className={styles.tag}>
-                      {tag}
-                    </span>
-                  ))}
-                </span>
+                <span className={styles.infoLabel}>평점</span>
+                <span className={styles.infoValue}>{concert.rating}/5</span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>리뷰 수</span>
+                <span className={styles.infoValue}>{concert.review_count}개</span>
               </div>
             </div>
           </div>

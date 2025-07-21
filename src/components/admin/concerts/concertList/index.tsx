@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 
 import { Concert } from '@/types/concert';
+import { mockConcerts } from '@/lib/mockData';
 
 import { ConcertCard } from './ConcertCard';
 import styles from './concertList.module.css';
@@ -16,69 +17,10 @@ interface FilterOptions {
   searchQuery: string;
 }
 
-// 목업 데이터를 별도 함수로 분리
-const getInitialConcerts = (): Concert[] => [
-  {
-    id: 1,
-    title: 'IU 2024 콘서트 [HEREH]',
-    description: '아이유의 2024년 전국 투어 콘서트',
-    location: '서울 잠실 종합운동장 주경기장',
-    location_X: 127.0719,
-    location_y: 37.513,
-    start_date: '2024-08-17',
-    end_date: '2024-08-18',
-    rating: 4.8,
-    admin_id: 1,
-    created_at: '2024-03-15T09:00:00Z',
-    updated_at: '2024-06-05T14:30:00Z',
-  },
-  {
-    id: 2,
-    title: 'NewJeans Get Up Tour',
-    description: '뉴진스의 첫 번째 월드투어',
-    location: 'KSPO DOME',
-    location_X: 127.0748,
-    location_y: 37.5145,
-    start_date: '2024-09-01',
-    end_date: '2024-09-03',
-    rating: 4.9,
-    admin_id: 1,
-    created_at: '2024-04-20T10:00:00Z',
-    updated_at: '2024-06-01T09:15:00Z',
-  },
-  {
-    id: 3,
-    title: 'BTS 월드투어 서울 앙코르',
-    description: 'BTS의 월드투어 서울 앙코르 공연',
-    location: '서울 잠실 올림픽 주경기장',
-    location_X: 127.0719,
-    location_y: 37.513,
-    start_date: '2024-10-15',
-    end_date: '2024-10-22',
-    rating: 5.0,
-    admin_id: 1,
-    created_at: '2024-05-10T11:00:00Z',
-    updated_at: '2024-05-25T16:45:00Z',
-  },
-  {
-    id: 4,
-    title: 'LE SSERAFIM 팬미팅',
-    description: '르세라핌의 2024 팬미팅',
-    location: '부산 BEXCO 오디토리움',
-    location_X: 129.1364,
-    location_y: 35.169,
-    start_date: '2024-07-28',
-    end_date: '2024-07-28',
-    rating: 4.6,
-    admin_id: 1,
-    created_at: '2024-02-05T08:00:00Z',
-    updated_at: '2024-04-10T11:20:00Z',
-  },
-];
 
 export default function ConcertList({ initialConcerts }: ConcertListProps = {}) {
   const [concerts, setConcerts] = useState<Concert[]>(
-    initialConcerts || getInitialConcerts(),
+    initialConcerts || mockConcerts,
   );
 
   const [filters, setFilters] = useState<FilterOptions>({

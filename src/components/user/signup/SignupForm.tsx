@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-
 import styles from './SignupForm.module.css';
 
 export default function SignupForm() {
@@ -84,14 +83,31 @@ export default function SignupForm() {
       }));
       return;
     }
+    // TODO: 인증번호 요청 API 호출 가능
     setShowVerifyInput(true);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (validate()) {
-      alert('회원가입 성공!');
-      router.push('/');
+
+    if (!validate()) return;
+
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      if (res.ok) {
+        alert('회원가입 성공!');
+        router.push('/');
+      } else {
+        const data = await res.json();
+        alert(`회원가입 실패: ${data.message || '알 수 없는 오류'}`);
+      }
+    } catch (error) {
+      alert('네트워크 오류가 발생했습니다.');
     }
   };
 
@@ -162,6 +178,7 @@ export default function SignupForm() {
           <input
             id='birthday'
             name='birthday'
+            type='date'
             value={form.birthday}
             onChange={handleChange}
             className={styles.input}
@@ -181,7 +198,11 @@ export default function SignupForm() {
               onChange={handleChange}
               className={styles.input}
             />
-            <button type='button' className={styles.verifyButton} onClick={handleVerifyClick}>
+            <button
+              type='button'
+              className={styles.verifyButton}
+              onClick={handleVerifyClick}
+            >
               인증
             </button>
           </div>

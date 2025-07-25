@@ -9,23 +9,24 @@ import styles from './Concert.module.css';
 type Concert = {
   id: number;
   title: string;
-  singer: string;
-  date: string;
+  startDate: string;
+  endDate: string;
+  location: string;
+  rating: number;
+  thumbNailImageUrl: string;
 };
 
 // API 응답 타입
 interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
+
 }
 
-const mockData: Concert[] = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  title: `title title title ${i + 1}`,
-  singer: `singer ${i + 1}`,
-  date: `2025-05-${(30 - (i % 30)).toString().padStart(2, '0')}`,
-}));
+// const mockData: Concert[] = Array.from({ length: 20 }, (_, i) => ({
+//   id: i + 1,
+//   title: `title title title ${i + 1}`,
+//   singer: `singer ${i + 1}`,
+//   date: `2025-05-${(30 - (i % 30)).toString().padStart(2, '0')}`,
+// }));
 
 export default function ConcertPage() {
   const router = useRouter();
@@ -71,14 +72,16 @@ export default function ConcertPage() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: ApiResponse<Concert[]> = await response.json();
+      const data: Concert[] = await response.json();
 
-      if (data.success) {
-        setConcerts(data.data);
-        setTotalPages(Math.ceil(data.data.length / perPage)); // 서버에서 전체 개수를 내려주면 그것 기준으로 수정
-        console.log('✅ 콘서트 데이터 로드 성공:', data.data);
+
+      if (data) {
+        console.log("erewr", data)
+        setConcerts(data);
+        setTotalPages(Math.ceil(data.length / perPage));
+        console.log('✅ 콘서트 데이터 로드 성공:', data);
       } else {
-        throw new Error(data.message || '데이터를 불러오는데 실패했습니다.');
+        throw new Error ('데이터를 불러오는데 실패했습니다.');
       }
     } catch (err) {
       console.error('❌ API 요청 실패, Mock 데이터 사용:', err);
@@ -86,8 +89,7 @@ export default function ConcertPage() {
 
       const startIndex = (page - 1) * perPage;
       const endIndex = page * perPage;
-      setConcerts(mockData.slice(startIndex, endIndex));
-      setTotalPages(Math.ceil(mockData.length / perPage));
+
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
     } finally {
       setLoading(false);

@@ -1,8 +1,8 @@
-// /pages/manager/banner/write.tsx
+// /pages/site-admin/banner/write.tsx
 import { useRouter } from 'next/router';
-import Header from '@/components/manager/common/Header';
-import Nav from '@/components/manager/common/Nav';
-import BannerForm from '@/components/manager/banner/BannerForm';
+import Header from '@/components/site-admin/common/Header';
+import Nav from '@/components/site-admin/common/Nav';
+import BannerForm from '@/components/site-admin/banner/BannerForm';
 import styles from './Write.module.css';
 
 const BannerWritePage = () => {
@@ -11,7 +11,7 @@ const BannerWritePage = () => {
   const handleSubmit = (form: any) => {
     console.log('배너 등록:', form);
     alert('배너가 등록되었습니다.');
-    router.push('/manager/banner');
+    router.push('/site-admin/banner');
   };
 
   return (

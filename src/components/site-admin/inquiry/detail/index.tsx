@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Header from '@/components/manager/common/Header';
-import Nav from '@/components/manager/common/Nav';
+import Header from '@/components/site-admin/common/Header';
+import Nav from '@/components/site-admin/common/Nav';
 import styles from './InquiryDetail.module.css';
 
 interface InquiryItem {
@@ -66,7 +66,7 @@ const InquiryAnswerPage: React.FC = () => {
         setInquiry(foundInquiry);
         setAnswerContent(foundInquiry.answer || '');
       } else {
-        router.push('/manager/inquiry');
+        router.push('/site-admin/inquiry');
       }
       setIsLoading(false);
     }
@@ -87,16 +87,16 @@ const InquiryAnswerPage: React.FC = () => {
     
     // 성공 메시지 표시 후 목록으로 이동
     alert('답변이 성공적으로 저장되었습니다.');
-    router.push('/manager/inquiry');
+    router.push('/site-admin/inquiry');
   };
 
   const handleCancel = () => {
     if (answerContent !== (inquiry?.answer || '')) {
       if (confirm('작성 중인 답변이 있습니다. 정말 취소하시겠습니까?')) {
-        router.push('/manager/inquiry');
+        router.push('/site-admin/inquiry');
       }
     } else {
-      router.push('/manager/inquiry');
+      router.push('/site-admin/inquiry');
     }
   };
 

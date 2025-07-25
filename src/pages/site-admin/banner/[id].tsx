@@ -19,7 +19,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   if (!id || Array.isArray(id) || !/^\d+$/.test(id as string)) {
     return {
       redirect: {
-        destination: '/manager/banner',
+        destination: '/site-admin/banner',
         permanent: false,
       },
     };

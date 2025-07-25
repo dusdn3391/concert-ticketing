@@ -1,7 +1,7 @@
-// components/manager/banner/edit/BannerEditPage.tsx
-import Header from '@/components/manager/common/Header';
-import Nav from '@/components/manager/common/Nav';
-import BannerForm from '@/components/manager/banner/BannerForm';
+// components/site-admin/banner/edit/BannerEditPage.tsx
+import Header from '@/components/site-admin/common/Header';
+import Nav from '@/components/site-admin/common/Nav';
+import BannerForm from '@/components/site-admin/banner/BannerForm';
 import styles from './BannerEdit.module.css';
 
 type Props = {
@@ -18,11 +18,10 @@ const BannerEditPage = ({ id, title, status, description }: Props) => {
     status,
   };
 
-  console.log('배너 정보 ', {id, status, title})
+  console.log('배너 정보 ', { id, status, title });
   const handleSubmit = (form: any) => {
     console.log('배너 수정 완료:', { id, ...form });
     alert('배너가 수정되었습니다.');
-   
   };
 
   return (

@@ -3,13 +3,13 @@ import styles from './BannerForm.module.css';
 
 type BannerFormProps = {
   mode: 'edit' | 'create';
-  initialData: {
+  initialData?: {
     title: string;
     description: string;
     status: '노출' | '비노출';
     imageUrl?: string;
   };
-  id?: string; // <-- 수정할 때 필요한 ID
+  id?: string;
   onSubmit: (form: any) => void;
 };
 

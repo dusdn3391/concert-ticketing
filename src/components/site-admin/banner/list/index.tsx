@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import Header from '@/components/manager/common/Header';
-import Nav from '@/components/manager/common/Nav';
+import Header from '@/components/site-admin/common/Header';
+import Nav from '@/components/site-admin/common/Nav';
 import pageStyles from './Admin.module.css';
 
 const mockBanners = [
@@ -17,7 +17,7 @@ const BannerListPage = () => {
         <main className={pageStyles.content}>
           <div className={pageStyles.pageHeader}>
             <h2>배너 관리</h2>
-            <Link href='/manager/banner/write' className={pageStyles.createBtn}>
+            <Link href='/site-admin/banner/write' className={pageStyles.createBtn}>
               + 배너 등록
             </Link>
           </div>
@@ -40,16 +40,14 @@ const BannerListPage = () => {
                   <td>
                     <Link
                       href={{
-                        pathname: `/manager/banner/${banner.id}`,
+                        pathname: `/site-admin/banner/${banner.id}`,
                         query: {
                           title: banner.title,
                           status: banner.status,
                         },
-                        
                       }}
                       className={pageStyles.editBtn}
                       onClick={() => console.log(`배너 ${banner.title} 수정 요청`)}
-
                     >
                       수정
                     </Link>

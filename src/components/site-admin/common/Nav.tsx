@@ -7,13 +7,13 @@ const Nav = () => {
     <nav className={styles.nav}>
       <ul>
         <li>
-          <Link href='/manager/banner'>배너 관리</Link>
+          <Link href='/site-admin/banner'>배너 관리</Link>
         </li>
         <li>
-          <Link href='/manager/notice'>공지사항</Link>
+          <Link href='/site-admin/notice'>공지사항</Link>
         </li>
         <li>
-          <Link href='/manager/inquiry'>1:1 문의내역</Link>
+          <Link href='/site-admin/inquiry'>1:1 문의내역</Link>
         </li>
       </ul>
     </nav>

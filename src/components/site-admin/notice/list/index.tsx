@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
-import Header from '@/components/manager/common/Header';
-import Nav from '@/components/manager/common/Nav';
+import Header from '@/components/site-admin/common/Header';
+import Nav from '@/components/site-admin/common/Nav';
 import pageStyles from './NoticeList.module.css';
 import Pagination from '@/components/user/common/Pagination';
 
@@ -13,7 +13,7 @@ const initialNotices = [
   { id: 5, title: '시스템 점검 안내', status: '노출', createdAt: '2025-04-22' },
 ];
 
-const inquiriesPerPage = 5; 
+const inquiriesPerPage = 5;
 
 const NoticeListPage = () => {
   const [notices, setNotices] = useState(initialNotices);
@@ -39,7 +39,7 @@ const NoticeListPage = () => {
         <main className={pageStyles.content}>
           <div className={pageStyles.pageHeader}>
             <h2>공지사항 관리</h2>
-            <Link href='/manager/notice/write' className={pageStyles.createBtn}>
+            <Link href='/site-admin/notice/write' className={pageStyles.createBtn}>
               + 공지사항 등록
             </Link>
           </div>
@@ -58,15 +58,15 @@ const NoticeListPage = () => {
                 <tr key={notice.id}>
                   <td>{notice.title}</td>
                   <td>{notice.createdAt}</td>
-                                    <td>{notice.status}</td>
+                  <td>{notice.status}</td>
 
                   <td>
                     <Link
                       href={{
-                        pathname: `/manager/notice/${notice.id}`,
+                        pathname: `/site-admin/notice/${notice.id}`,
                         query: {
                           title: notice.title,
-                          status: notice.status
+                          status: notice.status,
                         },
                       }}
                       className={pageStyles.editBtn}

@@ -20,15 +20,6 @@ interface ApiResponse<T> {
   message?: string;
 }
 
-// 페이지네이션 응답 타입
-interface PaginationResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  page: number;
-  size: number;
-}
-
 const mockData: Concert[] = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
   title: `title title title ${i + 1}`,
@@ -41,7 +32,6 @@ export default function ConcertPage() {
 
   const [concerts, setConcerts] = useState<Concert[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortOption, setSortOption] = useState('latest');
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +39,8 @@ export default function ConcertPage() {
 
   const perPage = 9;
 
-  // API에서 콘서트 데이터 가져오기
-  const fetchConcerts = async (page: number, sort: string) => {
+  // 콘서트 데이터 불러오기
+  const fetchConcerts = async (page: number) => {
     try {
       setLoading(true);
       setError(null);
@@ -58,61 +48,55 @@ export default function ConcertPage() {
       const apiUrl =
         process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL || 'http://localhost:8080';
 
-      // API 파라미터 설정
-      const params = new URLSearchParams({
-        page: (page - 1).toString(), // 백엔드는 0부터 시작
-        size: perPage.toString(),
-        sort: sort === 'latest' ? 'date,desc' : 'id,asc',
+      const size = perPage;
+      const token = localStorage.getItem('accessToken') || '';
+      const url = `${apiUrl}/api/concert/main-list?size=${size}`;
+
+      console.log('📦 [fetchConcerts] 호출됨');
+      console.log('🌐 API URL:', url);
+      console.log('📄 토큰:', token);
+      console.log('🔢 페이지:', page);
+      console.log('🔢 perPage:', perPage);
+
+      const response = await fetch(url, {
+        headers: {
+          Accept: '*/*',
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      const response = await fetch(`${apiUrl}/login`);
-
+      console.log('📥 응답 상태코드:', response.status);
+      console.log('📥 응답 OK 여부:', response.ok);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: ApiResponse<PaginationResponse<Concert>> = await response.json();
+      const data: ApiResponse<Concert[]> = await response.json();
 
       if (data.success) {
-        setConcerts(data.data.content);
-        setTotalPages(data.data.totalPages);
+        setConcerts(data.data);
+        setTotalPages(Math.ceil(data.data.length / perPage)); // 서버에서 전체 개수를 내려주면 그것 기준으로 수정
         console.log('✅ 콘서트 데이터 로드 성공:', data.data);
       } else {
         throw new Error(data.message || '데이터를 불러오는데 실패했습니다.');
       }
     } catch (err) {
       console.error('❌ API 요청 실패, Mock 데이터 사용:', err);
-
-      // API 실패 시 Mock 데이터 사용
       setUseMockData(true);
-      const sortedMockData = [...mockData].sort((a, b) => {
-        if (sort === 'latest') {
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
-        } else {
-          return a.id - b.id;
-        }
-      });
 
       const startIndex = (page - 1) * perPage;
       const endIndex = page * perPage;
-      setConcerts(sortedMockData.slice(startIndex, endIndex));
+      setConcerts(mockData.slice(startIndex, endIndex));
       setTotalPages(Math.ceil(mockData.length / perPage));
-
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
-  // 컴포넌트 마운트 시 및 페이지/정렬 변경 시 데이터 로드
   useEffect(() => {
-    fetchConcerts(currentPage, sortOption);
-  }, [currentPage, sortOption]);
-
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortOption(e.target.value);
-    setCurrentPage(1);
-  };
+    fetchConcerts(currentPage);
+  }, [currentPage]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -121,7 +105,7 @@ export default function ConcertPage() {
   const handleRetry = () => {
     setUseMockData(false);
     setError(null);
-    fetchConcerts(currentPage, sortOption);
+    fetchConcerts(currentPage);
   };
 
   return (
@@ -129,7 +113,6 @@ export default function ConcertPage() {
       <div className={styles.header}>
         <h1 className={styles.title}>콘서트</h1>
 
-        {/* API 상태 표시 */}
         <div className={styles.statusIndicator}>
           {loading && <span className={styles.loading}>🔄 로딩 중...</span>}
           {error && (
@@ -148,27 +131,6 @@ export default function ConcertPage() {
         </div>
       </div>
 
-      <div className={styles.sortWrapper}>
-        <select
-          className={styles.sortSelect}
-          value={sortOption}
-          onChange={handleSortChange}
-          aria-label='정렬 방식 선택'
-          disabled={loading}
-        >
-          <option value='latest'>최신순</option>
-          <option value='popular'>인기순</option>
-        </select>
-      </div>
-
-      {/* 로딩 스피너 */}
-      {loading && (
-        <div className={styles.loadingContainer}>
-          <div className={styles.spinner}></div>
-          <p>콘서트 데이터를 불러오는 중...</p>
-        </div>
-      )}
-
       {/* 콘서트 리스트 */}
       {!loading && (
         <div className={styles.list}>
@@ -178,14 +140,12 @@ export default function ConcertPage() {
         </div>
       )}
 
-      {/* 데이터가 없을 때 */}
       {!loading && concerts.length === 0 && (
         <div className={styles.emptyState}>
           <p>등록된 콘서트가 없습니다.</p>
         </div>
       )}
 
-      {/* 페이지네이션 */}
       {!loading && concerts.length > 0 && (
         <Pagination
           currentPage={currentPage}
@@ -194,7 +154,7 @@ export default function ConcertPage() {
         />
       )}
 
-      {/* 개발 모드에서만 표시되는 디버깅 정보 */}
+      {/* 개발용 디버깅 정보 */}
       {process.env.NODE_ENV === 'development' && (
         <div className={styles.debugInfo}>
           <details>
@@ -202,19 +162,16 @@ export default function ConcertPage() {
             <div className={styles.debugContent}>
               <p>
                 <strong>API URL:</strong> {process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}
-                /api/concerts/map
+                /api/concert/main-list
               </p>
               <p>
                 <strong>현재 페이지:</strong> {currentPage}
               </p>
               <p>
-                <strong>정렬 옵션:</strong> {sortOption}
-              </p>
-              <p>
                 <strong>데이터 소스:</strong> {useMockData ? 'Mock 데이터' : 'API'}
               </p>
               <p>
-                <strong>로드된 콘서트 수:</strong> {concerts.length}
+                <strong>콘서트 수:</strong> {concerts.length}
               </p>
               <p>
                 <strong>전체 페이지:</strong> {totalPages}

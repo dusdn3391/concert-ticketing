@@ -13,7 +13,6 @@ export const useSidebar = (defaultOpen: boolean = true): UseSidebarReturn => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 초기 로드 시 로컬 스토리지에서 상태 복원
   useEffect(() => {
     try {
       const savedState = localStorage.getItem(SIDEBAR_STORAGE_KEY);

@@ -29,6 +29,19 @@ export default function HomePage() {
   const [eventIndex, setEventIndex] = useState(0);
 
   useEffect(() => {
+    console.log('=== 환경변수 디버깅 ===');
+    console.log('API_BASE_URL:', process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+
+    // 모든 NEXT_PUBLIC_ 환경변수 확인
+    Object.keys(process.env).forEach((key) => {
+      if (key.startsWith('NEXT_PUBLIC_')) {
+        console.log(`${key}:`, process.env[key]);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
     if (!isPlaying) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);

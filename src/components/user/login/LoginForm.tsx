@@ -1,9 +1,8 @@
 import React from 'react';
 import Image from 'next/image';
-
 import styles from './LoginForm.module.css';
 
-const REDIRECT_URI = 'http://localhost:3000/api/callback';
+const REDIRECT_URI = 'http://localhost:3000/oauth/success';
 
 const CLIENT_IDS = {
   kakao: process.env.NEXT_PUBLIC_KAKAO_KEY as string,
@@ -11,17 +10,24 @@ const CLIENT_IDS = {
   google: process.env.NEXT_PUBLIC_GOOGLE_KEY as string,
 };
 
-export default function LoginForm() {
-  const handleLogin = (provider: 'kakao' | 'naver' | 'google') => {
+type Provider = 'kakao' | 'naver' | 'google';
+
+interface LoginFormProps {
+  onLoginSuccess?: (isFirstSignup: boolean) => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
+  const handleLogin = (provider: Provider): void => {
     let url = '';
 
     if (provider === 'kakao') {
-      url = `https://kauth.kakao.com/oauth/authorize?client_id=${CLIENT_IDS.kakao}&redirect_uri=${REDIRECT_URI}&response_type=code`;
+      url = `https://kauth.kakao.com/oauth/authorize?client_id=${CLIENT_IDS.kakao}&redirect_uri=${REDIRECT_URI}&response_type=code&state=${provider}`;
     } else if (provider === 'naver') {
-      const state = crypto.randomUUID();
+      const state = `${provider}_${crypto.randomUUID()}`;
+      localStorage.setItem('oauth_state', state);
       url = `https://nid.naver.com/oauth2.0/authorize?client_id=${CLIENT_IDS.naver}&redirect_uri=${REDIRECT_URI}&state=${state}&response_type=code`;
     } else if (provider === 'google') {
-      url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_IDS.google}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile email`;
+      url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_IDS.google}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile email&state=${provider}`;
     }
 
     window.location.href = url;
@@ -32,17 +38,14 @@ export default function LoginForm() {
       <div className={styles.center}>
         <h1>concert-ticketing</h1>
         <div className={styles.socialButtons}>
-          {/* 카카오 로그인 */}
-          <button onClick={() => handleLogin('kakao')} aria-label='카카오 로그인'>
-            <img
-              src='/login/kakao_login_medium_wide.png'
-              alt='카카오 로그인'
-              width={222}
-              height={40}
-            />
+          <button
+            onClick={() => handleLogin('kakao')}
+            className={styles.kakaoButton}
+            aria-label='카카오 로그인'
+          >
+            <img src='/login/kakao_login_medium_wide.png' alt='카카오 로그인' />
           </button>
 
-          {/* 네이버 로그인 */}
           <button
             className={styles.naver}
             onClick={() => handleLogin('naver')}
@@ -59,7 +62,6 @@ export default function LoginForm() {
             <span className={styles.naverText}>Naver로 시작하기</span>
           </button>
 
-          {/* 구글 로그인 버튼 */}
           <button
             className={styles['gsi-material-button']}
             onClick={() => handleLogin('google')}
@@ -91,11 +93,12 @@ export default function LoginForm() {
               <span className={styles['gsi-material-button-contents']}>
                 Google로 시작하기
               </span>
-              <span style={{ display: 'none' }}>Sign in with Google</span>
             </div>
           </button>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default LoginForm;

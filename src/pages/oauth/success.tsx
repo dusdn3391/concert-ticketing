@@ -1,4 +1,3 @@
-// pages/oauth/success.tsx
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 
@@ -22,9 +21,16 @@ export default function OAuthSuccess() {
         .then((res) => res.json())
         .then((data) => {
           console.log('파싱된 JSON:', data);
+
           if (data.token) {
             localStorage.setItem('accessToken', data.token);
-            router.push('/');
+
+            // ✅ 최초 회원 여부에 따라 직접 라우팅
+            if (data.first === true) {
+              router.push('/signup?first=true'); // 최초 회원
+            } else {
+              router.push('/'); // 기존 회원
+            }
           } else {
             alert('로그인 실패: 토큰 없음');
           }

@@ -6,8 +6,11 @@ import styles from './ConcertCard.module.css';
 type Concert = {
   id: number;
   title: string;
-  singer: string;
-  date: string;
+  startDate: string;
+  endDate: string;
+  location: string;
+  rating: number;
+  thumbNailImageUrl: string;
 };
 
 interface ConcertCardProps {
@@ -26,9 +29,8 @@ export default function ConcertCard({ concert, className }: ConcertCardProps) {
     <div onClick={handleClick} className={`${styles.card} ${className ?? ''}`}>
       <div className={styles.image}>image</div>
       <div className={styles.cardTitle}>{concert.title}</div>
-      <div className={styles.cardSinger}>{concert.singer}</div>
       <div className={styles.cardDate}>
-        {concert.date} ~ {concert.date}
+        {concert.startDate} ~ {concert.endDate}
       </div>
     </div>
   );

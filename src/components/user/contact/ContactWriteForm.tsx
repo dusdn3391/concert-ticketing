@@ -59,7 +59,10 @@ const CustomerInquiryForm: React.FC = () => {
       };
 
       console.log('[handleSubmit] 문의 데이터:', inquiry);
-      formData.append('inquiry', JSON.stringify(inquiry));
+      formData.append(
+        'inquiry',
+        new Blob([JSON.stringify(inquiry)], { type: 'application/json' }),
+      );
 
       if (files) {
         Array.from(files).forEach((file) => {

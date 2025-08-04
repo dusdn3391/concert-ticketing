@@ -10,7 +10,7 @@ interface Zone {
 
 interface Venue {
   id: string;
-  name: string;
+  title: string;
   description: string;
   location: string;
   thumbnailImage: string;

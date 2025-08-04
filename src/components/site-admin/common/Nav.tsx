@@ -13,6 +13,9 @@ const Nav = () => {
           <Link href='/site-admin/notice'>공지사항</Link>
         </li>
         <li>
+          <Link href='/site-admin/faq'>faq</Link>
+        </li>
+        <li>
           <Link href='/site-admin/inquiry'>1:1 문의내역</Link>
         </li>
         <li>

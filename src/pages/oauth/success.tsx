@@ -20,12 +20,14 @@ export default function OAuthSuccess() {
       })
         .then((res) => res.json())
         .then((data) => {
-          console.log('파싱된 JSON:', data);
+          console.log('✅ 파싱된 JSON:', data);
 
           if (data.token) {
             localStorage.setItem('accessToken', data.token);
 
-            // ✅ 최초 회원 여부에 따라 직접 라우팅
+            // 🔍 최초 로그인 여부 출력
+            console.log('✅ 최초 로그인 여부 (data.first):', data.first);
+
             if (data.first === true) {
               router.push('/signup?first=true'); // 최초 회원
             } else {

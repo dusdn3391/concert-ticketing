@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import LoginForm from '@/components/user/login/LoginForm';
 import UserTypeSelect from '@/components/user/signup/UserTypeSelect';
-import SignupForm from '@/components/user/signup/SignupForm'; // 추가
+import SignupForm from '@/components/user/signup/SignupForm';
 
 export default function SignupPage() {
   const router = useRouter();
-  const [step, setStep] = useState<'select' | 'login' | 'signup'>('select'); // 'signup' 추가
+  const [step, setStep] = useState<'select' | 'login' | 'signup'>('select'); // 처음은 'select'
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -15,7 +15,7 @@ export default function SignupPage() {
 
     if (isFirst === 'true') {
       console.log('소셜 로그인 성공: 최초 로그인');
-      setStep('signup'); // ✅ 이제 SignupForm으로 설정
+      setStep('signup');
     } else if (isFirst === 'false') {
       console.log('소셜 로그인 성공: 기존 회원');
       router.replace('/login');
@@ -24,7 +24,7 @@ export default function SignupPage() {
 
   const handleRoleSelect = (role: 'user' | 'admin') => {
     console.log('선택된 역할:', role);
-    setStep('login');
+    setStep('login'); // 역할 선택하면 로그인폼 보여줌
   };
 
   if (step === 'signup') return <SignupForm />;

@@ -15,7 +15,14 @@ const CustomerInquiryForm: React.FC = () => {
   // const [notificationEmail, setNotificationEmail] = useState<string>('');
   // const [phoneNumber, setPhoneNumber] = useState<string>('');
 
-  const categories = ['RESERVATION', '상품', '배송', '취소', '결제/환불', '기타'];
+  const categories = [
+    { code: 'RESERVATION', label: '예매' },
+    { code: 'PRODUCT', label: '상품' },
+    { code: 'DELIVERY', label: '배송' },
+    { code: 'CANCELLATION', label: '취소' },
+    { code: 'USER_MANAGEMENT', label: '결제/환불' },
+    { code: 'ETC', label: '기타' },
+  ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFiles(e.target.files);
@@ -132,8 +139,8 @@ const CustomerInquiryForm: React.FC = () => {
                   onChange={(e) => setCategory(e.target.value)}
                 >
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                    <option key={cat.code} value={cat.code}>
+                      {cat.label}
                     </option>
                   ))}
                 </select>

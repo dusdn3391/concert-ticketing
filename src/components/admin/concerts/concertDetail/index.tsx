@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import { ConcertDetail as ConcertDetailType } from '@/types/concert';
-import { mockConcertDetails } from '@/lib/mockData';
+import { apiCall } from '@/lib/api';
 import styles from './concertDetail.module.css';
 
 interface ConcertDetailProps {
@@ -15,9 +15,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
   const [tempZones, setTempZones] = useState<any[]>([]);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'schedules' | 'analytics' | 'settings'
-  >('overview');
+  const [error, setError] = useState<string | null>(null);
 
   // SVG 확대/축소 상태
   const [svgTransform, setSvgTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -27,32 +25,30 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const svgWrapperRef = useRef<HTMLDivElement>(null);
 
+  // 콘서트 상세 정보 조회 API 호출
+  const fetchConcertDetail = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await apiCall(`/admin/concerts/${concertId}`, {
+        method: 'GET',
+      });
+
+      setConcert(data.concert);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : '콘서트 정보를 불러오는데 실패했습니다.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchVenue = async () => {
-      try {
-        // TODO: 나중에 실제 API 호출로 변경
-        // const response = await fetch(`/api/venues/${venueId}`);
-        // const venueData = await response.json();
-
-        // 목업 데이터에서 해당 ID로 찾기
-        const foundConcert =
-          mockConcertDetails.find((c) => c.id === parseInt(concertId)) || null;
-
-        setTimeout(() => {
-          if (foundConcert) {
-            setConcert(foundConcert);
-          } else {
-            setConcert(null);
-          }
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error('Failed to fetch venue:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchVenue();
+    if (concertId) {
+      fetchConcertDetail();
+    }
   }, [concertId]);
 
   // SVG 확대/축소 기능
@@ -191,21 +187,31 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
     if (!concert) return;
 
     try {
-      // TODO: API 호출로 구역 정보 저장
-      const updatedConcert = {
+      await apiCall(`/admin/concerts/${concertId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          zones: tempZones,
+          svg_content: concert.svg_content,
+        }),
+      });
+
+      // 업데이트된 콘서트 정보로 상태 업데이트
+      setConcert({
         ...concert,
         zones: tempZones,
-        lastModified: new Date().toISOString().split('T')[0],
-      };
+        updated_at: new Date().toISOString(),
+      });
 
-      setConcert(updatedConcert);
       setIsEditMode(false);
       setTempZones([]);
 
       alert('구역 설정이 저장되었습니다.');
     } catch (error) {
-      console.error('Failed to save zones:', error);
-      alert('구역 저장에 실패했습니다.');
+      console.error('구역 저장 오류:', error);
+      alert(
+        '구역 저장에 실패했습니다: ' +
+          (error instanceof Error ? error.message : '알 수 없는 오류'),
+      );
     }
   };
 
@@ -345,7 +351,27 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
       <div className={styles.container}>
         <div className={styles.loading}>
           <div className={styles.spinner} />
-          <p>공연장 정보를 불러오는 중...</p>
+          <p>콘서트 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>
+          <div className={styles.errorIcon}>❌</div>
+          <h3>오류가 발생했습니다</h3>
+          <p>{error}</p>
+          <div className={styles.errorActions}>
+            <button onClick={fetchConcertDetail} className={styles.retryButton}>
+              다시 시도
+            </button>
+            <Link href='/admin/concerts' className={styles.backButton}>
+              콘서트 목록으로 돌아가기
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -355,7 +381,9 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
     return (
       <div className={styles.container}>
         <div className={styles.error}>
-          <p>공연장을 찾을 수 없습니다.</p>
+          <div className={styles.errorIcon}>🎵</div>
+          <h3>콘서트를 찾을 수 없습니다</h3>
+          <p>요청한 콘서트가 존재하지 않거나 삭제되었습니다.</p>
           <Link href='/admin/concerts' className={styles.backButton}>
             콘서트 목록으로 돌아가기
           </Link>

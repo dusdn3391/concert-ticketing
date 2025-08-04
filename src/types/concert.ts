@@ -12,8 +12,8 @@ export interface Concert extends BaseEntity {
   title: string;
   description: string;
   location: string;
-  location_X: number; // 경도
-  location_y: number; // 위도
+  location_X: number;
+  location_y: number;
   start_date: string;
   end_date: string;
   rating: number;

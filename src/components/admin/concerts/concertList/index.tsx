@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 import { Concert } from '@/types/concert';
-import { mockConcerts } from '@/lib/mockData';
+import { apiCall } from '@/lib/api';
 
 import { ConcertCard } from './ConcertCard';
 import styles from './concertList.module.css';
@@ -17,11 +17,10 @@ interface FilterOptions {
   searchQuery: string;
 }
 
-
 export default function ConcertList({ initialConcerts }: ConcertListProps = {}) {
-  const [concerts, setConcerts] = useState<Concert[]>(
-    initialConcerts || mockConcerts,
-  );
+  const [concerts, setConcerts] = useState<Concert[]>(initialConcerts || []);
+  const [loading, setLoading] = useState<boolean>(!initialConcerts);
+  const [error, setError] = useState<string | null>(null);
 
   const [filters, setFilters] = useState<FilterOptions>({
     sortBy: 'created_at',
@@ -29,7 +28,36 @@ export default function ConcertList({ initialConcerts }: ConcertListProps = {}) 
     searchQuery: '',
   });
 
+  console.log(concerts);
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // 콘서트 목록 조회 API 호출
+  const fetchConcerts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await apiCall('/admin/concerts', {
+        method: 'GET',
+      });
+
+      setConcerts(data.concerts || []);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : '콘서트 목록을 불러오는데 실패했습니다.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 컴포넌트 마운트 시 초기 데이터 로드
+  useEffect(() => {
+    if (!initialConcerts) {
+      fetchConcerts();
+    }
+  }, [initialConcerts]);
 
   // 필터링 및 정렬된 concert 목록
   const filteredConcerts = concerts
@@ -74,13 +102,32 @@ export default function ConcertList({ initialConcerts }: ConcertListProps = {}) 
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleDeleteConcert = (concertId: number, concertTitle: string): void => {
+  const handleDeleteConcert = async (
+    concertId: number,
+    concertTitle: string,
+  ): Promise<void> => {
     if (
-      window.confirm(
+      !window.confirm(
         `${concertTitle}을(를) 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
       )
     ) {
+      return;
+    }
+
+    try {
+      await apiCall(`/admin/concerts/${concertId}`, {
+        method: 'DELETE',
+      });
+
+      // 삭제 성공 시 로컬 상태에서도 제거
       setConcerts(concerts.filter((concert) => concert.id !== concertId));
+
+      // 성공 메시지 (선택사항)
+      alert(`${concertTitle}이(가) 성공적으로 삭제되었습니다.`);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : '콘서트 삭제에 실패했습니다.';
+      alert(`삭제 실패: ${errorMessage}`);
     }
   };
 
@@ -157,8 +204,24 @@ export default function ConcertList({ initialConcerts }: ConcertListProps = {}) 
         </div>
       </div>
 
-      {/* 콘서트 목록 */}
-      {filteredConcerts.length === 0 ? (
+      {/* 로딩 상태 */}
+      {loading ? (
+        <div className={styles.loadingState}>
+          <div className={styles.loadingIcon}>⏳</div>
+          <h3 className={styles.loadingTitle}>콘서트 목록을 불러오는 중...</h3>
+        </div>
+      ) : error ? (
+        /* 오류 상태 */
+        <div className={styles.errorState}>
+          <div className={styles.errorIcon}>❌</div>
+          <h3 className={styles.errorTitle}>오류가 발생했습니다</h3>
+          <p className={styles.errorDescription}>{error}</p>
+          <button onClick={fetchConcerts} className={styles.retryButton}>
+            다시 시도
+          </button>
+        </div>
+      ) : /* 콘서트 목록 */
+      filteredConcerts.length === 0 ? (
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>🎵</div>
           <h3 className={styles.emptyTitle}>

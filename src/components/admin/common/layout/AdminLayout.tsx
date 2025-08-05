@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import { useThemeStore, initializeSystemThemeListener } from '@/core/themeStore';
 import { useSidebar } from '@/hooks/useSidebar';
+import { getAdminInfo, logout } from '@/lib/auth';
 
 import Sidebar from './Sidebar';
 import ThemeToggle from '../ui/theme/ThemeToggle';
@@ -23,7 +24,29 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   } = useSidebar(true);
 
   const [isMobile, setIsMobile] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const initializeTheme = useThemeStore((state) => state.initializeTheme);
+  
+  // 관리자 정보 가져오기
+  const adminInfo = getAdminInfo();
+
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (userMenuOpen && !target.closest(`.${styles.userMenuContainer}`)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [userMenuOpen]);
 
   // 라이트모드, 다크모드 감지 클린업 함수
   useEffect(() => {
@@ -105,15 +128,43 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     );
   };
 
+  const handleLogout = () => {
+    if (window.confirm('로그아웃하시겠습니까?')) {
+      logout();
+    }
+  };
+
   const renderUserMenu = () => (
-    <button
-      type='button'
-      className={styles.userMenu}
-      title='사용자 메뉴'
-      aria-label='사용자 메뉴'
-    >
-      <Icons.User size={isMobile ? 14 : 16} />
-    </button>
+    <div className={styles.userMenuContainer}>
+      <button
+        type='button'
+        className={styles.userMenu}
+        onClick={() => setUserMenuOpen(!userMenuOpen)}
+        title='사용자 메뉴'
+        aria-label='사용자 메뉴'
+      >
+        <Icons.User size={isMobile ? 14 : 16} />
+        <Icons.ChevronDown size={12} className={userMenuOpen ? styles.chevronUp : ''} />
+      </button>
+      
+      {userMenuOpen && (
+        <div className={styles.userDropdown}>
+          <div className={styles.userInfo}>
+            <div className={styles.userName}>{adminInfo?.admin_id || 'Admin'}</div>
+            <div className={styles.userRole}>{adminInfo?.role || '관리자'}</div>
+          </div>
+          <hr className={styles.divider} />
+          <button
+            type='button'
+            className={styles.logoutButton}
+            onClick={handleLogout}
+          >
+            <Icons.LogOut size={16} />
+            로그아웃
+          </button>
+        </div>
+      )}
+    </div>
   );
 
   // localStorage 로딩이 완료되지 않은 경우 깜빡임 방지

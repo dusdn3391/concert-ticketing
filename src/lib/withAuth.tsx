@@ -8,30 +8,36 @@ interface AuthWrapperProps {
 
 // 로딩 컴포넌트
 const AuthLoadingComponent = () => (
-  <div style={{
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'var(--bg-primary)',
-    flexDirection: 'column',
-    gap: '16px'
-  }}>
-    <div style={{
-      width: '40px',
-      height: '40px',
-      border: '4px solid rgba(102, 126, 234, 0.2)',
-      borderTop: '4px solid #667eea',
-      borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
-    }} />
-    <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-      인증 확인 중...
-    </p>
+  <div
+    style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'var(--bg-primary)',
+      flexDirection: 'column',
+      gap: '16px',
+    }}
+  >
+    <div
+      style={{
+        width: '40px',
+        height: '40px',
+        border: '4px solid rgba(102, 126, 234, 0.2)',
+        borderTop: '4px solid #667eea',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+      }}
+    />
+    <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>인증 확인 중...</p>
     <style jsx>{`
       @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
     `}</style>
   </div>
@@ -54,14 +60,14 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
 
       // 인증 상태 확인
       const isValid = validateAuth();
-      
+
       if (isValid) {
         setIsAuthorized(true);
       } else {
         // 인증 실패 시 로그인 페이지로 리다이렉트
         router.replace('/admin/login');
       }
-      
+
       setIsLoading(false);
     };
 
@@ -87,7 +93,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
 
 // 고차 컴포넌트 (HOC) - 페이지 컴포넌트를 인증 래퍼로 감싸기
 export const withAuth = <P extends object>(
-  WrappedComponent: React.ComponentType<P>
+  WrappedComponent: React.ComponentType<P>,
 ): React.FC<P> => {
   const AuthenticatedComponent: React.FC<P> = (props) => {
     return (

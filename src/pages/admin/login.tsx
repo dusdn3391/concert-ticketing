@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-
-import { apiCall } from '@/lib/api';
 import styles from '@/components/admin/login/AdminLogin.module.css';
 
 interface LoginForm {
@@ -39,45 +37,36 @@ export default function AdminLogin() {
       setLoading(true);
       setError(null);
 
-      // 개발 환경에서 테스트 계정 체크
-      if (formData.admin_id === 'admin' && formData.password === '1234') {
-        // 테스트 계정 - 직접 로그인 처리
-        const testAdmin = {
-          id: 2,
-          admin_id: 'admin',
-          email: 'test@concert.com',
-          role: 'ADMIN',
-          company: '테스트컴퍼니'
-        };
-        const testToken = `test_token_${Date.now()}`;
-
-        localStorage.setItem('admin_token', testToken);
-        localStorage.setItem('admin_info', JSON.stringify(testAdmin));
-
-        // 성공 메시지
-        alert('테스트 계정으로 로그인 성공! 관리자 페이지로 이동합니다.');
-        
-        // 강제 페이지 이동
-        setTimeout(() => {
-          window.location.href = '/admin';
-        }, 100);
-        return;
-      }
-
-      // 실제 API 호출
-      const data = await apiCall('/admin/login', {
+      const response = await fetch('http://localhost:8080/api/admin/login', {
         method: 'POST',
-        body: JSON.stringify(formData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          adminId: formData.admin_id,
+          password: formData.password,
+        }),
       });
 
-      // 토큰을 localStorage에 저장
+      if (!response.ok) {
+        throw new Error('아이디 또는 비밀번호가 올바르지 않습니다.');
+      }
+
+      const data = await response.json();
+
       if (data.token) {
         localStorage.setItem('admin_token', data.token);
         localStorage.setItem('admin_info', JSON.stringify(data.admin));
-      }
+        alert('로그인이 성공하였습니다');
 
-      // 관리자 대시보드로 리다이렉트
-      await router.push('/admin');
+        if (data.state === 'SITE_ADMIN') {
+          router.push('/site-admin/banner');
+        } else {
+          router.push('/admin/concerts');
+        }
+      } else {
+        throw new Error('로그인에 실패했습니다.');
+      }
     } catch (err) {
       console.error('로그인 에러:', err);
       setError(err instanceof Error ? err.message : '로그인에 실패했습니다.');
@@ -155,12 +144,6 @@ export default function AdminLogin() {
 
           <div className={styles.footer}>
             <p className={styles.footerText}>콘서트 관리자만 접근 가능합니다</p>
-            <div className={styles.testAccount}>
-              <p className={styles.testTitle}>🧪 테스트 계정</p>
-              <p className={styles.testInfo}>
-                ID: <strong>admin</strong> / PW: <strong>1234</strong>
-              </p>
-            </div>
           </div>
         </div>
       </div>

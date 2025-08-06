@@ -16,7 +16,7 @@ const NoticeListPage = () => {
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('admin_token');
         if (!token) {
           alert('로그인이 필요합니다.');
           return;
@@ -37,7 +37,6 @@ const NoticeListPage = () => {
         }
 
         const data = await res.json();
-        // data가 배열이라고 가정, 실제 API 구조에 맞게 조정 필요
         setNotices(data);
       } catch (error) {
         console.error('공지사항 조회 중 오류:', error);
@@ -94,10 +93,6 @@ const NoticeListPage = () => {
                       <Link
                         href={{
                           pathname: `/site-admin/notice/${notice.id}`,
-                          query: {
-                            title: notice.title,
-                            status: notice.status,
-                          },
                         }}
                         className={pageStyles.editBtn}
                       >

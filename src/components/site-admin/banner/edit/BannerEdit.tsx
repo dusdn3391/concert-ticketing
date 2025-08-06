@@ -6,19 +6,10 @@ import styles from './BannerEdit.module.css';
 
 type Props = {
   id: string;
-  title: string;
-  description?: string;
-  status: '노출' | '비노출';
 };
 
-const BannerEditPage = ({ id, title, status, description }: Props) => {
-  const initialData = {
-    title,
-    description: description ?? '',
-    status,
-  };
-
-  console.log('배너 정보 ', { id, status, title });
+const BannerEditPage = ({ id }: Props) => {
+  console.log('배너 정보 ', { id });
   const handleSubmit = (form: any) => {
     console.log('배너 수정 완료:', { id, ...form });
     alert('배너가 수정되었습니다.');
@@ -31,12 +22,7 @@ const BannerEditPage = ({ id, title, status, description }: Props) => {
         <Nav />
         <main className={styles.content}>
           <h2>배너 수정</h2>
-          <BannerForm
-            mode='edit'
-            initialData={initialData}
-            id={id}
-            onSubmit={handleSubmit}
-          />
+          <BannerForm mode='edit' id={id} onSubmit={handleSubmit} />
         </main>
       </div>
     </div>

@@ -24,7 +24,11 @@ export default function SignupPage() {
 
   const handleRoleSelect = (role: 'user' | 'admin') => {
     console.log('선택된 역할:', role);
-    setStep('login'); // 역할 선택하면 로그인폼 보여줌
+    if (role === 'admin') {
+      router.push('/admin/signup'); // 바로 이동
+    } else {
+      setStep('login'); // 일반 유저는 로그인 폼으로
+    }
   };
 
   if (step === 'signup') return <SignupForm />;

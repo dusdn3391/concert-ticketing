@@ -12,7 +12,6 @@ export default function SignupForm() {
     nickname: '',
     birthday: '',
     phone: '',
-    verifyCode: '',
   });
 
   const [errors, setErrors] = useState<typeof form>({
@@ -22,10 +21,7 @@ export default function SignupForm() {
     nickname: '',
     birthday: '',
     phone: '',
-    verifyCode: '',
   });
-
-  const [showVerifyInput, setShowVerifyInput] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -66,25 +62,9 @@ export default function SignupForm() {
       newErrors.phone = '핸드폰 번호를 입력해주세요.';
       isValid = false;
     }
-    if (showVerifyInput && !form.verifyCode) {
-      newErrors.verifyCode = '인증번호를 입력해주세요.';
-      isValid = false;
-    }
 
     setErrors(newErrors);
     return isValid;
-  };
-
-  const handleVerifyClick = () => {
-    if (!form.phone) {
-      setErrors((prev) => ({
-        ...prev,
-        phone: '핸드폰 번호를 먼저 입력해주세요.',
-      }));
-      return;
-    }
-    // TODO: 인증번호 요청 API 호출 가능
-    setShowVerifyInput(true);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -106,6 +86,7 @@ export default function SignupForm() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
         },
         body: JSON.stringify(payload),
       });
@@ -201,40 +182,16 @@ export default function SignupForm() {
         {/* 핸드폰번호 */}
         <div className={styles.inputGroup}>
           <label htmlFor='phone'>핸드폰번호</label>
-          <div className={styles.inputWrapper}>
-            <input
-              type='tel'
-              id='phone'
-              name='phone'
-              value={form.phone}
-              onChange={handleChange}
-              className={styles.input}
-            />
-            <button
-              type='button'
-              className={styles.verifyButton}
-              onClick={handleVerifyClick}
-            >
-              인증
-            </button>
-          </div>
+          <input
+            type='tel'
+            id='phone'
+            name='phone'
+            value={form.phone}
+            onChange={handleChange}
+            className={styles.input}
+          />
           {errors.phone && <p className={styles.error}>{errors.phone}</p>}
         </div>
-
-        {/* 인증번호 */}
-        {showVerifyInput && (
-          <div className={styles.inputGroup}>
-            <label htmlFor='verifyCode'>인증번호</label>
-            <input
-              id='verifyCode'
-              name='verifyCode'
-              value={form.verifyCode}
-              onChange={handleChange}
-              className={styles.input}
-            />
-            {errors.verifyCode && <p className={styles.error}>{errors.verifyCode}</p>}
-          </div>
-        )}
 
         <button type='submit' className={styles.submitButton}>
           회원가입

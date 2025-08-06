@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Header from '@/components/site-admin/common/Header';
 import Nav from '@/components/site-admin/common/Nav';
 import Pagination from '@/components/user/common/Pagination'; // ✅ 추가
-import styles from './UserTable.module.css'; // ✅ 오타 수정
+import styles from './AdminTable.module.css'; // ✅ 오타 수정
 
 type User = {
   id: number;

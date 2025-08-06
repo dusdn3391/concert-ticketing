@@ -1,25 +1,26 @@
 import { useState, ChangeEvent } from 'react';
 import styles from './NoticeForm.module.css';
+import { useRouter } from 'next/router';
 
 type NoticeFormProps = {
   mode: 'create' | 'edit';
   initialData?: {
+    id?: number; // 👈 수정 시 id 필요
     title: string;
     description?: string;
-    status:string;
+    status: string;
     imageUrl?: string;
   };
-  onSubmit: (form: {
+  onSubmit?: (form: {
     title: string;
-    status:string;
+    status: string;
     description: string;
     imageFile: File | null;
   }) => void;
 };
 
-const NoticeForm = ({ mode, initialData, onSubmit }: NoticeFormProps) => {
-    console.log('initialData:', initialData);
-  console.log('initialData.status:', initialData?.status);
+const NoticeForm = ({ mode, initialData }: NoticeFormProps) => {
+  const router = useRouter();
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [status, setStatus] = useState(initialData?.status || '');
@@ -28,7 +29,6 @@ const NoticeForm = ({ mode, initialData, onSubmit }: NoticeFormProps) => {
     initialData?.imageUrl || null,
   );
 
-  console.log('sdasdasasd',status)
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -37,9 +37,43 @@ const NoticeForm = ({ mode, initialData, onSubmit }: NoticeFormProps) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ title, description, status, imageFile });
+
+    const visibility = status === '노출' ? 'VISIBLE' : 'HIDDEN';
+    const imagePaths = imageFile ? ['example.jpg'] : [];
+
+    const token = localStorage.getItem('admin_token');
+    const apiUrl =
+      mode === 'edit'
+        ? `http://localhost:8080/api/notices/${initialData?.id}`
+        : 'http://localhost:8080/api/notices';
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: mode === 'edit' ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title,
+          content: description,
+          visibility,
+          imagePaths,
+        }),
+      });
+
+      if (!response.ok) throw new Error(`${mode === 'edit' ? '수정' : '등록'} 실패`);
+
+      const data = await response.json();
+      console.log(`공지 ${mode === 'edit' ? '수정' : '등록'} 완료:`, data);
+      alert(`공지사항이 ${mode === 'edit' ? '수정' : '등록'}되었습니다!`);
+      router.push('/site-admin/notice');
+    } catch (error) {
+      console.error(`${mode === 'edit' ? '수정' : '등록'} 중 에러:`, error);
+      alert(`공지사항 ${mode === 'edit' ? '수정' : '등록'}에 실패했습니다.`);
+    }
   };
 
   return (
@@ -49,7 +83,6 @@ const NoticeForm = ({ mode, initialData, onSubmit }: NoticeFormProps) => {
         id='title'
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder='공지사항 제목을 입력하세요'
         required
       />
 
@@ -58,11 +91,11 @@ const NoticeForm = ({ mode, initialData, onSubmit }: NoticeFormProps) => {
         id='description'
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder='공지사항 설명을 입력하세요'
         rows={10}
       />
-     <label htmlFor="status">공개</label>
-     <select
+
+      <label htmlFor='status'>공개</label>
+      <select
         id='status'
         value={status}
         onChange={(e) => setStatus(e.target.value as '노출' | '비노출')}

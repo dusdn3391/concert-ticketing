@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import { useThemeStore, initializeSystemThemeListener } from '@/core/themeStore';
 import { useSidebar } from '@/hooks/useSidebar';
-import { getAdminInfo, logout } from '@/lib/auth';
+import { logout } from '@/lib/auth';
 
 import Sidebar from './Sidebar';
 import ThemeToggle from '../ui/theme/ThemeToggle';
@@ -26,9 +26,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const initializeTheme = useThemeStore((state) => state.initializeTheme);
-  
+
   // 관리자 정보 가져오기
-  const adminInfo = getAdminInfo();
+  // const adminInfo = getAdminInfo();
 
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -146,19 +146,15 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         <Icons.User size={isMobile ? 14 : 16} />
         <Icons.ChevronDown size={12} className={userMenuOpen ? styles.chevronUp : ''} />
       </button>
-      
+
       {userMenuOpen && (
         <div className={styles.userDropdown}>
           <div className={styles.userInfo}>
-            <div className={styles.userName}>{adminInfo?.admin_id || 'Admin'}</div>
-            <div className={styles.userRole}>{adminInfo?.role || '관리자'}</div>
+            {/* <div className={styles.userName}>{adminInfo?.admin_id || 'Admin'}</div>
+            <div className={styles.userRole}>{adminInfo?.role || '관리자'}</div> */}
           </div>
           <hr className={styles.divider} />
-          <button
-            type='button'
-            className={styles.logoutButton}
-            onClick={handleLogout}
-          >
+          <button type='button' className={styles.logoutButton} onClick={handleLogout}>
             <Icons.LogOut size={16} />
             로그아웃
           </button>

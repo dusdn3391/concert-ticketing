@@ -16,6 +16,7 @@ type BannerFormProps = {
 
 export default function BannerForm({ mode, initialData, id, onSubmit }: BannerFormProps) {
   const router = useRouter();
+
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [status, setStatus] = useState<'노출' | '비노출'>(initialData?.status || '노출');
@@ -23,6 +24,51 @@ export default function BannerForm({ mode, initialData, id, onSubmit }: BannerFo
   const [imagePreview, setImagePreview] = useState<string | null>(
     initialData?.imageUrl || null,
   );
+  const [loading, setLoading] = useState(false);
+
+  // edit 모드에서 id가 있을 때 배너 데이터 가져오기
+  useEffect(() => {
+    if (mode === 'edit' && id) {
+      const fetchBanner = async () => {
+        setLoading(true);
+        try {
+          const token = localStorage.getItem('admin_token');
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/banners/${id}`,
+            {
+              headers: {
+                Accept: '*/*',
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+          if (!res.ok) {
+            throw new Error('배너 정보를 불러오는데 실패했습니다.');
+          }
+          const data = await res.json();
+
+          // API 반환 예시
+          // {
+          //   title: string,
+          //   description: string,
+          //   imageUrl: string,
+          //   status: 'SHOW' | 'HIDE'
+          // }
+
+          setTitle(data.title);
+          setDescription(data.description);
+          setStatus(data.status === 'SHOW' ? '노출' : '비노출');
+          setImagePreview(data.imageUrl || null);
+        } catch (err) {
+          alert(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다.');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchBanner();
+    }
+  }, [mode, id]);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -33,7 +79,7 @@ export default function BannerForm({ mode, initialData, id, onSubmit }: BannerFo
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault(); // form 제출 방지
+    e?.preventDefault();
 
     if (!title.trim() || !description.trim()) {
       alert('제목과 내용을 모두 입력해주세요.');
@@ -45,36 +91,64 @@ export default function BannerForm({ mode, initialData, id, onSubmit }: BannerFo
         title,
         description,
         status: status === '노출' ? 'SHOW' : 'HIDE',
-        imageUrl: imagePreview || '', // 서버에서 파일 업로드 처리 안 한다면 URL만
+        imageUrl: imagePreview || '',
       };
 
-      console.log('[handleSubmit] 제출 데이터:', bannerPayload);
-
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/banners`;
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify(bannerPayload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('등록 실패:', errorData);
-        alert(`등록에 실패했습니다: ${errorData.message || '오류 발생'}`);
+      const token = localStorage.getItem('admin_token');
+      if (!token) {
+        alert('로그인이 필요합니다.');
         return;
       }
 
-      alert('배너가 성공적으로 등록되었습니다.');
+      let response;
+      if (mode === 'create') {
+        response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/banners/create`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(bannerPayload),
+          },
+        );
+      } else if (mode === 'edit' && id) {
+        response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/banners/${id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(bannerPayload),
+          },
+        );
+      }
+
+      if (!response || !response.ok) {
+        const errorData = await response?.json();
+        console.error('오류:', errorData);
+        alert(`저장에 실패했습니다: ${errorData?.message || '오류 발생'}`);
+        return;
+      }
+
+      alert(
+        mode === 'create'
+          ? '배너가 성공적으로 등록되었습니다.'
+          : '배너가 성공적으로 수정되었습니다.',
+      );
       router.push('/site-admin/banner');
     } catch (error) {
       console.error('서버 오류:', error);
       alert('서버 요청 중 오류가 발생했습니다.');
     }
   };
+
+  if (loading) {
+    return <p>배너 정보를 불러오는 중입니다...</p>;
+  }
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>

@@ -2,17 +2,13 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 import styles from '@/styles/Home.module.css';
-
 import ConcertCard from '@/components/user/concert/ConcertCard';
 
-const slides = [
-  { id: 1, text: 'Slide 1', image: '/slides/slide-1.png' },
-  { id: 2, text: 'Slide 2', image: '/slides/slide-2.png' },
-  { id: 3, text: 'Slide 3', image: '/slides/slide-3.png' },
-  { id: 4, text: 'Slide 4', image: '/slides/slide-4.png' },
-  { id: 5, text: 'Slide 5', image: '/slides/slide-5.png' },
-  { id: 6, text: 'Slide 6', image: '/slides/slide-6.png' },
-];
+interface Slide {
+  id: number;
+  text: string;
+  image: string;
+}
 
 const events = Array.from({ length: 10 }, (_, i) => ({
   id: i + 1,
@@ -22,40 +18,61 @@ const events = Array.from({ length: 10 }, (_, i) => ({
 }));
 
 export default function HomePage() {
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [loadingSlides, setLoadingSlides] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [hoveredEvent, setHoveredEvent] = useState(events[0]);
   const [page, setPage] = useState(0);
   const [eventIndex, setEventIndex] = useState(0);
 
+  // ✅ 슬라이드 데이터 API 호출
   useEffect(() => {
-    console.log('=== 환경변수 디버깅 ===');
-    console.log('API_BASE_URL:', process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL);
-    console.log('NODE_ENV:', process.env.NODE_ENV);
-
-    // 모든 NEXT_PUBLIC_ 환경변수 확인
-    Object.keys(process.env).forEach((key) => {
-      if (key.startsWith('NEXT_PUBLIC_')) {
-        console.log(`${key}:`, process.env[key]);
-      }
-    });
+    fetch(`${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/banners`, {
+      headers: {
+        Accept: '*/*',
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('슬라이드 배너 데이터를 불러오는 데 실패했습니다.');
+        return res.json();
+      })
+      .then((data: any[]) => {
+        const mapped = data.map((b) => ({
+          id: b.id,
+          text: b.title,
+          image: b.imageUrl,
+        }));
+        setSlides(mapped);
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        setLoadingSlides(false);
+      });
   }, []);
 
+  // ✅ 슬라이드 자동 이동
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying || slides.length === 0) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, slides.length]);
 
+  // ✅ 이벤트 자동 전환
   useEffect(() => {
     const eventInterval = setInterval(() => {
-      setEventIndex((prev) => (prev + 1) % events.length);
-      setHoveredEvent(events[(eventIndex + 1) % events.length]);
+      setEventIndex((prev) => {
+        const next = (prev + 1) % events.length;
+        setHoveredEvent(events[next]);
+        return next;
+      });
     }, 3000);
     return () => clearInterval(eventInterval);
-  }, [eventIndex]);
+  }, []);
 
   const togglePlay = () => setIsPlaying((prev) => !prev);
   const startIdx = page * 5;
@@ -70,6 +87,10 @@ export default function HomePage() {
   }));
 
   const limitedConcerts = concerts.slice(0, 6);
+
+  if (loadingSlides) {
+    return <div>슬라이드를 불러오는 중...</div>;
+  }
 
   return (
     <div className={styles.container}>
@@ -153,6 +174,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 콘서트 */}
       <section className={styles.concerts}>
         <h2>콘서트</h2>
         <div className={styles.concertGrid}>

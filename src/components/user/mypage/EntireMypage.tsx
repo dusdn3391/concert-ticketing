@@ -20,8 +20,15 @@ interface Inquiry {
   date: string;
 }
 
+interface Notice {
+  id: number;
+  title: string;
+  createdAt: string;
+}
+
 export default function EntireMypage() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [latestNotice, setLatestNotice] = useState<Notice | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const inquiriesPerPage = 5;
 
@@ -83,7 +90,28 @@ export default function EntireMypage() {
       }
     };
 
+    const fetchLatestNotice = async () => {
+      try {
+        const res = await fetch(`http://localhost:8080/api/notices`, {
+          headers: { Accept: '*/*' },
+        });
+        if (!res.ok) throw new Error('Failed to fetch notices');
+        const data = await res.json();
+        console.log(data);
+        if (Array.isArray(data)) {
+          const sorted = data.sort(
+            (a: Notice, b: Notice) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          );
+          setLatestNotice(sorted[0]);
+        }
+      } catch (err) {
+        console.error('❌ 공지 조회 실패:', err);
+      }
+    };
+
     fetchInquiries();
+    fetchLatestNotice();
   }, [currentPage]);
 
   return (
@@ -96,7 +124,9 @@ export default function EntireMypage() {
             <div className={styles.noticeBox}>
               <div className={styles.tabs}>
                 <div className={styles.notice}>NOTICE</div>
-                <div className={styles.recentNotice}>최신 공지사항 or 이벤트</div>
+                <div className={styles.recentNotice}>
+                  {latestNotice ? latestNotice.title : '공지사항이 없습니다.'}
+                </div>
               </div>
             </div>
 

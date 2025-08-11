@@ -43,7 +43,7 @@ const InquiryListPage: React.FC = () => {
   useEffect(() => {
     const fetchInquiries = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('admin_token');
         const res = await fetch(
           `http://localhost:8080/api/admin/inquiries?page=${currentPage}&size=${pageSize}`,
           {
@@ -95,7 +95,10 @@ const InquiryListPage: React.FC = () => {
 
   // 답변 페이지로 이동
   const handleGoToAnswer = (inquiry: InquiryItem) => {
-    router.push(`/site-admin/inquiry/${inquiry.id}`);
+    router.push({
+      pathname: `/site-admin/inquiry/${inquiry.id}`,
+      //query: { data: JSON.stringify(inquiry) },
+    });
   };
 
   // 새 문의 작성 페이지로 이동

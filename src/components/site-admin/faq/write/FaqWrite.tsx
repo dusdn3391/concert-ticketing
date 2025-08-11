@@ -2,10 +2,10 @@
 import { useRouter } from 'next/router';
 import Header from '@/components/site-admin/common/Header';
 import Nav from '@/components/site-admin/common/Nav';
-import BannerForm from '@/components/site-admin/faq/FaqForm';
+import FaqForm from '@/components/site-admin/faq/FaqForm';
 import styles from './Write.module.css';
 
-const BannerWritePage = () => {
+const FaqWritePage = () => {
   const router = useRouter();
 
   const handleSubmit = (form: any) => {
@@ -21,11 +21,11 @@ const BannerWritePage = () => {
         <Nav />
         <main className={styles.content}>
           <h2>faq 등록</h2>
-          <BannerForm mode='create' onSubmit={handleSubmit} />
+          <FaqForm mode='create' onSubmit={handleSubmit} />
         </main>
       </div>
     </div>
   );
 };
 
-export default BannerWritePage;
+export default FaqWritePage;

@@ -13,6 +13,68 @@ interface Banner {
   imageUrl: string;
 }
 
+const AuthenticatedImage = ({
+  src,
+  alt,
+  style,
+}: {
+  src: string;
+  alt: string;
+  style?: React.CSSProperties;
+}) => {
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      try {
+        const token = localStorage.getItem('admin_token');
+        if (!token) {
+          setImageError(true);
+          return;
+        }
+
+        const response = await fetch(src, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('이미지 로드 실패');
+        }
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        setImageSrc(objectUrl);
+      } catch (err) {
+        console.error('이미지 로딩 오류:', err);
+        setImageError(true);
+      }
+    };
+
+    if (src) {
+      fetchImage();
+    }
+
+    return () => {
+      if (imageSrc) {
+        URL.revokeObjectURL(imageSrc);
+      }
+    };
+  }, [src]);
+
+  if (imageError) {
+    return <span>이미지 로드 실패</span>;
+  }
+
+  if (!imageSrc) {
+    return <span>로딩 중...</span>;
+  }
+
+  return <img src={imageSrc} alt={alt} style={style} />;
+};
+
 const BannerListPage = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +105,14 @@ const BannerListPage = () => {
       }
 
       const data = await response.json();
-      setBanners(data);
+      const mapped = data.map((banner: any) => ({
+        ...banner,
+        imageUrl: banner.imageUrl
+          ? `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}${banner.imageUrl}`
+          : null,
+      }));
+
+      setBanners(mapped);
     } catch (err) {
       console.error('배너 로딩 오류:', err);
       setError(err instanceof Error ? err.message : '배너를 불러오는 중 오류 발생');
@@ -111,7 +180,7 @@ const BannerListPage = () => {
             <table className={pageStyles.table}>
               <thead>
                 <tr>
-                  <th>이미지</th> {/* ✅ 이미지 열 추가 */}
+                  <th>이미지</th>
                   <th>제목</th>
                   <th>상태</th>
                   <th>등록일</th>
@@ -123,7 +192,7 @@ const BannerListPage = () => {
                   <tr key={banner.id}>
                     <td>
                       {banner.imageUrl ? (
-                        <img
+                        <AuthenticatedImage
                           src={banner.imageUrl}
                           alt={banner.title}
                           style={{ width: '100px', height: 'auto' }}

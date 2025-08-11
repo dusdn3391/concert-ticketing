@@ -94,9 +94,9 @@ export const useVenueStore = create<VenueStore>((set, get) => ({
       set({ loading: true, error: null });
 
       const baseUrl = process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL;
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('admin_token');
 
-      const response = await fetch(`${baseUrl}/admin/concert-halls`, {
+      const response = await fetch(`${baseUrl}/api/concerts/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

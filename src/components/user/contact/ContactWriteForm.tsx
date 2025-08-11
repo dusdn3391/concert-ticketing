@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-
+import LoginModal from '@/components/user/common/LoginModal';
 import ContactSidebar from '@/components/user/contact/ContactNav';
 import styles from './ContactWrite.module.css';
 
@@ -10,10 +10,8 @@ const CustomerInquiryForm: React.FC = () => {
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const [files, setFiles] = useState<FileList | null>(null);
-  // const [phoneConsent, setPhoneConsent] = useState<boolean>(false);
-  // const [smsConsent, setSmsConsent] = useState<boolean>(false);
-  // const [notificationEmail, setNotificationEmail] = useState<string>('');
-  // const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [filePreviews, setFilePreviews] = useState<string[]>([]); // 미리보기 URL 저장용
+  const [showLoginModal, setShowLoginModal] = useState(false); // 로그인 모달 제어용
 
   const categories = [
     { code: 'RESERVATION', label: '예매' },
@@ -25,7 +23,15 @@ const CustomerInquiryForm: React.FC = () => {
   ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFiles(e.target.files);
+    const selectedFiles = e.target.files;
+    setFiles(selectedFiles);
+
+    if (selectedFiles && selectedFiles.length > 0) {
+      const previews = Array.from(selectedFiles).map((file) => URL.createObjectURL(file));
+      setFilePreviews(previews);
+    } else {
+      setFilePreviews([]);
+    }
   };
 
   const handleSubmit = async () => {
@@ -37,24 +43,6 @@ const CustomerInquiryForm: React.FC = () => {
       console.warn('[handleSubmit] 제목 또는 내용 미입력');
       return;
     }
-
-    // if (!phoneConsent && !smsConsent) {
-    //   alert('답변 받을 수단을 최소 하나 이상 선택해주세요.');
-    //   console.warn('[handleSubmit] 알림 수단 미선택');
-    //   return;
-    // }
-
-    // if (phoneConsent && !notificationEmail.trim()) {
-    //   alert('이메일 알림을 선택하셨다면 이메일 주소를 입력해주세요.');
-    //   console.warn('[handleSubmit] 이메일 수신 동의했지만 이메일 주소 없음');
-    //   return;
-    // }
-
-    // if (smsConsent && !phoneNumber.trim()) {
-    //   alert('SMS 알림을 선택하셨다면 휴대폰 번호를 입력해주세요.');
-    //   console.warn('[handleSubmit] SMS 수신 동의했지만 휴대폰 번호 없음');
-    //   return;
-    // }
 
     try {
       const formData = new FormData();
@@ -110,16 +98,6 @@ const CustomerInquiryForm: React.FC = () => {
   const handleCancel = () => {
     console.log('취소');
   };
-
-  // const handlePhoneConsentChange = (checked: boolean) => {
-  //   setPhoneConsent(checked);
-  //   if (!checked) setNotificationEmail('');
-  // };
-
-  // const handleSmsConsentChange = (checked: boolean) => {
-  //   setSmsConsent(checked);
-  //   if (!checked) setPhoneNumber('');
-  // };
 
   return (
     <div className={styles.container}>
@@ -180,6 +158,17 @@ const CustomerInquiryForm: React.FC = () => {
                   <label htmlFor='fileUpload' className={styles.fileLabel}>
                     파일첨부
                   </label>
+                </div>
+                <div className={styles.filePreviewContainer}>
+                  {filePreviews.map((src, index) => (
+                    <img
+                      key={index}
+                      src={src}
+                      alt={`첨부파일 미리보기 ${index + 1}`}
+                      className={styles.filePreviewImage}
+                      onLoad={() => URL.revokeObjectURL(src)} // 메모리 누수 방지
+                    />
+                  ))}
                 </div>
                 <div className={styles.fileInfo}>
                   <p>
@@ -275,6 +264,7 @@ const CustomerInquiryForm: React.FC = () => {
             </div>
           </div>
         </div>
+        {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
       </div>
     </div>
   );

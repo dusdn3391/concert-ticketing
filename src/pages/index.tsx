@@ -27,30 +27,43 @@ export default function HomePage() {
   const [eventIndex, setEventIndex] = useState(0);
 
   // ✅ 슬라이드 데이터 API 호출
+  const fetchSlides = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/banners`,
+        {
+          headers: {
+            Accept: '*/*',
+          },
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error('슬라이드 배너 데이터를 불러오는 데 실패했습니다.');
+      }
+
+      const data = await res.json();
+
+      // data가 배열이라고 가정하고, 이미지 URL에 베이스 붙이기
+      const mapped = data.map((b: any) => ({
+        id: b.id,
+        text: b.title,
+        image: b.imageUrl
+          ? `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}${b.imageUrl}`
+          : null,
+      }));
+
+      setSlides(mapped);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSlides(false);
+    }
+  };
+
+  // 컴포넌트 마운트 시 호출
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/banners`, {
-      headers: {
-        Accept: '*/*',
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('슬라이드 배너 데이터를 불러오는 데 실패했습니다.');
-        return res.json();
-      })
-      .then((data: any[]) => {
-        const mapped = data.map((b) => ({
-          id: b.id,
-          text: b.title,
-          image: b.imageUrl,
-        }));
-        setSlides(mapped);
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => {
-        setLoadingSlides(false);
-      });
+    fetchSlides();
   }, []);
 
   // ✅ 슬라이드 자동 이동

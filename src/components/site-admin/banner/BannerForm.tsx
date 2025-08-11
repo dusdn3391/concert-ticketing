@@ -26,7 +26,6 @@ export default function BannerForm({ mode, initialData, id, onSubmit }: BannerFo
   );
   const [loading, setLoading] = useState(false);
 
-  // edit 모드에서 id가 있을 때 배너 데이터 가져오기
   useEffect(() => {
     if (mode === 'edit' && id) {
       const fetchBanner = async () => {
@@ -46,14 +45,6 @@ export default function BannerForm({ mode, initialData, id, onSubmit }: BannerFo
             throw new Error('배너 정보를 불러오는데 실패했습니다.');
           }
           const data = await res.json();
-
-          // API 반환 예시
-          // {
-          //   title: string,
-          //   description: string,
-          //   imageUrl: string,
-          //   status: 'SHOW' | 'HIDE'
-          // }
 
           setTitle(data.title);
           setDescription(data.description);
@@ -87,48 +78,54 @@ export default function BannerForm({ mode, initialData, id, onSubmit }: BannerFo
     }
 
     try {
-      const bannerPayload = {
-        title,
-        description,
-        status: status === '노출' ? 'SHOW' : 'HIDE',
-        imageUrl: imagePreview || '',
-      };
-
       const token = localStorage.getItem('admin_token');
       if (!token) {
         alert('로그인이 필요합니다.');
         return;
       }
 
-      let response;
-      if (mode === 'create') {
-        response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/banners/create`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(bannerPayload),
-          },
-        );
-      } else if (mode === 'edit' && id) {
-        response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/banners/${id}`,
-          {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(bannerPayload),
-          },
-        );
+      const formData = new FormData();
+
+      formData.append(
+        'request',
+        new Blob(
+          [
+            JSON.stringify({
+              title,
+              description,
+              status: status === '노출' ? 'SHOW' : 'HIDE',
+            }),
+          ],
+          { type: 'application/json' },
+        ),
+      );
+
+      if (imageFile) {
+        const imageBlob = new Blob([imageFile], { type: 'application/json' });
+        formData.append('image', imageBlob, imageFile.name);
       }
 
-      if (!response || !response.ok) {
-        const errorData = await response?.json();
+      let url = '';
+      let method: 'POST' | 'PUT' = 'POST';
+
+      if (mode === 'create') {
+        url = `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/banners/create`;
+        method = 'POST';
+      } else if (mode === 'edit' && id) {
+        url = `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/banners/${id}`;
+        method = 'PUT';
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
         console.error('오류:', errorData);
         alert(`저장에 실패했습니다: ${errorData?.message || '오류 발생'}`);
         return;

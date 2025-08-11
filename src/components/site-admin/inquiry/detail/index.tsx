@@ -6,49 +6,18 @@ import styles from './InquiryDetail.module.css';
 
 interface InquiryItem {
   id: number;
-  category: string;
+  type: string;
   title: string;
   content: string;
-  status: '답변대기' | '답변완료';
+  status: string;
   createdAt: string;
   answer?: string;
   answeredAt?: string;
+  userEmail:string;
   files?: string[];
   notificationEmail?: string;
   phoneNumber?: string;
 }
-
-const mockInquiries: InquiryItem[] = [
-  {
-    id: 1,
-    category: '예매',
-    title: '예매 취소 문의',
-    content: '예매한 공연을 취소하고 싶습니다. 어떻게 진행하면 되나요?',
-    status: '답변완료',
-    createdAt: '2025-07-15',
-    answer: '안녕하세요. 예매 취소는 마이페이지 > 예매내역에서 직접 취소하실 수 있습니다. 공연 3일 전까지 취소 가능하며, 취소 수수료는 예매 금액의 10%입니다.',
-    answeredAt: '2025-07-16',
-    notificationEmail: 'user@example.com'
-  },
-  {
-    id: 2,
-    category: '배송',
-    title: '상품 배송 지연 문의',
-    content: '주문한 상품이 배송예정일이 지났는데 아직 도착하지 않았습니다.',
-    status: '답변대기',
-    createdAt: '2025-07-17',
-    phoneNumber: '010-1234-5678'
-  },
-  {
-    id: 3,
-    category: '결제/환불',
-    title: '환불 처리 문의',
-    content: '공연 취소로 인한 환불이 언제 처리되나요?',
-    status: '답변대기',
-    createdAt: '2025-07-18',
-    notificationEmail: 'customer@example.com'
-  }
-];
 
 const InquiryAnswerPage: React.FC = () => {
   const router = useRouter();
@@ -58,36 +27,73 @@ const InquiryAnswerPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      const inquiryId = parseInt(id as string, 10);
-      const foundInquiry = mockInquiries.find(item => item.id === inquiryId);
-      
-      if (foundInquiry) {
-        setInquiry(foundInquiry);
-        setAnswerContent(foundInquiry.answer || '');
-      } else {
-        router.push('/site-admin/inquiry');
+    const fetchData = async () => {
+      if (!id) return;
+      try {
+        const token = localStorage.getItem('admin_token');
+        const res = await fetch(`http://localhost:8080/api/admin/inquiries/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: '*/*',
+          },
+        });
+
+        if (!res.ok) throw new Error('❌ 문의 상세 조회 실패');
+        const data = await res.json();
+        setInquiry(data);
+        setAnswerContent(data.answer || '');
+        setIsLoading(false);
+      } catch (error) {
+        console.error(error);
       }
-      setIsLoading(false);
-    }
-  }, [id, router]);
-
-  const handleSubmitAnswer = () => {
-    if (!inquiry || !answerContent.trim()) return;
-
-    // 실제로는 API 호출
-    const updatedInquiry = {
-      ...inquiry,
-      answer: answerContent,
-      status: '답변완료' as const,
-      answeredAt: new Date().toISOString().split('T')[0]
     };
 
-    setInquiry(updatedInquiry);
-    
-    // 성공 메시지 표시 후 목록으로 이동
-    alert('답변이 성공적으로 저장되었습니다.');
-    router.push('/site-admin/inquiry');
+    fetchData();
+  }, [id]);
+
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case 'COMPLETED':
+      return '답변완료';
+    case 'PENDING':
+      return '답변대기';
+    default:
+      return status;
+  }
+};
+
+  const handleSubmitAnswer = async () => {
+    if (!inquiry || !answerContent.trim()) return;
+    try {
+      const token = localStorage.getItem('admin_token');
+      const res = await fetch(
+        `http://localhost:8080/api/admin/inquiries/${inquiry.id}/answer`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ answer: answerContent }),
+        },
+      );
+
+      if (!res.ok) throw new Error('답변 저장 실패');
+
+      const today = new Date().toISOString();
+      setInquiry({
+        ...inquiry,
+        answer: answerContent,
+        status: 'COMPLETED',
+      });
+
+      alert('답변이 성공적으로 저장되었습니다.');
+      router.push('/site-admin/inquiry');
+    } catch (error) {
+      console.error(error);
+      alert('답변 저장 중 오류가 발생했습니다.');
+    }
   };
 
   const handleCancel = () => {
@@ -102,36 +108,34 @@ const InquiryAnswerPage: React.FC = () => {
 
   if (isLoading) {
     return (
-        <div className={styles.wrapper}>
-            <Header />
-          <div className={styles.body}>
-        <Nav />
-            <div className={styles.content}>
-              <div className={styles.loading}>로딩 중...</div>
-            </div>
+      <div className={styles.wrapper}>
+        <Header />
+        <div className={styles.body}>
+          <Nav />
+          <div className={styles.content}>
+            <div className={styles.loading}>로딩 중...</div>
           </div>
         </div>
+      </div>
     );
   }
 
   if (!inquiry) {
     return (
-        <div className={styles.wrapper}>
-                        <Header />
-          <div className={styles.body}>
-        <Nav />
-            <div className={styles.content}>
-              <div className={styles.error}>문의를 찾을 수 없습니다.</div>
-            </div>
+      <div className={styles.wrapper}>
+        <Header />
+        <div className={styles.body}>
+          <Nav />
+          <div className={styles.content}>
+            <div className={styles.error}>문의를 찾을 수 없습니다.</div>
           </div>
         </div>
+      </div>
     );
   }
-
   return (
       <div className={styles.wrapper}>
-                      <Header />
-
+          <Header />
         <div className={styles.body}>
         <Nav />
           <div className={styles.content}>
@@ -154,11 +158,11 @@ const InquiryAnswerPage: React.FC = () => {
               <div className={styles.inquiryCard}>
                 <div className={styles.inquiryHeader}>
                   <div className={styles.inquiryMeta}>
-                    <span className={styles.category}>{inquiry.category}</span>
-                    <span className={`${styles.status} ${styles[inquiry.status]}`}>
-                      {inquiry.status}
-                    </span>
-                    <span className={styles.date}>작성일: {inquiry.createdAt}</span>
+                    <span className={styles.category}>{inquiry.type}</span>
+                   <span className={`${styles.status} ${styles[inquiry.status]}`}>
+                     {getStatusLabel(inquiry.status)}
+                   </span>
+                     <span className={styles.date}>작성일: {inquiry.createdAt.split('T')[0]}</span>
                   </div>
                 </div>
                 
@@ -170,12 +174,10 @@ const InquiryAnswerPage: React.FC = () => {
                 {/* 연락처 정보 */}
                 <div className={styles.contactInfo}>
                   <h4>연락처 정보</h4>
-                  {inquiry.notificationEmail && (
-                    <p><strong>알림 이메일:</strong> {inquiry.notificationEmail}</p>
+                  {inquiry.userEmail && (
+                    <p><strong>알림 이메일:</strong> {inquiry.userEmail}</p>
                   )}
-                  {inquiry.phoneNumber && (
-                    <p><strong>휴대폰 번호:</strong> {inquiry.phoneNumber}</p>
-                  )}
+                 
                 </div>
               </div>
             </div>

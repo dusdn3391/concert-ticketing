@@ -13,6 +13,7 @@ interface FAQItem {
 interface NoticeItem {
   id: number;
   title: string;
+  content: string;
   date: string;
   status: string;
 }
@@ -28,24 +29,63 @@ const CustomerCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('전체');
   const [expandedNotice, setExpandedNotice] = useState<number | null>(null);
   const [notices, setNotices] = useState<NoticeItem[]>([]);
+  const [publicNotices, setPublicNotices] = useState<NoticeItem[]>([]); // ← API 데이터 저장
 
   const faqTabs = ['전체', '상품', '배송', '취소', '결제/환불', '기타'];
-
-  const publicNotices = [
-    { id: 1, title: '공지사항 1', status: 'active' },
-    { id: 2, title: '공지사항 2', status: 'active' },
-    { id: 3, title: '공지사항 3', status: 'active' },
-  ];
 
   const toggleNotice = (id: number) => {
     setExpandedNotice(expandedNotice === id ? null : id);
   };
+  const categoryMap: Record<string, string> = {
+    전체: '',
+    상품: 'PRODUCT',
+    배송: 'DELIVERY',
+    취소: 'CANCEL',
+    '결제/환불': 'PAYMENT_REFUND',
+    기타: 'ETC',
+  };
+
+  const [faqs, setFaqs] = useState<FAQItem[]>([]);
+
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        // 탭에 맞는 카테고리 파라미터
+        const categoryParam = categoryMap[activeTab]
+          ? `?category=${categoryMap[activeTab]}`
+          : '';
+
+        const response = await fetch(`http://localhost:8080/api/faqs${categoryParam}`, {
+          headers: {
+            // Authorization: `Bearer ${token}`,
+            Accept: '*/*',
+          },
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch FAQs');
+
+        const data = await response.json();
+
+        const mapped = (data.content || data).map((faq: any) => ({
+          id: faq.id,
+          title: faq.question,
+          // date: new Date(faq.createdAt).toISOString().slice(0, 10),
+        }));
+
+        setFaqs(mapped);
+      } catch (error) {
+        console.error('❌ FAQ 조회 실패:', error);
+        setFaqs([]);
+      }
+    };
+
+    fetchFaqs();
+  }, [activeTab]);
 
   useEffect(() => {
     const fetchInquiries = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        if (!token) throw new Error('No access token found');
 
         const response = await fetch(
           `http://localhost:8080/api/inquiries?page=0&size=5`,
@@ -82,6 +122,37 @@ const CustomerCenter: React.FC = () => {
     fetchInquiries();
   }, []);
 
+  useEffect(() => {
+    const fetchNotices = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/api/notices`, {
+          headers: {
+            // Authorization: `Bearer ${token}`,
+            Accept: '*/*',
+          },
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch notices');
+
+        const data = await response.json();
+
+        const mapped = (data.content || data).map((notice: any) => ({
+          id: notice.id,
+          title: notice.title,
+          date: new Date(notice.createdAt).toISOString().slice(0, 10),
+          status: notice.status,
+          content: notice.content,
+        }));
+
+        setPublicNotices(mapped);
+      } catch (error) {
+        console.error('❌ 공지사항 조회 실패:', error);
+      }
+    };
+
+    fetchNotices();
+  }, []);
+
   return (
     <div className={styles.container}>
       <div className={styles.wrapper}>
@@ -111,8 +182,17 @@ const CustomerCenter: React.FC = () => {
               </div>
             </div>
 
-            <div className={styles.emptyContent}>
-              <p>선택하신 카테고리의 FAQ가 없습니다.</p>
+            <div className={styles.faqList}>
+              {faqs.length === 0 ? (
+                <p>선택하신 카테고리의 FAQ가 없습니다.</p>
+              ) : (
+                faqs.map((faq) => (
+                  <div key={faq.id} className={styles.faqItem}>
+                    <span className={styles.faqTitle}>{faq.title}</span>
+                    {/* <span className={styles.faqDate}>{faq.date}</span> */}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -179,9 +259,7 @@ const CustomerCenter: React.FC = () => {
 
                   {expandedNotice === notice.id && (
                     <div className={styles.publicNoticeContent}>
-                      <div className={styles.publicNoticeText}>
-                        공지사항 {notice.id}의 상세 내용이 여기에 표시됩니다.
-                      </div>
+                      <div className={styles.publicNoticeText}>{notice.content}</div>
                     </div>
                   )}
                 </div>

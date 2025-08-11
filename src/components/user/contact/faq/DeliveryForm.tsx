@@ -1,74 +1,76 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-
 import CustomerSidebar from '@/components/user/contact/ContactNav';
 import styles from './Delivery.module.css';
 
 const categoryLabels: Record<string, string> = {
   delivery: '배송',
   product: '상품',
-  cancel: '취소',
+  cancellation: '취소',
   payment: '결제/환불',
   etc: '기타',
 };
 
-const faqDataByCategory: Record<
-  string,
-  { id: string; question: string; answer: string }[]
-> = {
-  delivery: [
-    { id: 'd1', question: '배송은 얼마나 걸리나요?', answer: '보통 2~3일 걸립니다.' },
-    {
-      id: 'd2',
-      question: '배송조회는 어디서 하나요?',
-      answer: '마이페이지에서 확인 가능합니다.',
-    },
-  ],
-  product: [
-    {
-      id: 'p1',
-      question: '상품 교환은 어떻게 하나요?',
-      answer: '고객센터에 문의해주세요.',
-    },
-    {
-      id: 'p2',
-      question: '상품 품절 시 알림을 받을 수 있나요?',
-      answer: '네, 알림 신청이 가능합니다.',
-    },
-  ],
-  cancel: [
-    {
-      id: 'c1',
-      question: '주문 취소는 어떻게 하나요?',
-      answer: '주문 후 30분 이내 취소 가능합니다.',
-    },
-  ],
-  payment: [
-    {
-      id: 'pay1',
-      question: '결제 수단은 어떤 것이 있나요?',
-      answer: '카드, 계좌이체, 휴대폰 결제가 가능합니다.',
-    },
-  ],
-  etc: [
-    {
-      id: 'e1',
-      question: '기타 문의는 어떻게 하나요?',
-      answer: '1:1 문의하기를 이용해주세요.',
-    },
-  ],
+type FAQItem = {
+  id: number;
+  category: string;
+  visibility: string;
+  question: string;
+  answer: string;
 };
 
 const FAQCategoryPage = () => {
   const router = useRouter();
+  const [faqDataByCategory, setFaqDataByCategory] = useState<Record<string, FAQItem[]>>(
+    {},
+  );
+  const [loading, setLoading] = useState(true);
 
   if (!router.isReady) return null;
 
   const { category } = router.query;
   const categoryKey = Array.isArray(category) ? category[0] : category || '';
   const categoryLabel = categoryLabels[categoryKey] || 'FAQ';
-
   const faqList = faqDataByCategory[categoryKey] || [];
+
+  useEffect(() => {
+    const fetchFAQs = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL}/api/faqs`,
+          {
+            headers: {
+              Accept: '*/*',
+            },
+          },
+        );
+
+        if (!res.ok) throw new Error('FAQ 데이터를 불러오는데 실패했습니다.');
+
+        const data: FAQItem[] = await res.json();
+
+        // 카테고리별로 데이터 분류 (대문자 -> 소문자 변환)
+        const grouped: Record<string, FAQItem[]> = {};
+        data.forEach((item) => {
+          const key = item.category.toLowerCase(); // "PRODUCT" -> "product"
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(item);
+        });
+
+        setFaqDataByCategory(grouped);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFAQs();
+  }, []);
+
+  if (loading) {
+    return <p>FAQ를 불러오는 중입니다...</p>;
+  }
 
   return (
     <div className={styles.container}>
@@ -93,7 +95,6 @@ const FAQCategoryPage = () => {
 
             <div className={styles.form}>
               <h3 className={styles.category}>{categoryLabel}</h3>
-
               <div className={styles.accordion}>
                 {faqList.length === 0 && <p>해당 카테고리의 FAQ가 없습니다.</p>}
                 {faqList.map((item) => (

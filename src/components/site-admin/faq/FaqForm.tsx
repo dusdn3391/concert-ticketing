@@ -1,84 +1,121 @@
-import { useState, useEffect, ChangeEvent } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './FaqForm.module.css';
 
-type BannerFormProps = {
+type CategoryCode = 'PRODUCT' | 'DELIVERY' | 'CANCELLATION' | 'PAYMENT' | 'ETC';
+
+const CATEGORY_LABELS: Record<CategoryCode, string> = {
+  PRODUCT: '상품',
+  DELIVERY: '배송',
+  CANCELLATION: '취소',
+  PAYMENT: '결제/환불',
+  ETC: '기타',
+};
+
+type FaqFormProps = {
+  id?: number;
   mode: 'edit' | 'create';
-  initialData?: {
-    title: string;
-    description: string;
-    status: '노출' | '비노출';
-    imageUrl?: string;
-  };
-  id?: string;
   onSubmit: (form: any) => void;
 };
 
-export default function FaqForm({ mode, initialData, id, onSubmit }: BannerFormProps) {
-  const [title, setTitle] = useState(initialData?.title || '');
-  const [description, setDescription] = useState(initialData?.description || '');
-  const [status, setStatus] = useState<'노출' | '비노출'>(initialData?.status || '노출');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.imageUrl || null,
-  );
+export default function FaqForm({ id, mode }: FaqFormProps) {
+  const [question, setQuestion] = useState('');
+  const [answer, setAnswer] = useState('');
+  const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PUBLIC');
+  const [category, setCategory] = useState<CategoryCode>('PRODUCT');
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+  useEffect(() => {
+    if (mode === 'edit' && id) {
+      fetch(`/api/faqs/${id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setQuestion(data.question);
+          setAnswer(data.answer);
+          setVisibility(data.visibility);
+          setCategory(data.category);
+        })
+        .catch((err) => {
+          console.error('FAQ 불러오기 실패:', err);
+        });
     }
-  };
+  }, [id, mode]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = {
-      ...(id && { id }), // id가 있으면 포함
-      title,
-      description,
-      status,
-      imageFile,
+
+    const payload = {
+      category,
+      visibility,
+      question,
+      answer,
     };
-    onSubmit(formData);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL;
+      const url =
+        mode === 'create' ? `${baseUrl}/api/faqs/create` : `${baseUrl}/api/faqs/${id}`;
+      const method = mode === 'create' ? 'POST' : 'PUT';
+      const token = localStorage.getItem('admin_token');
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error(`FAQ ${mode === 'create' ? '등록' : '수정'} 실패`);
+
+      alert(`FAQ가 ${mode === 'create' ? '등록' : '수정'}되었습니다.`);
+      window.location.href = '/site-admin/faq';
+    } catch (error) {
+      console.error(error);
+      alert('오류가 발생했습니다. 다시 시도해주세요.');
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <label htmlFor='title'>제목</label>
+      <label htmlFor='category'>카테고리</label>
+      <select
+        id='category'
+        value={category}
+        onChange={(e) => setCategory(e.target.value as CategoryCode)}
+      >
+        {Object.entries(CATEGORY_LABELS).map(([code, label]) => (
+          <option key={code} value={code}>
+            {label}
+          </option>
+        ))}
+      </select>
+
+      <label htmlFor='question'>질문</label>
       <input
-        id='title'
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder='faq 제목을 입력하세요'
+        id='question'
+        value={question}
+        onChange={(e) => setQuestion(e.target.value)}
+        placeholder='FAQ 질문을 입력하세요'
         required
       />
 
-      <label htmlFor='description'>설명</label>
+      <label htmlFor='answer'>답변</label>
       <textarea
-        id='description'
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder='faq 설명을 입력하세요'
+        id='answer'
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        placeholder='FAQ 답변을 입력하세요'
         rows={4}
       />
 
-      <label htmlFor='image'>이미지 업로드</label>
-      <input type='file' id='image' accept='image/*' onChange={handleImageChange} />
-
-      {imagePreview && (
-        <div className={styles.imagePreview}>
-          <img src={imagePreview} alt='미리보기' />
-        </div>
-      )}
-
-      <label htmlFor='status'>노출 상태</label>
+      <label htmlFor='visibility'>노출 상태</label>
       <select
-        id='status'
-        value={status}
-        onChange={(e) => setStatus(e.target.value as '노출' | '비노출')}
+        id='visibility'
+        value={visibility}
+        onChange={(e) => setVisibility(e.target.value as 'PUBLIC' | 'PRIVATE')}
       >
-        <option value='노출'>노출</option>
-        <option value='비노출'>비노출</option>
+        <option value='VISIBLE'>노출</option>
+        <option value='HIDDEN'>비노출</option>
       </select>
 
       <div className={styles.buttonGroup}>

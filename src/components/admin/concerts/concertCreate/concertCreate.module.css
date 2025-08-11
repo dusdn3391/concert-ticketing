@@ -162,6 +162,28 @@
   color: var(--text-primary);
 }
 
+.removeRoundButton{
+  border: none;
+  background-color: #fff;
+  margin-left:10px;
+}
+
+.roundItem{
+  margin-top:20px;
+}
+
+.roundInputs{
+  margin-top: 10px;
+}
+
+.addRoundButton{
+  background-color: #fff;
+  padding:5px;
+  margin-top: 5px;
+  border:1px solid #ddd;
+  border-radius: 5px;
+}
+
 .textarea {
   width: 95%;
   padding: 10px 12px;

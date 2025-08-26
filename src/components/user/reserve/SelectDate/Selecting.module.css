@@ -51,11 +51,40 @@
 }
 
 .selectBox .calendar{
-    width:83%;
+    width:80%;
     text-align: center;
-    height:300px;
+    height:350px;
+}
+.calendarRoot {
+  width: 100%;
+  max-width: 360px;
+  border: none;
+  max-height:200px;
+  font-family: inherit;
 }
 
+/* 내부 기본 컨테이너 */
+.calendarRoot :global(.react-calendar) {
+  width: 100%;
+  max-height:200px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+
+/* 요일 헤더 컴팩트 */
+.calendarRoot :global(.react-calendar__month-view__weekdays) {
+  font-size: 12px;
+}
+.calendarRoot :global(.react-calendar__month-view__weekdays__weekday abbr) {
+  text-decoration: none;
+}
+.calendarRoot :global(.react-calendar__tile) {
+  height: 35px;            /* ✅ 32~36px로 조절 */
+  padding: 2px;              /* 여백 제거 */
+  line-height: 34px;       /* 텍스트 수직정렬 */
+  border-radius: 8px;
+}
 .rounds{
     border:1px solid #000;
     display: flex;

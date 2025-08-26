@@ -1,7 +1,7 @@
 // API 설정 및 유틸리티 함수들
 
 // API Base URL 설정
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL;
 
 // API 호출을 위한 기본 설정
 export const getApiUrl = (endpoint: string): string => {
@@ -18,12 +18,12 @@ export const getAuthHeaders = (): Record<string, string> => {
 
   // 토큰이 있으면 Authorization 헤더 추가
   let token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-  
+
   // 환경변수에 토큰이 없으면 localStorage에서 가져오기
   if (!token && typeof window !== 'undefined') {
     token = localStorage.getItem('admin_token') || undefined;
   }
-  
+
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -41,7 +41,7 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 
   try {
     const response = await fetch(url, defaultOptions);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

@@ -1,17 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-
 import styles from './zoneList.module.css';
+import { useConcertStore } from '@/stores/concert';
+
+interface ApiSeatSection {
+  id: number;
+  sectionName: string;
+  colorCode: string;
+  price: number;
+  seats: Array<{
+    id: number;
+    rowName: string;
+    seatNumber: string;
+    price?: string | number;
+  }>;
+}
 
 interface Zone {
   id: string;
+  sectionId: number;
+  colorCode: string;
   name: string;
   svgElementId: string;
   seatCount: number;
-  priceRange: {
-    min: number;
-    max: number;
-  };
+  price: number;
   status: 'draft' | 'completed' | 'published';
   lastModified: string;
 }
@@ -22,68 +34,100 @@ interface ZoneListProps {
 
 export default function ZoneList({ concertId }: ZoneListProps) {
   const [zones, setZones] = useState<Zone[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'name' | 'seatCount' | 'lastModified'>('name');
   const [filterStatus, setFilterStatus] = useState<
     'all' | 'draft' | 'completed' | 'published'
   >('all');
 
+  const fetchConcert = useConcertStore((s) => s.fetchConcert);
+  const concert = useConcertStore((s) => s.get(concertId));
+  const isLoading = useConcertStore((s) => s.isLoading(concertId));
+  const error = useConcertStore((s) => s.getError(concertId));
+
+  // ✅ 1) 초기 스냅샷
   useEffect(() => {
-    // TODO: API 호출로 구역 데이터 가져오기
-    const fetchZones = async () => {
-      try {
-        // 임시 데이터
-        const mockZones: Zone[] = [
-          {
-            id: 'zone-1',
-            name: 'VIP석',
-            svgElementId: 'vip-area',
-            seatCount: 100,
-            priceRange: { min: 150000, max: 200000 },
-            status: 'completed',
-            lastModified: '2024-01-20',
-          },
-          {
-            id: 'zone-2',
-            name: 'R석',
-            svgElementId: 'r-area',
-            seatCount: 200,
-            priceRange: { min: 100000, max: 120000 },
-            status: 'completed',
-            lastModified: '2024-01-19',
-          },
-          {
-            id: 'zone-3',
-            name: 'S석',
-            svgElementId: 's-area',
-            seatCount: 300,
-            priceRange: { min: 80000, max: 90000 },
-            status: 'draft',
-            lastModified: '2024-01-18',
-          },
-          {
-            id: 'zone-4',
-            name: 'A석',
-            svgElementId: 'a-area',
-            seatCount: 400,
-            priceRange: { min: 50000, max: 60000 },
-            status: 'published',
-            lastModified: '2024-01-17',
-          },
-        ];
-
-        setTimeout(() => {
-          setZones(mockZones);
-          setLoading(false);
-        }, 800);
-      } catch (error) {
-        console.error('Failed to fetch zones:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchZones();
+    const state = useConcertStore.getState();
+    console.groupCollapsed('[ZoneList] 초기 ConcertStore 스냅샷');
+    console.log('concertId:', concertId);
+    console.log('byId:', state.byId);
+    console.log('loadingById:', state.loadingById);
+    console.log('errorById:', state.errorById);
+    console.groupEnd();
   }, [concertId]);
+
+  // ✅ 3) fetch 트리거 로그
+  useEffect(() => {
+    if (!concert && !isLoading) {
+      console.groupCollapsed('[ZoneList] fetchConcert 트리거');
+      console.log('concertId:', concertId);
+      console.groupEnd();
+      fetchConcert(concertId);
+    }
+  }, [concertId, concert, isLoading, fetchConcert]);
+
+  // ✅ 4) 매핑 전 원본/매핑 결과 로그
+  useEffect(() => {
+    if (!concert) return;
+
+    console.groupCollapsed('[ZoneList] concert 원본 데이터');
+    console.log(concert);
+    console.groupEnd();
+
+    const seatSections: ApiSeatSection[] = Array.isArray(concert.seatSections)
+      ? concert.seatSections
+      : [];
+
+    console.groupCollapsed('[ZoneList] seatSections 원본');
+    console.table(
+      seatSections.map((s) => ({
+        id: s.id,
+        sectionName: s.sectionName,
+        colorCode: s.colorCode,
+        price: s.price,
+        seatsLen: Array.isArray(s.seats) ? s.seats.length : 0,
+      })),
+    );
+    console.groupEnd();
+
+    const updatedAt =
+      (concert as any)?.updated_at ??
+      concert?.updatedAt ??
+      new Date().toISOString().slice(0, 10);
+
+    const mapped: Zone[] = seatSections.map((s) => {
+      const zoneId = `zone_${String(s.colorCode || s.id)}`;
+      return {
+        id: zoneId,
+        sectionId: s.id,
+        colorCode: String(s.colorCode || ''),
+        name: s.sectionName ?? `구역`,
+        svgElementId: zoneId,
+        seatCount: Array.isArray(s.seats)
+          ? s.seats.filter((x) => String(x.seatNumber).trim() !== '').length
+          : 0,
+        price: Number(s.price ?? 0),
+        status: 'completed',
+        lastModified: String(updatedAt).slice(0, 10),
+      };
+    });
+
+    console.groupCollapsed('[ZoneList] 매핑 결과 zones');
+    console.table(
+      mapped.map((z) => ({
+        id: z.id,
+        sectionId: z.sectionId,
+        colorCode: z.colorCode,
+        name: z.name,
+        seatCount: z.seatCount,
+        price: z.price,
+        status: z.status,
+        lastModified: z.lastModified,
+      })),
+    );
+    console.groupEnd();
+
+    setZones(mapped);
+  }, [concert]);
 
   const getStatusColor = (status: Zone['status']) => {
     switch (status) {
@@ -111,9 +155,11 @@ export default function ZoneList({ concertId }: ZoneListProps) {
     }
   };
 
-  const sortedAndFilteredZones = zones
-    .filter((zone) => filterStatus === 'all' || zone.status === filterStatus)
-    .sort((a, b) => {
+  const sortedAndFilteredZones = useMemo(() => {
+    const filtered = zones.filter(
+      (zone) => filterStatus === 'all' || zone.status === filterStatus,
+    );
+    return filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
           return a.name.localeCompare(b.name);
@@ -125,13 +171,39 @@ export default function ZoneList({ concertId }: ZoneListProps) {
           return 0;
       }
     });
+  }, [zones, filterStatus, sortBy]);
 
-  if (loading) {
+  if (isLoading || !concert) {
     return (
       <div className={styles.container}>
         <div className={styles.loading}>
           <div className={styles.spinner} />
           <p>구역 목록을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.group('[ZoneList] 에러 상태');
+    console.log('concertId:', concertId);
+    console.error(error);
+    console.groupEnd();
+
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>
+          <div className={styles.errorIcon}>❌</div>
+          <h3>오류가 발생했습니다</h3>
+          <p>{error}</p>
+          <div className={styles.errorActions}>
+            <button onClick={() => location.reload()} className={styles.retryButton}>
+              다시 시도
+            </button>
+            <Link href={`/admin/concerts/${concertId}`} className={styles.backButton}>
+              콘서트로 돌아가기
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -164,6 +236,7 @@ export default function ZoneList({ concertId }: ZoneListProps) {
       <div className={styles.controls}>
         <div className={styles.filters}>
           <select
+            title='status'
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as any)}
             className={styles.select}
@@ -175,6 +248,7 @@ export default function ZoneList({ concertId }: ZoneListProps) {
           </select>
 
           <select
+            title='sortBy'
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
             className={styles.select}
@@ -210,7 +284,7 @@ export default function ZoneList({ concertId }: ZoneListProps) {
       {/* 구역 목록 */}
       <div className={styles.zoneGrid}>
         {sortedAndFilteredZones.map((zone) => (
-          <div key={zone.id} className={styles.zoneCard}>
+          <div key={zone.colorCode} className={styles.zoneCard}>
             <div className={styles.zoneHeader}>
               <h3 className={styles.zoneName}>{zone.name}</h3>
               <span className={`${styles.status} ${getStatusColor(zone.status)}`}>
@@ -224,11 +298,8 @@ export default function ZoneList({ concertId }: ZoneListProps) {
                 <span className={styles.statValue}>{zone.seatCount}석</span>
               </div>
               <div className={styles.zoneStat}>
-                <span className={styles.statLabel}>가격 범위</span>
-                <span className={styles.statValue}>
-                  {zone.priceRange.min.toLocaleString()}원 ~{' '}
-                  {zone.priceRange.max.toLocaleString()}원
-                </span>
+                <span className={styles.statLabel}>가격</span>
+                <span className={styles.statValue}>{zone.price.toLocaleString()}원</span>
               </div>
               <div className={styles.zoneStat}>
                 <span className={styles.statLabel}>수정일</span>
@@ -238,13 +309,13 @@ export default function ZoneList({ concertId }: ZoneListProps) {
 
             <div className={styles.zoneActions}>
               <Link
-                href={`/admin/concerts/${concertId}/zones/${zone.id}`}
+                href={`/admin/concerts/${concertId}/zones/${zone.colorCode}`}
                 className={styles.detailButton}
               >
                 상세보기
               </Link>
               <Link
-                href={`/admin/concerts/${concertId}/zones/${zone.id}/editor`}
+                href={`/admin/concerts/${concertId}/zones/${zone.colorCode}/editor`}
                 className={styles.editButton}
               >
                 좌석 편집

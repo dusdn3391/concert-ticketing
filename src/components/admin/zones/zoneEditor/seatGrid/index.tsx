@@ -9,7 +9,6 @@ interface Seat {
   x: number;
   y: number;
   status: 'available' | 'occupied' | 'disabled';
-  price: number;
   selected?: boolean;
 }
 
@@ -75,7 +74,7 @@ export default function SeatGrid({
         >
           {gridCells.map(({ row, col }) => {
             const seat = getSeatAtPosition(col, row);
-            const isSelected = seat && selectedSeats.includes(seat.id);
+            const isSelected = seat && selectedSeats.includes(seat?.id);
             const isHovered = hoveredCell?.row === row && hoveredCell?.col === col;
             const isDragTarget = draggedSeat && isHovered && !seat;
 
@@ -86,9 +85,7 @@ export default function SeatGrid({
                   seat ? styles.hasSeat : styles.emptySeat
                 } ${isDragTarget ? styles.dragTarget : ''}`}
                 onClick={() => {
-                  if (!seat) {
-                    onGridCellClick(row, col);
-                  }
+                  if (!seat) onGridCellClick(row, col);
                 }}
                 onDragOver={(e) => onDragOver(e, row, col)}
                 onDrop={(e) => onDrop(e, row, col)}
@@ -157,7 +154,7 @@ function SeatItem({
       onDragStart={handleDragStart}
       onDragEnd={onDragEnd}
       onClick={handleClick}
-      title={`${seat.row}${seat.number} - ${seat.price.toLocaleString()}원 - ${seat.status}`}
+      title={`${seat.row}${seat.number} - ${seat.status}`}
     >
       <button
         type='button'
@@ -171,11 +168,6 @@ function SeatItem({
         <span className={styles.seatLabel}>
           {seat.row}
           {seat.number}
-        </span>
-        <span className={styles.seatPrice}>
-          {seat.price >= 10000
-            ? `${Math.floor(seat.price / 10000)}만원`
-            : `${seat.price.toLocaleString()}원`}
         </span>
       </div>
     </div>

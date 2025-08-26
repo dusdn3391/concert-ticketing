@@ -43,6 +43,15 @@
   cursor: pointer;
   background-color: white;
 }
+/* ConcertCard.module.css */
+.image {
+  position: relative; /* next/image fill용 */
+  width: 100%;
+  aspect-ratio: 16 / 9; /* 또는 고정 높이: height: 180px; */
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f2f3f5; /* 로딩 배경 */
+}
 
 .pageButton.active {
   background-color: black;

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 import Image from 'next/image';
-import { useVenueStore } from '@/stores/venue';
-import styles from './concertCreate.module.css';
-import PostcodeModal from './PostcodeModal';
+import styles from '../concertCreate/concertCreate.module.css';
+import PostcodeModal from '../concertCreate/PostcodeModal';
+import Link from 'next/link';
 
 declare global {
   interface Window {
@@ -14,14 +13,14 @@ declare global {
 
 interface ConcertRound {
   id: number;
-  date: string;
-  startTime: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:mm
 }
 
 interface DisplayImage {
-  imageUrl: string; // 미리보기용 Base64 URL
+  imageUrl: string; // 미리보기/서버 이미지 URL
   imagesRole: 'THUMBNAIL' | 'DETAIL';
-  file?: File; // 실제 업로드할 파일
+  file?: File; // 새로 업로드 하는 경우만 파일 존재
 }
 
 interface ConcertFormData {
@@ -31,14 +30,14 @@ interface ConcertFormData {
   locationX: number | null;
   locationY: number | null;
   concertRounds: ConcertRound[];
-  reservationStartDate: string;
-  reservationEndDate: string;
+  reservationStartDate: string; // input용 로컬 datetime (YYYY-MM-DDTHH:mm)
+  reservationEndDate: string; // input용 로컬 datetime
   price: string;
   limitAge: number;
   durationTime: number;
-  thumbnailFile: File | null; // (보조) 썸네일 파일
-  descriptionFiles: File[]; // (보조) 상세파일들
-  images: DisplayImage[]; // 미리보기 + 파일 보관
+  thumbnailFile: File | null;
+  descriptionFiles: File[];
+  images: DisplayImage[]; // 기존+새 파일 미리보기
 }
 
 interface FormErrors {
@@ -54,7 +53,6 @@ interface FormErrors {
   images?: string;
 }
 
-// Daum 주소 선택 결과 인터페이스
 interface AddressResult {
   address: string;
   roadAddress?: string;
@@ -63,18 +61,11 @@ interface AddressResult {
   buildingName?: string;
 }
 
-export default function ConcertCreate() {
+export default function ConcertEdit() {
   const router = useRouter();
-  const { createConcert, loading, error } = useVenueStore();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [showPostcodeModal, setShowPostcodeModal] = useState(false);
-  const [baseAddress, setBaseAddress] = useState('');
-  const [detailAddress, setDetailAddress] = useState('');
-  const [isLoadingCoords, setIsLoadingCoords] = useState(false);
-  const [isKakaoMapsLoaded, setIsKakaoMapsLoaded] = useState(false);
-  const [isSdkLoading, setIsSdkLoading] = useState(false);
+  const { id } = router.query as { id?: string };
 
+  // ------------ 상태 ------------
   const [formData, setFormData] = useState<ConcertFormData>({
     title: '',
     description: '',
@@ -92,84 +83,135 @@ export default function ConcertCreate() {
     images: [],
   });
 
-  // 날짜/시간 -> ISO, ISO + 분 더하기
-  // const toISO = (date: string, time: string) => `${date}T${time}:00`;
-  // const addMinutesISO = (iso: string, minutes: number) => {
-  //   const d = new Date(iso);
-  //   d.setMinutes(d.getMinutes() + minutes);
-  //   return d.toISOString();
-  // };
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [pageError, setPageError] = useState<string | null>(null);
+
+  const [showPostcodeModal, setShowPostcodeModal] = useState(false);
+  const [baseAddress, setBaseAddress] = useState('');
+  const [detailAddress, setDetailAddress] = useState('');
+  const [isLoadingCoords, setIsLoadingCoords] = useState(false);
+  const [isKakaoMapsLoaded, setIsKakaoMapsLoaded] = useState(false);
+  const [isSdkLoading, setIsSdkLoading] = useState(false);
+
+  // ------------ 유틸 ------------
+  const toISO = (date: string, time: string) => `${date}T${time}:00`;
+  const addMinutesISO = (iso: string, minutes: number) => {
+    const d = new Date(iso);
+    d.setMinutes(d.getMinutes() + minutes);
+    return d.toISOString();
+  };
+
+  const toInputLocalDateTime = (isoLike?: string | null) => {
+    if (!isoLike) return '';
+    const d = new Date(isoLike);
+    // YYYY-MM-DDTHH:mm (로컬)
+    const pad = (n: number) => `${n}`.padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const min = pad(d.getMinutes());
+    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+  };
+
+  const fromInputLocalDateTimeToISO = (local: string) => {
+    // 사용자가 입력한 로컬 시간을 ISO로 변환
+    // new Date(local) 는 로컬 기준 → ISO 문자열로 저장
+    return local ? new Date(local).toISOString() : '';
+  };
 
   const updateFormData = <K extends keyof ConcertFormData>(
     field: K,
     value: ConcertFormData[K],
-  ): void => {
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const sortRoundsByDateTime = (rounds: ConcertRound[]): ConcertRound[] => {
+    return [...rounds].sort((a, b) => {
+      if (!a.date || !a.startTime || !b.date || !b.startTime) return 0;
+      return (
+        new Date(`${a.date}T${a.startTime}`).getTime() -
+        new Date(`${b.date}T${b.startTime}`).getTime()
+      );
+    });
+  };
+
+  const formatRoundDateTime = (date: string, startTime: string): string => {
+    if (!date || !startTime) return '';
+    const dt = new Date(`${date}T${startTime}`);
+    return dt.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getThumbnailImage = () =>
+    formData.images.find((img) => img.imagesRole === 'THUMBNAIL');
+  const getEarliestRound = () => {
+    const valid = formData.concertRounds.filter((r) => r.date && r.startTime);
+    if (valid.length === 0) return null;
+    return sortRoundsByDateTime(valid)[0];
+  };
+
+  // ------------ 이미지 업로드 ------------
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = () => {
       const imageUrl = reader.result as string;
-      const newImage: DisplayImage = {
-        imageUrl,
-        imagesRole: 'THUMBNAIL',
-        file,
-      };
+      const newThumb: DisplayImage = { imageUrl, imagesRole: 'THUMBNAIL', file };
 
-      // 기존 썸네일 제거하고 교체
-      const existingDetails = formData.images.filter(
-        (img) => img.imagesRole !== 'THUMBNAIL',
-      );
-      updateFormData('images', [newImage, ...existingDetails]);
+      const details = formData.images.filter((img) => img.imagesRole !== 'THUMBNAIL');
+      updateFormData('images', [newThumb, ...details]);
       updateFormData('thumbnailFile', file);
     };
     reader.readAsDataURL(file);
   };
 
-  const handleDetailImageUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleDetailImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = () => {
       const imageUrl = reader.result as string;
-      const newImage: DisplayImage = {
-        imageUrl,
-        imagesRole: 'DETAIL',
-        file,
-      };
-
-      updateFormData('images', [...formData.images, newImage]);
+      const newImg: DisplayImage = { imageUrl, imagesRole: 'DETAIL', file };
+      updateFormData('images', [...formData.images, newImg]);
       updateFormData('descriptionFiles', [...formData.descriptionFiles, file]);
     };
     reader.readAsDataURL(file);
   };
 
-  const removeImage = (index: number): void => {
-    const toRemove = formData.images[index];
-    const newImages = formData.images.filter((_, i) => i !== index);
-    updateFormData('images', newImages);
+  const removeImage = (index: number) => {
+    const target = formData.images[index];
+    const next = formData.images.filter((_, i) => i !== index);
+    updateFormData('images', next);
 
-    if (toRemove?.imagesRole === 'THUMBNAIL') {
-      updateFormData('thumbnailFile', null);
-    } else if (toRemove?.imagesRole === 'DETAIL' && toRemove.file) {
+    if (target?.imagesRole === 'THUMBNAIL') updateFormData('thumbnailFile', null);
+    if (target?.imagesRole === 'DETAIL' && target.file) {
       updateFormData(
         'descriptionFiles',
-        formData.descriptionFiles.filter((f) => f !== toRemove.file),
+        formData.descriptionFiles.filter((f) => f !== target.file),
       );
     }
   };
 
-  const loadKakaoMapsSDK = async (): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      if (window.kakao && window.kakao.maps && window.kakao.maps.services) {
+  // ------------ Kakao Maps ------------
+  const loadKakaoMapsSDK = async (): Promise<void> =>
+    new Promise((resolve, reject) => {
+      if (window.kakao?.maps?.services) {
         setIsKakaoMapsLoaded(true);
         resolve();
         return;
@@ -183,32 +225,29 @@ export default function ConcertCreate() {
 
       setIsSdkLoading(true);
 
-      const existingScript = document.querySelector('script[src*="dapi.kakao.com"]');
-      if (existingScript) {
-        const checkInterval = setInterval(() => {
-          if (window.kakao && window.kakao.maps && window.kakao.maps.services) {
-            clearInterval(checkInterval);
+      const exists = document.querySelector('script[src*="dapi.kakao.com"]');
+      if (exists) {
+        const iv = setInterval(() => {
+          if (window.kakao?.maps?.services) {
+            clearInterval(iv);
             setIsKakaoMapsLoaded(true);
             setIsSdkLoading(false);
             resolve();
           }
         }, 100);
         setTimeout(() => {
-          clearInterval(checkInterval);
+          clearInterval(iv);
           setIsSdkLoading(false);
           reject(new Error('SDK 로드 타임아웃'));
         }, 10000);
         return;
       }
 
-      const scriptUrl = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&libraries=services&autoload=false`;
       const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = scriptUrl;
+      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&libraries=services&autoload=false`;
       script.async = true;
-
       script.onload = () => {
-        if (window.kakao && window.kakao.maps) {
+        if (window.kakao?.maps) {
           window.kakao.maps.load(() => {
             if (window.kakao.maps.services) {
               setIsKakaoMapsLoaded(true);
@@ -224,57 +263,30 @@ export default function ConcertCreate() {
           reject(new Error('Kakao Maps 객체 없음'));
         }
       };
-
       script.onerror = () => {
         setIsSdkLoading(false);
         reject(new Error('Kakao Maps SDK 로드 실패'));
       };
-
       document.head.appendChild(script);
     });
-  };
 
-  const convertAddressToCoordinates = async (
-    fullAddress: string,
-  ): Promise<{ lat: number; lng: number } | null> => {
-    return new Promise(async (resolve) => {
+  const convertAddressToCoordinates = async (fullAddress: string) =>
+    new Promise<{ lat: number; lng: number } | null>(async (resolve) => {
       try {
-        if (!isKakaoMapsLoaded) {
-          await loadKakaoMapsSDK();
-        }
-        if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) {
-          resolve(null);
-          return;
-        }
-
+        if (!isKakaoMapsLoaded) await loadKakaoMapsSDK();
         const geocoder = new window.kakao.maps.services.Geocoder();
         geocoder.addressSearch(fullAddress, (result: any, status: any) => {
           if (status === window.kakao.maps.services.Status.OK && result.length > 0) {
-            const coords = { lat: parseFloat(result[0].y), lng: parseFloat(result[0].x) };
-            resolve(coords);
+            resolve({ lat: parseFloat(result[0].y), lng: parseFloat(result[0].x) });
           } else {
-            geocoder.addressSearch(baseAddress, (result2: any, status2: any) => {
-              if (
-                status2 === window.kakao.maps.services.Status.OK &&
-                result2.length > 0
-              ) {
-                const coords2 = {
-                  lat: parseFloat(result2[0].y),
-                  lng: parseFloat(result2[0].x),
-                };
-                resolve(coords2);
-              } else {
-                resolve(null);
-              }
-            });
+            resolve(null);
           }
         });
-      } catch (error) {
-        console.error('좌표 변환 오류:', error);
+      } catch (e) {
+        console.error('좌표 변환 오류:', e);
         resolve(null);
       }
     });
-  };
 
   const updateCoordinates = async () => {
     if (!baseAddress) {
@@ -282,15 +294,13 @@ export default function ConcertCreate() {
       updateFormData('locationY', null);
       return;
     }
-
     setIsLoadingCoords(true);
     const fullAddress = detailAddress ? `${baseAddress} ${detailAddress}` : baseAddress;
-
     try {
-      const coordinates = await convertAddressToCoordinates(fullAddress);
-      if (coordinates) {
-        updateFormData('locationX', coordinates.lng);
-        updateFormData('locationY', coordinates.lat);
+      const coords = await convertAddressToCoordinates(fullAddress);
+      if (coords) {
+        updateFormData('locationX', coords.lng);
+        updateFormData('locationY', coords.lat);
         updateFormData('location', fullAddress);
       } else {
         updateFormData('locationX', null);
@@ -303,213 +313,276 @@ export default function ConcertCreate() {
 
   useEffect(() => {
     if (!baseAddress) return;
-    const timeoutId = setTimeout(() => {
-      updateCoordinates();
-    }, 500);
-    return () => clearTimeout(timeoutId);
+    const t = setTimeout(updateCoordinates, 500);
+    return () => clearTimeout(t);
   }, [baseAddress, detailAddress]); // eslint-disable-line
 
-  const handleAddressSelect = (addressData: AddressResult) => {
-    const selectedAddress = addressData.roadAddress || addressData.address;
-    setBaseAddress(selectedAddress);
+  const handleAddressSelect = (addr: AddressResult) => {
+    const selected = addr.roadAddress || addr.address;
+    setBaseAddress(selected);
     setDetailAddress('');
     setShowPostcodeModal(false);
   };
 
   const handleDetailAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setDetailAddress(value);
+    setDetailAddress(e.target.value);
   };
 
-  const validateForm = (): boolean => {
+  // ------------ 유효성 검사 ------------
+  const validateForm = () => {
     const newErrors: FormErrors = {};
-
     if (!formData.title.trim()) newErrors.title = '콘서트 제목을 입력해주세요.';
-    else if (formData.title.length < 2)
-      newErrors.title = '콘서트 제목은 최소 2글자 이상이어야 합니다.';
-    else if (formData.title.length > 50)
-      newErrors.title = '콘서트 제목은 최대 50글자까지 입력 가능합니다.';
+    else if (formData.title.length < 2) newErrors.title = '최소 2글자 이상';
+    else if (formData.title.length > 50) newErrors.title = '최대 50글자';
 
     if (!formData.description.trim()) newErrors.description = '설명을 입력해주세요.';
-    else if (formData.description.length < 10)
-      newErrors.description = '설명은 최소 10글자 이상 입력해주세요.';
-    else if (formData.description.length > 500)
-      newErrors.description = '설명은 최대 500글자까지 입력 가능합니다.';
+    else if (formData.description.length < 10) newErrors.description = '최소 10글자 이상';
+    else if (formData.description.length > 500) newErrors.description = '최대 500글자';
 
     if (!formData.location.trim()) newErrors.location = '위치를 입력해주세요.';
 
     if (formData.concertRounds.length === 0) {
-      newErrors.concertRounds = '최소 1개의 콘서트 회차를 추가해주세요.';
+      newErrors.concertRounds = '최소 1개의 회차가 필요합니다.';
     } else {
       for (let i = 0; i < formData.concertRounds.length; i++) {
-        const round = formData.concertRounds[i];
-        if (!round.date || !round.startTime) {
-          newErrors.concertRounds = `${i + 1}회차의 날짜와 시간을 모두 입력해주세요.`;
+        const r = formData.concertRounds[i];
+        if (!r.date || !r.startTime) {
+          newErrors.concertRounds = `${i + 1}회차의 날짜/시간을 입력해주세요.`;
           break;
         }
-        const concertDateTime = new Date(`${round.date}T${round.startTime}`);
-        const now = new Date();
-        if (concertDateTime <= now) {
-          newErrors.concertRounds = `${i + 1}회차의 공연일시는 현재 시간보다 늦어야 합니다.`;
-          break;
-        }
+        const dt = new Date(`${r.date}T${r.startTime}`);
         if (formData.reservationEndDate) {
-          const reservationEndDateTime = new Date(formData.reservationEndDate);
-          if (concertDateTime <= reservationEndDateTime) {
-            newErrors.concertRounds = `${i + 1}회차의 공연일시는 예매 종료일시보다 늦어야 합니다.`;
+          const end = new Date(formData.reservationEndDate);
+          if (dt <= end) {
+            newErrors.concertRounds = `${i + 1}회차는 예매 종료 이후여야 합니다.`;
             break;
           }
         }
       }
-
-      const dateTimeStrings = formData.concertRounds
-        .filter((round) => round.date && round.startTime)
-        .map((round) => `${round.date}T${round.startTime}`);
-
-      const duplicates = dateTimeStrings.filter(
-        (dateTime, index) => dateTimeStrings.indexOf(dateTime) !== index,
-      );
-      if (duplicates.length > 0)
-        newErrors.concertRounds = '동일한 날짜와 시간의 회차가 있습니다.';
+      const dts = formData.concertRounds
+        .filter((r) => r.date && r.startTime)
+        .map((r) => `${r.date}T${r.startTime}`);
+      const dup = dts.filter((v, i) => dts.indexOf(v) !== i);
+      if (dup.length > 0) newErrors.concertRounds = '동일한 회차가 존재합니다.';
     }
 
     if (!formData.reservationStartDate)
-      newErrors.reservationStartDate = '예매 시작일시를 선택해주세요.';
-    if (!formData.reservationEndDate)
-      newErrors.reservationEndDate = '예매 종료일시를 선택해주세요.';
+      newErrors.reservationStartDate = '예매 시작일시 필요';
+    if (!formData.reservationEndDate) newErrors.reservationEndDate = '예매 종료일시 필요';
 
     if (formData.reservationStartDate && formData.reservationEndDate) {
-      const start = new Date(formData.reservationStartDate);
-      const end = new Date(formData.reservationEndDate);
-      if (start >= end)
-        newErrors.reservationEndDate = '예매 종료일시는 시작일시보다 늦어야 합니다.';
-      const now = new Date();
-      if (start < now)
-        newErrors.reservationStartDate = '예매 시작일시는 현재 시간 이후여야 합니다.';
+      const st = new Date(formData.reservationStartDate);
+      const ed = new Date(formData.reservationEndDate);
+      if (st >= ed) newErrors.reservationEndDate = '종료일시는 시작 이후여야 합니다.';
     }
 
     if (!formData.price.trim()) newErrors.price = '가격을 입력해주세요.';
-    if (formData.limitAge < 0) newErrors.limitAge = '연령 제한은 0 이상이어야 합니다.';
+    if (formData.limitAge < 0) newErrors.limitAge = '연령 제한은 0 이상';
     if (formData.durationTime <= 0) newErrors.durationTime = '공연 시간을 입력해주세요.';
     if (formData.images.length === 0)
-      newErrors.images = '최소 1개의 이미지를 업로드해주세요.';
+      newErrors.images = '최소 1개의 이미지가 필요합니다.';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const sortRoundsByDateTime = (rounds: ConcertRound[]): ConcertRound[] => {
-    return [...rounds].sort((a, b) => {
-      if (!a.date || !a.startTime || !b.date || !b.startTime) return 0;
-      const dateTimeA = new Date(`${a.date}T${a.startTime}`);
-      const dateTimeB = new Date(`${b.date}T${b.startTime}`);
-      return dateTimeA.getTime() - dateTimeB.getTime();
-    });
-  };
+  // ------------ 데이터 불러오기(EDIT 전용) ------------
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      try {
+        setPageLoading(true);
+        setPageError(null);
+        const token = localStorage.getItem('admin_token');
+        const res = await fetch(`http://localhost:8080/api/concerts/${id}`, {
+          method: 'GET',
+          headers: {
+            Accept: '*/*',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error('콘서트 정보를 불러오지 못했습니다.');
+        const data = await res.json();
 
-  const formatRoundDateTime = (date: string, startTime: string): string => {
-    if (!date || !startTime) return '';
-    const dateTime = new Date(`${date}T${startTime}`);
-    return dateTime.toLocaleString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+        // 회차 매핑: concertRounds 우선, 없으면 schedules → 회차로 역매핑
+        // 회차 매핑: concertRounds 우선, 없으면 schedules → 회차로 역매핑
+        let rounds: ConcertRound[] = [];
+        if (Array.isArray(data.concertRounds) && data.concertRounds.length > 0) {
+          rounds = data.concertRounds.map((r: any, idx: number) => ({
+            id: r.id ?? idx,
+            date:
+              r.date ??
+              (r.startTime ? new Date(r.startTime).toISOString().slice(0, 10) : ''),
+            startTime:
+              r.startTime && typeof r.startTime === 'string' && r.startTime.length === 5
+                ? r.startTime
+                : r.startTime
+                  ? new Date(r.startTime)
+                      .toLocaleTimeString('ko-KR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                      })
+                      .slice(0, 5)
+                  : '',
+          }));
+        } else if (Array.isArray(data.schedules)) {
+          rounds = data.schedules.map((s: any, idx: number) => {
+            // ✅ concertTime 우선 사용, 없으면 startTime/ time 등 fallback
+            const iso = s.concertTime ?? s.startTime ?? s.time ?? null;
+            const pad = (n: number) => `${n}`.padStart(2, '0');
 
-  const getThumbnailImage = () =>
-    formData.images.find((img) => img.imagesRole === 'THUMBNAIL');
-  const getEarliestRound = () => {
-    if (formData.concertRounds.length === 0) return null;
-    const validRounds = formData.concertRounds.filter((r) => r.date && r.startTime);
-    if (validRounds.length === 0) return null;
-    const sortedRounds = sortRoundsByDateTime(validRounds);
-    return sortedRounds[0];
-  };
+            if (!iso) {
+              return { id: s.id ?? idx, date: '', startTime: '' };
+            }
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+            const d = new Date(iso);
+            return {
+              id: s.id ?? idx,
+              date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+              startTime: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+            };
+          });
+        }
+
+        // 이미지 매핑
+        const mappedImages: DisplayImage[] = Array.isArray(data.images)
+          ? data.images.map((img: any) => ({
+              imageUrl: img.imageUrl ?? img.url ?? '',
+              imagesRole: img.imagesRole ?? img.role ?? 'DETAIL',
+            }))
+          : [];
+
+        setFormData({
+          title: data.title ?? '',
+          description: data.description ?? '',
+          location: data.location ?? '',
+          locationX: data.locationX ?? data.location_x ?? null,
+          locationY: data.locationY ?? data.location_y ?? null,
+          concertRounds: rounds,
+          reservationStartDate: toInputLocalDateTime(
+            data.reservationStartDate ?? data.reservation_start_date,
+          ),
+          reservationEndDate: toInputLocalDateTime(
+            data.reservationEndDate ?? data.reservation_end_date,
+          ),
+          price: data.price ?? '',
+          limitAge: Number(data.limitAge ?? 0),
+          durationTime: Number(data.durationTime ?? 0),
+          thumbnailFile: null,
+          descriptionFiles: [],
+          images: mappedImages,
+        });
+
+        // 주소 초기값(단순 세팅)
+        setBaseAddress(data.location ?? '');
+        setDetailAddress('');
+      } catch (e: any) {
+        setPageError(e?.message || '알 수 없는 오류');
+      } finally {
+        setPageLoading(false);
+      }
+    })();
+  }, [id]);
+
+  // ------------ 제출(수정 전용) ------------
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm() || !id) return;
 
-    setIsSubmitting(true);
     try {
-      const rounds = formData.concertRounds
-        .filter((r) => r.date && r.startTime)
-        .sort(
-          (a, b) =>
-            new Date(`${a.date}T${a.startTime}`).getTime() -
-            new Date(`${b.date}T${b.startTime}`).getTime(),
-        );
+      setIsSubmitting(true);
 
-      // const schedules = rounds.map((r, idx) => {
-      //   const startISO = new Date(toISO(r.date, r.startTime)).toISOString(); // 시작
-      //   const endISO = addMinutesISO(startISO, formData.durationTime || 0); // 종료 = 시작 + 공연시간(분)
-      //   return { id: idx, startTime: startISO, endTime: endISO };
-      // });
-      /* 🔵 여기부터 콘솔 디버그 추가 */
-      // console.group('🗓️ Schedules Debug');
-      // console.log('입력 회차(concertRounds):', formData.concertRounds);
-      // console.table(
-      //   rounds.map((r, i) => ({
-      //     idx: i,
-      //     date: r.date,
-      //     startTime_HHMM: r.startTime,
-      //     startISO_raw: toISO(r.date, r.startTime),
-      //   })),
-      // );
-      // console.table(
-      //   schedules.map((s) => ({
-      //     id: s.id,
-      //     startTime_ISO: s.startTime,
-      //     endTime_ISO: s.endTime,
-      //     start_local: new Date(s.startTime).toLocaleString('ko-KR'),
-      //     end_local: new Date(s.endTime).toLocaleString('ko-KR'),
-      //   })),
-      // );
-      // console.log('공연시간(분):', formData.durationTime);
-      // console.log('브라우저 TZ 오프셋(분):', new Date().getTimezoneOffset());
-      // console.groupEnd();
-      // 2) 기간(YYYY-MM-DD) — 첫/마지막 회차 기준
-      const startDate = rounds[0]?.date ?? '';
-      const endDate = rounds.at(-1)?.date ?? '';
+      // 회차 정렬 + schedules 생성
+      const rounds = sortRoundsByDateTime(
+        formData.concertRounds.filter((r) => r.date && r.startTime),
+      );
+      const schedules = rounds.map((r, idx) => {
+        const startISO = new Date(toISO(r.date, r.startTime)).toISOString();
+        const endISO = addMinutesISO(startISO, formData.durationTime || 0);
+        return { id: idx, startTime: startISO, endTime: endISO };
+      });
 
-      // 3) 최종 payload (schedules 포함!)
-      const payload = {
+      const requestBody = {
         title: formData.title,
         description: formData.description,
         location: formData.location,
         locationX: formData.locationX || 0,
         locationY: formData.locationY || 0,
-
-        reservationStartDate: formData.reservationStartDate,
-        reservationEndDate: formData.reservationEndDate,
+        reservationStartDate: fromInputLocalDateTimeToISO(formData.reservationStartDate),
+        reservationEndDate: fromInputLocalDateTimeToISO(formData.reservationEndDate),
         price: formData.price,
         limitAge: formData.limitAge,
         durationTime: formData.durationTime,
-        concertRounds: formData.concertRounds,
-        // schedules,
-        startDate,
-        endDate,
-        thumbnailImage: formData.thumbnailFile || undefined,
-        descriptionImages: formData.descriptionFiles || [],
-      } as const;
+        concertRounds: rounds.map((r) => ({ date: r.date, startTime: r.startTime })),
+        schedules,
+      };
 
-      const newConcert = await createConcert(payload);
-      console.log('✅ 콘서트 생성 성공:', newConcert);
-      alert('콘서트가 성공적으로 생성되었습니다!');
-      router.push('/admin/concerts');
-    } catch (error) {
-      console.error('❌ 콘서트 생성 실패:', error);
-      alert(
-        `콘서트 생성 중 오류: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+      const fd = new FormData();
+      fd.append(
+        'concertRequest',
+        new Blob([JSON.stringify(requestBody)], { type: 'application/json' }),
       );
+
+      if (formData.thumbnailFile) {
+        fd.append('images', formData.thumbnailFile);
+      }
+      if (formData.descriptionFiles.length > 0) {
+        formData.descriptionFiles.forEach((f) => fd.append('images', f));
+      }
+
+      const token = localStorage.getItem('admin_token');
+      const res = await fetch(`http://localhost:8080/api/concerts/${id}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        } as any,
+        body: fd,
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || '콘서트 수정 실패');
+      }
+
+      alert('콘서트가 성공적으로 수정되었습니다!');
+      router.push('/admin/concerts');
+    } catch (error: any) {
+      console.error('❌ 콘서트 수정 실패:', error);
+      alert(`수정 중 오류: ${error?.message || '알 수 없는 오류'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // ------------ 렌더링 ------------
+  if (pageLoading) {
+    return (
+      <div className={styles.container}>
+        <p>불러오는 중...</p>
+      </div>
+    );
+  }
+
+  if (pageError) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>
+          <div className={styles.errorIcon}>❌</div>
+          <h3>오류가 발생했습니다</h3>
+          <p>{pageError}</p>
+          <div className={styles.errorActions}>
+            <button onClick={() => router.reload()} className={styles.retryButton}>
+              다시 시도
+            </button>
+            <Link href='/admin/concerts' className={styles.backButton}>
+              콘서트 목록으로
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -553,14 +626,12 @@ export default function ConcertCreate() {
                 )}
                 {(() => {
                   const earliestRound = getEarliestRound();
-                  return (
-                    earliestRound && (
-                      <span className={styles.previewStat}>
-                        🎭{' '}
-                        {formatRoundDateTime(earliestRound.date, earliestRound.startTime)}
-                      </span>
-                    )
-                  );
+                  return earliestRound ? (
+                    <span className={styles.previewStat}>
+                      🎭{' '}
+                      {formatRoundDateTime(earliestRound.date, earliestRound.startTime)}
+                    </span>
+                  ) : null;
                 })()}
                 {formData.price && (
                   <span className={styles.previewStat}>💰 {formData.price}</span>
@@ -582,9 +653,8 @@ export default function ConcertCreate() {
         <form className={styles.form} onSubmit={handleSubmit}>
           {/* 기본 정보 */}
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>기본 정보</h3>
+            <h3 className={styles.sectionTitle}>기본 정보 (수정)</h3>
             <div className={styles.formGrid}>
-              {/* 콘서트 제목 */}
               <div className={styles.formGroup}>
                 <label className={styles.label}>
                   콘서트 제목 <span className={styles.required}>*</span>
@@ -603,7 +673,7 @@ export default function ConcertCreate() {
                 <span className={styles.inputHint}>{formData.title.length}/50</span>
               </div>
 
-              {/* 주소 입력 */}
+              {/* 주소 */}
               <div className={styles.formGroup}>
                 <label className={styles.label}>
                   주소 <span className={styles.required}>*</span>
@@ -619,12 +689,12 @@ export default function ConcertCreate() {
                   />
                 </div>
                 {baseAddress && (
-                  <div style={{ marginTop: '8px' }}>
+                  <div style={{ marginTop: 8 }}>
                     <input
                       type='text'
                       value={detailAddress}
                       onChange={handleDetailAddressChange}
-                      placeholder='상세 주소를 입력하세요 (아파트명, 동호수 등)'
+                      placeholder='상세 주소 (아파트명, 동호수 등)'
                       className={styles.input}
                       maxLength={100}
                     />
@@ -635,7 +705,7 @@ export default function ConcertCreate() {
                 )}
                 <div className={styles.inputHint}>
                   {!baseAddress
-                    ? '주소를 정확하게 입력하려면 클릭하세요'
+                    ? '주소를 정확히 입력하려면 클릭'
                     : `기본 주소: ${baseAddress}${detailAddress ? ` + 상세주소: ${detailAddress}` : ''}`}
                 </div>
               </div>
@@ -649,7 +719,7 @@ export default function ConcertCreate() {
               <textarea
                 value={formData.description}
                 onChange={(e) => updateFormData('description', e.target.value)}
-                placeholder='콘서트에 대한 자세한 설명을 입력해주세요...'
+                placeholder='콘서트에 대한 자세한 설명...'
                 className={`${styles.textarea} ${errors.description ? styles.inputError : ''}`}
                 rows={4}
                 maxLength={500}
@@ -661,85 +731,81 @@ export default function ConcertCreate() {
             </div>
           </div>
 
-          {/* 콘서트 회차 */}
+          {/* 회차 */}
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>콘서트 회차</h3>
-
             <div className={styles.formGroup}>
               <div className={styles.roundsContainer}>
-                {sortRoundsByDateTime(formData.concertRounds).map((round, index) => {
-                  const originalIndex = formData.concertRounds.findIndex(
-                    (r) => r.id === round.id,
-                  );
-                  return (
-                    <div key={round.id} className={styles.roundItem}>
-                      <div className={styles.roundHeader}>
-                        <span className={styles.roundNumber}>{index + 1}회차</span>
-                        {round.date && round.startTime && (
-                          <span className={styles.roundDateTime}>
-                            {formatRoundDateTime(round.date, round.startTime)}
-                          </span>
-                        )}
-                        {formData.concertRounds.length > 1 && (
-                          <button
-                            type='button'
-                            onClick={() =>
-                              updateFormData(
-                                'concertRounds',
-                                formData.concertRounds.filter((r) => r.id !== round.id),
-                              )
-                            }
-                            className={styles.removeRoundButton}
-                            title='회차 삭제'
-                          >
-                            ✕
-                          </button>
-                        )}
+                {sortRoundsByDateTime(formData.concertRounds).map((round) => (
+                  <div key={round.id} className={styles.roundItem}>
+                    <div className={styles.roundHeader}>
+                      <span className={styles.roundNumber}>
+                        {/* 순번은 정렬 순서로 표시되므로 생략 */}
+                      </span>
+                      {round.date && round.startTime && (
+                        <span className={styles.roundDateTime}>
+                          {formatRoundDateTime(round.date, round.startTime)}
+                        </span>
+                      )}
+                      {formData.concertRounds.length > 1 && (
+                        <button
+                          type='button'
+                          onClick={() =>
+                            updateFormData(
+                              'concertRounds',
+                              formData.concertRounds.filter((r) => r.id !== round.id),
+                            )
+                          }
+                          className={styles.removeRoundButton}
+                          title='회차 삭제'
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    <div className={styles.roundInputs}>
+                      <div className={styles.formGroup}>
+                        <label className={styles.label}>공연 날짜 *</label>
+                        <input
+                          type='date'
+                          title='date'
+                          value={round.date}
+                          min={new Date().toISOString().split('T')[0]}
+                          onChange={(e) =>
+                            updateFormData(
+                              'concertRounds',
+                              formData.concertRounds.map((r) =>
+                                r.id === round.id ? { ...r, date: e.target.value } : r,
+                              ),
+                            )
+                          }
+                          className={styles.input}
+                        />
                       </div>
 
-                      <div className={styles.roundInputs}>
-                        <div className={styles.formGroup}>
-                          <label className={styles.label}>공연 날짜 *</label>
-                          <input
-                            type='date'
-                            title='date'
-                            value={round.date}
-                            min={new Date().toISOString().split('T')[0]}
-                            onChange={(e) =>
-                              updateFormData(
-                                'concertRounds',
-                                formData.concertRounds.map((r) =>
-                                  r.id === round.id ? { ...r, date: e.target.value } : r,
-                                ),
-                              )
-                            }
-                            className={styles.input}
-                          />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                          <label className={styles.label}>시작 시간 *</label>
-                          <input
-                            type='time'
-                            title='time'
-                            value={round.startTime}
-                            onChange={(e) =>
-                              updateFormData(
-                                'concertRounds',
-                                formData.concertRounds.map((r) =>
-                                  r.id === round.id
-                                    ? { ...r, startTime: e.target.value }
-                                    : r,
-                                ),
-                              )
-                            }
-                            className={styles.input}
-                          />
-                        </div>
+                      <div className={styles.formGroup}>
+                        <label className={styles.label}>시작 시간 *</label>
+                        <input
+                          type='time'
+                          title='time'
+                          value={round.startTime}
+                          onChange={(e) =>
+                            updateFormData(
+                              'concertRounds',
+                              formData.concertRounds.map((r) =>
+                                r.id === round.id
+                                  ? { ...r, startTime: e.target.value }
+                                  : r,
+                              ),
+                            )
+                          }
+                          className={styles.input}
+                        />
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
 
                 <button
                   type='button'
@@ -759,8 +825,7 @@ export default function ConcertCreate() {
                 )}
 
                 <div className={styles.inputHint}>
-                  각 회차별로 공연 날짜와 시작 시간을 설정하세요. 회차는 시간 순서대로
-                  자동 정렬됩니다.
+                  회차는 시간 순서대로 자동 정렬됩니다.
                 </div>
               </div>
             </div>
@@ -778,7 +843,6 @@ export default function ConcertCreate() {
                   type='datetime-local'
                   title='datetime-local'
                   value={formData.reservationStartDate}
-                  min={new Date().toISOString().slice(0, 16)}
                   onChange={(e) => updateFormData('reservationStartDate', e.target.value)}
                   className={`${styles.input} ${errors.reservationStartDate ? styles.inputError : ''}`}
                 />
@@ -797,9 +861,6 @@ export default function ConcertCreate() {
                   type='datetime-local'
                   title='datetime-local'
                   value={formData.reservationEndDate}
-                  min={
-                    formData.reservationStartDate || new Date().toISOString().slice(0, 16)
-                  }
                   onChange={(e) => updateFormData('reservationEndDate', e.target.value)}
                   className={`${styles.input} ${errors.reservationEndDate ? styles.inputError : ''}`}
                 />
@@ -873,7 +934,7 @@ export default function ConcertCreate() {
             </div>
           </div>
 
-          {/* 이미지 업로드 */}
+          {/* 이미지 */}
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>이미지</h3>
 
@@ -952,7 +1013,7 @@ export default function ConcertCreate() {
                 </label>
               </div>
               <div className={styles.inputHint}>
-                콘서트 상세 정보를 보여줄 추가 이미지 (선택사항)
+                콘서트 상세 정보를 보여줄 추가 이미지 (선택)
               </div>
             </div>
 
@@ -1004,16 +1065,16 @@ export default function ConcertCreate() {
                 {isSubmitting ? (
                   <>
                     <span className={styles.spinner} />
-                    생성 중...
+                    수정 중...
                   </>
                 ) : (
-                  '콘서트 생성하기'
+                  '콘서트 수정하기'
                 )}
               </button>
             </div>
 
             <div className={styles.submitHint}>
-              생성 후 추가 설정을 진행할 수 있습니다.
+              수정 후에도 추가 설정을 변경할 수 있습니다.
             </div>
           </div>
         </form>

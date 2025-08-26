@@ -137,16 +137,12 @@ export default function InquiryDetail({ id }: InquiryDetailProps) {
         const data = await res.json();
 
         // 이미지 경로를 절대 URL로 변환
+        // 이미지 경로를 절대 URL로 변환
         const processedData = {
           ...data,
-          imagePaths: data.imagePaths
-            ?.map((path: string) => {
-              const fileName = path.split('\\').pop();
-              return fileName
-                ? `http://localhost:8080/uploads/inquiries/${fileName}`
-                : '';
-            })
-            .filter(Boolean), // 빈 문자열 제거
+          imagePaths: data.imagePaths?.map(
+            (path: string) => `http://localhost:8080${path}`,
+          ),
         };
 
         setInquiry(processedData);
@@ -184,8 +180,8 @@ export default function InquiryDetail({ id }: InquiryDetailProps) {
                         {new Date(inquiry.createdAt).toLocaleDateString()}
                       </span>
                       <div className={styles.answer}>
-                        <p>{inquiry.title}</p>
-                        <p>{inquiry.content}</p>
+                        <p>제목 : {inquiry.title}</p>
+                        <p>내용 : {inquiry.content}</p>
 
                         {/* 질문 이미지들 */}
                         {inquiry.imagePaths && inquiry.imagePaths.length > 0 && (

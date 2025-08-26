@@ -158,3 +158,16 @@
 .deleteBtn{
 border:none;
 }
+
+.locationWrap{
+  display: grid;
+  gap: 12px;
+  margin:20px 0px;
+}
+
+.map{
+  width: '100%';
+  height: 360px;
+  border: '1px solid #e5e7eb';
+  border-radius: 8px;
+}

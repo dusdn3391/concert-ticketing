@@ -11,15 +11,16 @@ interface ConcertCardProps {
 }
 
 export function ConcertCard({ concert, onDelete }: ConcertCardProps) {
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('ko-KR');
   };
 
   const getDateStatus = () => {
     const now = new Date();
-    const startDate = new Date(concert.start_date);
-    const endDate = new Date(concert.end_date);
-    
+    const startDate = new Date(concert.startDate);
+    const endDate = new Date(concert.endDate);
+
     if (now < startDate) {
       return { status: 'upcoming', text: '예정', color: '#3b82f6' };
     } else if (now >= startDate && now <= endDate) {
@@ -41,25 +42,19 @@ export function ConcertCard({ concert, onDelete }: ConcertCardProps) {
       {/* 기본 정보 */}
       <div className={styles.venueInfo}>
         <h3 className={styles.venueName}>{concert.title}</h3>
-
         <p className={styles.venueLocation}>📍 {concert.location}</p>
-
         <p className={styles.venueDescription}>{concert.description}</p>
       </div>
 
       {/* 통계 */}
       <div className={styles.statsGrid}>
         <div className={styles.statItem}>
-          <div className={styles.statValue}>
-            {formatDate(concert.start_date)}
-          </div>
+          <div className={styles.statValue}>{formatDate(concert.startDate)}</div>
           <div className={styles.statLabel}>시작일</div>
         </div>
 
         <div className={styles.statItem}>
-          <div className={styles.statValue}>
-            {formatDate(concert.end_date)}
-          </div>
+          <div className={styles.statValue}>{formatDate(concert.endDate)}</div>
           <div className={styles.statLabel}>종료일</div>
         </div>
 
@@ -69,10 +64,18 @@ export function ConcertCard({ concert, onDelete }: ConcertCardProps) {
         </div>
       </div>
 
-      {/* 날짜 정보 */}
-      <div className={styles.dateInfo}>
-        <div>생성: {formatDate(concert.created_at)}</div>
-        {concert.updated_at && <div>수정: {formatDate(concert.updated_at)}</div>}
+      {/* 예약 기간 */}
+      <div className={styles.statsGrid}>
+        <div className={styles.statItem}>
+          <div className={styles.statValue}>
+            {formatDate(concert.reservationStartDate)}
+          </div>
+          <div className={styles.statLabel}>예매 시작</div>
+        </div>
+        <div className={styles.statItem}>
+          <div className={styles.statValue}>{formatDate(concert.reservationEndDate)}</div>
+          <div className={styles.statLabel}>예매 종료</div>
+        </div>
       </div>
 
       {/* 액션 버튼 */}

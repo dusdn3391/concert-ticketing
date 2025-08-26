@@ -7,7 +7,6 @@ import styles from './bulkModal.module.css';
 interface SimpleBulkConfig {
   rows: string[];
   seatsPerRow: number;
-  basePrice: number;
   startRow: number;
   startCol: number;
 }
@@ -30,7 +29,6 @@ export default function BulkModal({
   const [config, setConfig] = useState<SimpleBulkConfig>({
     rows: availableRows.slice(0, 3),
     seatsPerRow: 10,
-    basePrice: 50000,
     startRow: 0,
     startCol: 0,
   });
@@ -68,7 +66,12 @@ export default function BulkModal({
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>좌석 대량 생성</h2>
-          <button type='button' className={styles.closeButton} onClick={onClose}>
+          <button
+            type='button'
+            className={styles.closeButton}
+            onClick={onClose}
+            title='closeButton'
+          >
             <Icons.X />
           </button>
         </div>
@@ -97,14 +100,14 @@ export default function BulkModal({
               </div>
               <div className={styles.quickRowActions}>
                 <button
-                  type="button"
+                  type='button'
                   className={styles.quickButton}
                   onClick={() => updateConfig({ rows: availableRows })}
                 >
                   전체 선택
                 </button>
                 <button
-                  type="button"
+                  type='button'
                   className={styles.quickButton}
                   onClick={() => updateConfig({ rows: [] })}
                 >
@@ -120,6 +123,7 @@ export default function BulkModal({
               </label>
               <input
                 type='range'
+                title='range'
                 min='1'
                 max={maxSeatsPerRow}
                 value={Math.min(config.seatsPerRow, maxSeatsPerRow)}
@@ -142,6 +146,7 @@ export default function BulkModal({
                   <input
                     type='range'
                     min='0'
+                    title='range'
                     max={Math.max(0, gridRows - 1)}
                     value={config.startRow}
                     onChange={(e) => updateConfig({ startRow: Number(e.target.value) })}
@@ -153,38 +158,13 @@ export default function BulkModal({
                   <input
                     type='range'
                     min='0'
+                    title='range'
                     max={Math.max(0, gridCols - 1)}
                     value={config.startCol}
                     onChange={(e) => updateConfig({ startCol: Number(e.target.value) })}
                     className={styles.rangeInput}
                   />
                 </div>
-              </div>
-            </div>
-
-            {/* 기본 가격 */}
-            <div className={styles.settingSection}>
-              <label className={styles.settingLabel}>기본 가격</label>
-              <input
-                type='number'
-                value={config.basePrice}
-                onChange={(e) => updateConfig({ basePrice: Number(e.target.value) })}
-                className={styles.priceInput}
-                min='0'
-                step='1000'
-                placeholder='가격을 입력하세요'
-              />
-              <div className={styles.pricePresets}>
-                {[30000, 50000, 70000, 100000].map((price) => (
-                  <button
-                    key={price}
-                    type="button"
-                    className={styles.pricePreset}
-                    onClick={() => updateConfig({ basePrice: price })}
-                  >
-                    {price.toLocaleString()}원
-                  </button>
-                ))}
               </div>
             </div>
 
@@ -212,12 +192,6 @@ export default function BulkModal({
                     행 {config.startRow}, 열 {config.startCol}
                   </span>
                 </div>
-                <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>좌석 가격:</span>
-                  <span className={styles.summaryValue}>
-                    {config.basePrice.toLocaleString()}원
-                  </span>
-                </div>
               </div>
             </div>
 
@@ -225,30 +199,34 @@ export default function BulkModal({
             <div className={styles.previewSection}>
               <h4 className={styles.previewTitle}>배치 미리보기</h4>
               <div className={styles.gridPreview}>
-                <div 
+                <div
                   className={styles.previewGrid}
                   style={{
                     gridTemplateColumns: `repeat(${Math.min(gridCols, 10)}, 1fr)`,
                     gridTemplateRows: `repeat(${Math.min(gridRows, 8)}, 1fr)`,
                   }}
                 >
-                  {Array.from({ length: Math.min(gridRows, 8) * Math.min(gridCols, 10) }, (_, index) => {
-                    const row = Math.floor(index / Math.min(gridCols, 10));
-                    const col = index % Math.min(gridCols, 10);
-                    
-                    // 좌석이 배치될 위치인지 확인
-                    const isInRange = row >= config.startRow && 
-                                     row < config.startRow + config.rows.length && 
-                                     col >= config.startCol && 
-                                     col < config.startCol + config.seatsPerRow;
-                    
-                    return (
-                      <div 
-                        key={index} 
-                        className={`${styles.previewCell} ${isInRange ? styles.willHaveSeat : ''}`}
-                      />
-                    );
-                  })}
+                  {Array.from(
+                    { length: Math.min(gridRows, 8) * Math.min(gridCols, 10) },
+                    (_, index) => {
+                      const row = Math.floor(index / Math.min(gridCols, 10));
+                      const col = index % Math.min(gridCols, 10);
+
+                      // 좌석이 배치될 위치인지 확인
+                      const isInRange =
+                        row >= config.startRow &&
+                        row < config.startRow + config.rows.length &&
+                        col >= config.startCol &&
+                        col < config.startCol + config.seatsPerRow;
+
+                      return (
+                        <div
+                          key={index}
+                          className={`${styles.previewCell} ${isInRange ? styles.willHaveSeat : ''}`}
+                        />
+                      );
+                    },
+                  )}
                 </div>
                 <p className={styles.previewNote}>
                   📍 녹색: 좌석이 생성될 위치 | 회색: 빈 공간

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAdminBadgeStore } from '@/stores/badges';
 import { useRouter } from 'next/router';
+import { useVenueStore } from '@/stores/venue';
 
 import styles from './sidebar.module.css';
 import { Icons } from '../ui/Icons';
@@ -24,19 +26,22 @@ export default function Sidebar({ isOpen, onToggle, isMobile = false }: SidebarP
   const router = useRouter();
   const [expandedItems, setExpandedItems] = useState<string[]>(['concerts']);
 
+  // 👇 전역에서 개수 읽기
+  const { concertCount } = useAdminBadgeStore();
+
   const menuItems: MenuItem[] = [
-    {
-      id: 'dashboard',
-      label: '대시보드',
-      href: '/admin',
-      icon: <Icons.BarChart className={styles.iconSvg} />,
-    },
+    // {
+    //   id: 'dashboard',
+    //   label: '대시보드',
+    //   href: '/admin',
+    //   icon: <Icons.BarChart className={styles.iconSvg} />,
+    // },
     {
       id: 'concerts',
-      label: '공연장 관리',
+      label: '공연장 관리', // 필요하면 '콘서트'로 라벨 변경 가능
       href: '',
       icon: <Icons.MapPin className={styles.iconSvg} />,
-      badge: 2,
+      badge: concertCount, // 👈 여기!
       subItems: [
         {
           id: 'concerts-create',
@@ -139,7 +144,6 @@ export default function Sidebar({ isOpen, onToggle, isMobile = false }: SidebarP
     const active = isActive(item.href, item.subItems, hasSubItems);
     const isSubItem = level > 0;
 
-    // 사이드바가 닫혀있고 서브메뉴가 있는 항목인 경우 렌더링하지 않음
     if (!isOpen && hasSubItems) {
       return null;
     }

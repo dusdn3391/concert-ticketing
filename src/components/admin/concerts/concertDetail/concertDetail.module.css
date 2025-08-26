@@ -101,6 +101,15 @@
   color: var(--text-secondary);
   font-size: 16px;
 }
+.EditButton{
+    padding: 8px 16px;
+  background-color:#f59e0b;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
 
 .previewButton {
   padding: 8px 16px;
@@ -259,7 +268,6 @@
 
 .svgContainer {
   padding: 20px;
-  min-height: 400px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -268,7 +276,7 @@
 
 .svgContainer svg {
   max-width: 100%;
-  max-height: 500px;
+  max-height: 100%;
   height: auto;
   border: 1px solid var(--border-secondary);
   border-radius: 4px;

@@ -31,15 +31,10 @@ const PostcodeModal: React.FC<PostcodeModalProps> = ({ onAddressSelect, onClose 
 
   useEffect(() => {
     const loadScripts = async () => {
-      console.log('🚀 Daum Postcode 스크립트 로딩 시작');
-
       // Daum 우편번호 서비스 로드
       const loadDaumPostcode = (): Promise<void> => {
         return new Promise((resolve, reject) => {
-          console.log('📮 Daum Postcode 로딩 시작');
-
           if (window.daum && window.daum.Postcode) {
-            console.log('✅ Daum Postcode 이미 로드됨');
             resolve();
             return;
           }
@@ -47,7 +42,6 @@ const PostcodeModal: React.FC<PostcodeModalProps> = ({ onAddressSelect, onClose 
           const script = document.createElement('script');
           script.src = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
           script.onload = () => {
-            console.log('✅ Daum Postcode 로드 성공');
             resolve();
           };
           script.onerror = (error) => {
@@ -64,13 +58,8 @@ const PostcodeModal: React.FC<PostcodeModalProps> = ({ onAddressSelect, onClose 
 
         // Daum 우편번호 서비스 초기화
         if (containerRef.current && window.daum && window.daum.Postcode) {
-          console.log('🎯 Daum Postcode 초기화');
-
           new window.daum.Postcode({
             oncomplete: function (data: any) {
-              console.log('📍 주소 선택됨:', data);
-
-              // 주소 데이터를 부모 컴포넌트로 전달
               onAddressSelect(data);
             },
             width: '100%',

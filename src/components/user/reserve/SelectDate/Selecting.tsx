@@ -18,6 +18,7 @@ const SelectDate = () => {
             <div className={styles.selectName}>날짜선택</div>
             <div className={styles.calendar}>
               <Calendar
+                className={styles.calendarRoot}
                 onChange={(date) => setSelectedDate(date as Date)}
                 value={selectedDate}
                 locale='ko-KR'

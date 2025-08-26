@@ -27,9 +27,10 @@
     display: flex;
     gap:1px;
     align-items: center;
-
 }
-
+.starArray span{
+  font-size: 12px;
+}
 .registerBtn{
     border:none;
     background-color: #3498db;

@@ -7,19 +7,48 @@ import {
 } from './common';
 import { Admin } from './admin';
 
+// ====== 좌석 & 구역 타입 ======
+export interface Seat {
+  id: number;
+  rowName: string;
+  seatNumber: string;
+  price: string; // 단일 좌석 가격(문자열/표기 그대로 저장)
+}
+
+export interface SeatSection {
+  id: number; // 서버가 주는 구역 id (예: 2)
+  sectionName: string; // 구역 이름 (예: 'a')
+  colorCode: string; // SVG 해시 코드 (예: '5937e43cc3fc')
+  price: number; // 이 구역의 기준 가격 (예: 50000.00)
+  seats: Seat[]; // 해당 구역의 좌석들
+}
+
 // 콘서트 기본 정보 (ERD 기반)
 export interface Concert extends BaseEntity {
   title: string;
   description: string;
   location: string;
-  location_X: number;
-  location_y: number;
-  start_date: string;
-  end_date: string;
+  locationX: number;
+  locationY: number;
+  startDate: string; // 공연 시작일
+  endDate: string; // 공연 종료일
+  reservationStartDate: string; // 예매 시작일
+  reservationEndDate: string; // 예매 종료일
+  price: string;
   rating: number;
-  admin_id: number;
+  limitAge: number;
+  durationTime: number;
+  adminId: number;
+  concertHallName?: string | null;
+
   // 조인된 정보
   admin?: Admin;
+
+  // 관계 데이터
+  images?: any[];
+  seatMap?: any;
+  schedules?: any[];
+  casts?: any[];
 }
 
 // 출연진 (Cast)
@@ -166,7 +195,7 @@ export interface ConcertDetail extends Concert {
       seat_count: number; // 해당 스케줄의 총 좌석 수
       available_seats: number; // 예약 가능한 좌석 수
       reserved_seats: number; // 예약된 좌석 수
-      revenue: number; // 해당 스케줄의 매출
+      revenue: number; // 해당 스케줄의
     }
   >;
   total_seats: number; // 전체 좌석 수
@@ -175,16 +204,18 @@ export interface ConcertDetail extends Concert {
   average_rating: number; // 평균 평점 (리뷰 기반)
   review_count: number; // 리뷰 수
   svg_content?: string; // SVG 레이아웃 콘텐츠
+
+  // 프런트 편집용 구역(도형 매칭 기반)
   zones?: Array<{
     id: string;
     name: string;
     svgElementId: string;
     seatCount: number;
-    priceRange: {
-      min: number;
-      max: number;
-    };
-  }>; // 구역 정보
+    price: number; // ✅ min/max 대신 단일 price
+  }>;
+
+  // ✅ 백엔드 seatSections(색상해시/구역단위 좌석) — 응답 예시와 동일한 구조
+  seatSections?: SeatSection[];
 }
 
 // 출연진 상세 정보

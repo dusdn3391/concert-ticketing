@@ -22,12 +22,8 @@ const NoticePage = () => {
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) throw new Error('토큰이 없습니다.');
-
         const response = await fetch(`http://localhost:8080/api/notices`, {
           headers: {
-            Authorization: `Bearer ${token}`,
             Accept: '*/*',
           },
         });

@@ -84,9 +84,15 @@ const CustomerCenter: React.FC = () => {
 
   useEffect(() => {
     const fetchInquiries = async () => {
-      try {
-        const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('accessToken');
 
+      // 토큰이 없으면 바로 "문의내역 없음" 처리
+      if (!token) {
+        setNotices([]); // 빈 배열로 상태 세팅
+        return;
+      }
+
+      try {
         const response = await fetch(
           `http://localhost:8080/api/inquiries?page=0&size=5`,
           {
@@ -114,8 +120,9 @@ const CustomerCenter: React.FC = () => {
           }));
 
         setNotices(sorted.slice(0, 1)); // 최근 문의 1개만
-      } catch (error) {
-        console.error('❌ 1:1 문의 조회 실패:', error);
+      } catch {
+        // 여기서도 굳이 콘솔 에러 찍지 않음
+        setNotices([]);
       }
     };
 

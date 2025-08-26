@@ -31,18 +31,18 @@ interface Seat {
   priceCategory: string;
 }
 
-interface Venue {
+// 🔧 로컬 타입 이름 변경 + svgData에 null 허용
+interface PreviewVenue {
   id: string;
-  name: string;
+  title: string;
   description: string;
-  capacity: number;
-  svgData?: string;
+  svgData?: string | null;
   zones: Zone[];
 }
 
 export default function ConcertPreview({ concertId }: ConcertPreviewProps) {
   const router = useRouter();
-  const [venue, setVenue] = useState<Venue | null>(null);
+  const [venue, setVenue] = useState<PreviewVenue | null>(null);
   const [zones, setZones] = useState<Zone[]>([]);
   const [seats, setSeats] = useState<Seat[]>([]);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
@@ -66,7 +66,16 @@ export default function ConcertPreview({ concertId }: ConcertPreviewProps) {
         setError('공연장을 찾을 수 없습니다.');
         return;
       }
-      setVenue(venueData);
+
+      // 🧭 스토어 Venue → 로컬 PreviewVenue로 매핑
+      const mapped: PreviewVenue = {
+        id: (venueData as any).id,
+        title: (venueData as any).title ?? (venueData as any).name ?? '',
+        description: (venueData as any).description ?? '',
+        svgData: (venueData as any).svgData ?? null,
+        zones: (venueData as any).zones ?? [],
+      };
+      setVenue(mapped);
 
       // 구역 정보 로드
       const zonesData = await getZonesByVenue(concertId);
@@ -90,23 +99,16 @@ export default function ConcertPreview({ concertId }: ConcertPreviewProps) {
   }, [loadVenueData]);
 
   const handleZoneClick = (zoneId: string) => {
-    if (selectedZone === zoneId) {
-      setSelectedZone(null);
-    } else {
-      setSelectedZone(zoneId);
-    }
+    setSelectedZone((prev) => (prev === zoneId ? null : zoneId));
   };
 
-  const getZoneSeats = (zoneId: string) => {
-    return seats.filter((seat) => seat.zoneId === zoneId);
-  };
+  const getZoneSeats = (zoneId: string) => seats.filter((seat) => seat.zoneId === zoneId);
 
   const getZoneStats = (zoneId: string) => {
     const zoneSeats = getZoneSeats(zoneId);
     const available = zoneSeats.filter((seat) => seat.status === 'available').length;
     const occupied = zoneSeats.filter((seat) => seat.status === 'occupied').length;
     const disabled = zoneSeats.filter((seat) => seat.status === 'disabled').length;
-
     return { total: zoneSeats.length, available, occupied, disabled };
   };
 
@@ -114,16 +116,17 @@ export default function ConcertPreview({ concertId }: ConcertPreviewProps) {
     const available = seats.filter((seat) => seat.status === 'available').length;
     const occupied = seats.filter((seat) => seat.status === 'occupied').length;
     const disabled = seats.filter((seat) => seat.status === 'disabled').length;
-
     return { total: seats.length, available, occupied, disabled };
   };
 
-  const handleBackToList = () => {
-    router.push('/admin/concerts');
-  };
+  const handleBackToList = () => router.push('/admin/concerts');
 
+  // ✏️ 콘서트 수정 버튼: /admin/concerts/edit?id=...
   const handleEditVenue = () => {
-    router.push(`/admin/concerts/${concertId}`);
+    router.push({
+      pathname: '/admin/concerts/edit',
+      query: { id: concertId },
+    });
   };
 
   const handleZoneEditor = (zoneId: string) => {
@@ -167,7 +170,7 @@ export default function ConcertPreview({ concertId }: ConcertPreviewProps) {
             <span>목록</span>
           </button>
           <div className={styles.titleSection}>
-            <h1 className={styles.title}>{venue.name}</h1>
+            <h1 className={styles.title}>{venue.title}</h1>
             <p className={styles.subtitle}>전체 좌석 배치 미리보기</p>
           </div>
         </div>
@@ -252,9 +255,7 @@ export default function ConcertPreview({ concertId }: ConcertPreviewProps) {
                 {zones.map((zone) => (
                   <div
                     key={zone.id}
-                    className={`${styles.zoneIndicator} ${
-                      selectedZone === zone.id ? styles.selected : ''
-                    }`}
+                    className={`${styles.zoneIndicator} ${selectedZone === zone.id ? styles.selected : ''}`}
                     style={{ backgroundColor: zone.color }}
                     onClick={() => handleZoneClick(zone.id)}
                     title={zone.name}
@@ -332,7 +333,6 @@ export default function ConcertPreview({ concertId }: ConcertPreviewProps) {
             {(() => {
               const zone = zones.find((z) => z.id === selectedZone);
               const zoneSeats = getZoneSeats(selectedZone);
-
               if (!zone) return null;
 
               return (
@@ -340,6 +340,7 @@ export default function ConcertPreview({ concertId }: ConcertPreviewProps) {
                   <div className={styles.detailHeader}>
                     <h4 className={styles.detailTitle}>{zone.name} 상세 정보</h4>
                     <button
+                      title='detail'
                       type='button'
                       onClick={() => setSelectedZone(null)}
                       className={styles.closeButton}

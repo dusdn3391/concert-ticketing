@@ -92,13 +92,12 @@ export default function ConcertCreate() {
     images: [],
   });
 
-  // 날짜/시간 -> ISO, ISO + 분 더하기
-  // const toISO = (date: string, time: string) => `${date}T${time}:00`;
-  // const addMinutesISO = (iso: string, minutes: number) => {
-  //   const d = new Date(iso);
-  //   d.setMinutes(d.getMinutes() + minutes);
-  //   return d.toISOString();
-  // };
+  const toISO = (date: string, time: string) => `${date}T${time}:00`;
+  const addMinutesISO = (iso: string, minutes: number) => {
+    const d = new Date(iso);
+    d.setMinutes(d.getMinutes() + minutes);
+    return d.toISOString();
+  };
 
   const updateFormData = <K extends keyof ConcertFormData>(
     field: K,
@@ -430,12 +429,14 @@ export default function ConcertCreate() {
     return sortedRounds[0];
   };
 
+  // ⛳ handleSubmit 교체
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setIsSubmitting(true);
     try {
+      // 1) 회차 정렬
       const rounds = formData.concertRounds
         .filter((r) => r.date && r.startTime)
         .sort(
@@ -444,61 +445,58 @@ export default function ConcertCreate() {
             new Date(`${b.date}T${b.startTime}`).getTime(),
         );
 
-      // const schedules = rounds.map((r, idx) => {
-      //   const startISO = new Date(toISO(r.date, r.startTime)).toISOString(); // 시작
-      //   const endISO = addMinutesISO(startISO, formData.durationTime || 0); // 종료 = 시작 + 공연시간(분)
-      //   return { id: idx, startTime: startISO, endTime: endISO };
-      // });
-      /* 🔵 여기부터 콘솔 디버그 추가 */
-      // console.group('🗓️ Schedules Debug');
-      // console.log('입력 회차(concertRounds):', formData.concertRounds);
-      // console.table(
-      //   rounds.map((r, i) => ({
-      //     idx: i,
-      //     date: r.date,
-      //     startTime_HHMM: r.startTime,
-      //     startISO_raw: toISO(r.date, r.startTime),
-      //   })),
-      // );
-      // console.table(
-      //   schedules.map((s) => ({
-      //     id: s.id,
-      //     startTime_ISO: s.startTime,
-      //     endTime_ISO: s.endTime,
-      //     start_local: new Date(s.startTime).toLocaleString('ko-KR'),
-      //     end_local: new Date(s.endTime).toLocaleString('ko-KR'),
-      //   })),
-      // );
-      // console.log('공연시간(분):', formData.durationTime);
-      // console.log('브라우저 TZ 오프셋(분):', new Date().getTimezoneOffset());
-      // console.groupEnd();
-      // 2) 기간(YYYY-MM-DD) — 첫/마지막 회차 기준
+      // 2) ISO 문자열 배열
+      const concertTimes = rounds.map((r) =>
+        new Date(toISO(r.date, r.startTime)).toISOString(),
+      );
+
+      // 3) scheduleRequests 형태 (서버 전송 포맷)
+      const scheduleRequests = concertTimes.map((ct) => ({ concertTime: ct }));
+
+      // 4) 기간(YYYY-MM-DD)
       const startDate = rounds[0]?.date ?? '';
       const endDate = rounds.at(-1)?.date ?? '';
 
-      // 3) 최종 payload (schedules 포함!)
+      // 5) 콘솔 디버깅 (클라이언트 단계)
+      console.group('🧪 Schedule Build (Client)');
+      console.log('raw formData.concertRounds:', formData.concertRounds);
+      console.log('sorted rounds:', rounds);
+      console.log('concertTimes (ISO):', concertTimes);
+      console.table(scheduleRequests);
+      console.groupEnd();
+
+      // 6) 실제 createConcert에 넘길 payload (프리뷰)
       const payload = {
         title: formData.title,
         description: formData.description,
         location: formData.location,
         locationX: formData.locationX || 0,
         locationY: formData.locationY || 0,
-
         reservationStartDate: formData.reservationStartDate,
         reservationEndDate: formData.reservationEndDate,
         price: formData.price,
         limitAge: formData.limitAge,
         durationTime: formData.durationTime,
-        concertRounds: formData.concertRounds,
-        // schedules,
+        concertRounds: formData.concertRounds, // 원본 회차도 그대로 전달
+        schedules: scheduleRequests,
         startDate,
         endDate,
         thumbnailImage: formData.thumbnailFile || undefined,
         descriptionImages: formData.descriptionFiles || [],
       } as const;
 
+      console.group('📤 createConcert(payload) call');
+      console.log('payload preview:', {
+        ...payload,
+        thumbnailImage: payload.thumbnailImage ? '<<File>>' : null,
+        descriptionImagesCount: payload.descriptionImages.length,
+      });
+      console.groupEnd();
+
+      // ✅ 한 번만 호출!
       const newConcert = await createConcert(payload);
       console.log('✅ 콘서트 생성 성공:', newConcert);
+
       alert('콘서트가 성공적으로 생성되었습니다!');
       router.push('/admin/concerts');
     } catch (error) {

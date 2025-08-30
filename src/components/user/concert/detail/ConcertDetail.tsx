@@ -1,6 +1,7 @@
 // 상단 import 그대로 유지
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 import ConcertDetailSection from './ConcertDetailSection';
 import ReviewSection from './ReviewSection';
@@ -45,6 +46,7 @@ const toAbsolute = (p?: string) =>
   !p ? '' : p.startsWith('http') ? p : `${API_BASE}${p}`;
 
 export default function ConcertDetail({ id }: ConcertDetailProps) {
+  const router = useRouter(); // ✅ 라우터 초기화
   const [concert, setConcert] = useState<ConcertData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('상세보기');
@@ -105,7 +107,8 @@ export default function ConcertDetail({ id }: ConcertDetailProps) {
   };
 
   const handleReserveClick = () => {
-    window.open('/reserve/select-date', '_blank', 'width=1000,height=600,resizable=no');
+    const url = `/reserve/${id}/select-date`;
+    window.open(url, '_blank', 'width=1000,height=600,resizable=no,scrollbars=yes');
   };
 
   if (loading) return <div>불러오는 중...</div>;

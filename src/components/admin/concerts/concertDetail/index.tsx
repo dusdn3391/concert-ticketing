@@ -12,14 +12,13 @@ interface ConcertDetailProps {
 // ====== 환경/공통 ======
 const API_BASE = process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL || 'http://localhost:8080';
 
+// ====== SVG 이미지 경로 선택 ======
 function pickSvgImagePath(images?: any[] | null): string | null {
   if (!Array.isArray(images)) return null;
-
   const svg = images.find(
     (it) => (it?.imagesRole ?? it?.role ?? it?.images_role) === 'SVG_IMAGE',
   );
   if (!svg) return null;
-
   const p = String(svg.image || svg.imageUrl || '');
   const absolute = /^https?:\/\//i.test(p)
     ? p
@@ -32,15 +31,12 @@ async function fetchSvgMarkupWithAuth(url: string): Promise<string> {
   const res = await fetch(url, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
-  if (!res.ok) {
-    const t = await res.text().catch(() => '');
-    throw new Error(`SVG 로드 실패 (${res.status}) ${t.slice(0, 200)}`);
-  }
+  if (!res.ok) throw new Error(`SVG 로드 실패 (${res.status})`);
   const blob = await res.blob();
   return await blob.text();
 }
 
-// ====== 하이라이트/해시 유틸 ======
+// ====== SVG/해시 유틸 ======
 const BASE_FILL = 'rgba(59, 130, 246, 0.7)';
 const HOVER_FILL = 'rgba(59, 130, 246, 0.85)';
 const STROKE = 'rgba(0, 0, 0, 0.3)';
@@ -136,20 +132,62 @@ type TempZone = {
   priceRange: { min: number; max: number };
 };
 
-// ====== 가격 프롬프트 유틸 ======
 // ====== 가격 프롬프트 유틸 (단일 가격) ======
 function promptSinglePrice(init?: number): number | null {
   const s = window.prompt(
     '구역 가격(원)을 입력하세요 (숫자만)',
     init !== undefined ? String(init) : '50000',
   );
-  if (s === null) return null; // 취소
+  if (s === null) return null;
   const v = Number(s.replace(/[, ]/g, ''));
   if (!Number.isFinite(v) || v < 0) {
     alert('가격은 0 이상의 숫자로 입력해주세요.');
     return null;
   }
   return v;
+}
+
+// ===== SCHEDULE 유틸 =====
+function fmtLocalYMDHM(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const y = d.getFullYear();
+  const m = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  return `${y}-${m}-${day}T${hh}:${mm}:00`;
+}
+function toStartTimeLocal(s: any): string {
+  const src =
+    s?.startTime ??
+    s?.concertTime ??
+    (s?.date && s?.startTime ? `${s.date}T${s.startTime}` : null);
+
+  if (typeof src === 'string' && src.trim()) {
+    const d = new Date(src);
+    if (!isNaN(d.getTime())) return fmtLocalYMDHM(d);
+    const m = src.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/);
+    if (m) return `${m[1]}T${m[2]}:${m[3]}:00`;
+  }
+  const d = new Date();
+  d.setHours(20, 0, 0, 0);
+  return fmtLocalYMDHM(d);
+}
+function buildScheduleRequestsFromRawSchedules(
+  raw: any,
+): Array<{ id: number; startTime: string }> {
+  const list = Array.isArray(raw?.schedules) ? raw.schedules : [];
+  if (list.length === 0) {
+    const base =
+      typeof raw?.startDate === 'string' && raw.startDate
+        ? new Date(`${raw.startDate}T20:00`)
+        : new Date();
+    return [{ id: 0, startTime: fmtLocalYMDHM(base) }];
+  }
+  return list.map((s: any, idx: number) => ({
+    id: Number(s?.id ?? idx),
+    startTime: toStartTimeLocal(s),
+  }));
 }
 
 export default function ConcertDetail({ concertId }: ConcertDetailProps) {
@@ -160,9 +198,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
   const [loading, setLoading] = useState(true);
   const [svgFile, setSvgFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [descriptionFiles, setDescriptionFiles] = useState<File[]>([]);
 
   const [svgTransform, setSvgTransform] = useState({ x: 0, y: 0, scale: 1 });
   const [isDragging, setIsDragging] = useState(false);
@@ -203,7 +238,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
       review_count: raw.review_count ?? raw.reviewCount ?? 0,
 
       concertHallName: raw.concertHallName ?? null,
-      images: raw.images ?? [],
       schedules: raw.schedules ?? [],
       casts: raw.casts ?? [],
 
@@ -232,8 +266,8 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
           try {
             const svgText = await fetchSvgMarkupWithAuth(svgUrl);
             setConcert((prev) => (prev ? { ...prev, svg_content: svgText } : prev));
-          } catch (e: any) {
-            console.warn('SVG_IMAGE 로드 실패:', e?.message || e);
+          } catch {
+            /* ignore */
           }
         }
       }
@@ -248,7 +282,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
 
   useEffect(() => {
     if (concertId) fetchConcertDetail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [concertId]);
 
   // ====== 편집 진입: 기존 구역을 tempZones로 시딩 ======
@@ -287,7 +320,9 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
           }
         });
       }
-    } catch {}
+    } catch {
+      /* ignore */
+    }
 
     const seen = new Set<string>();
     const unique = tz.filter((z) => {
@@ -301,7 +336,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
     setIsEditMode(true);
   };
 
-  // ====== 저장 ======
+  // ====== 저장 (수정 PUT) ======
   const handleSaveZones = async () => {
     if (!concert) return;
 
@@ -309,12 +344,11 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
       const token = localStorage.getItem('admin_token');
       const raw = rawDetailRef.current ?? concert;
 
-      // seatSections로 변환
       const seatSections = (tempZones as TempZone[]).map((z, idx) => ({
         id: idx,
         sectionName: z.name || '',
         colorCode: z.hash || '',
-        price: Number(z.priceRange?.min ?? 0), // ← 단일 가격(min) 사용
+        price: Number(z.priceRange?.min ?? 0),
         seats: [] as Array<{
           id: number;
           rowName: string;
@@ -344,55 +378,14 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
         casts: Array.isArray(raw.casts) ? raw.casts : [],
       };
 
-      const scheduleRequests = (Array.isArray(raw.schedules) ? raw.schedules : [])
-        .map((s: any, idx: number) => {
-          const concertTime = s.concertTime ?? s.startTime ?? '';
-          if (!concertTime) return null;
-          return { id: Number(s.id ?? idx), concertTime };
-        })
-        .filter(Boolean) as Array<{ id: number; concertTime: string }>;
+      // --- scheduleRequests: 서버 요구 포맷 { id, startTime } ---
+      const scheduleRequests = buildScheduleRequestsFromRawSchedules(raw);
 
       const seatMap = {
         id: 0,
         originalFileName: svgFile?.name ?? (concert.svg_content ? 'seatmap.svg' : ''),
         storedFileName: '',
       };
-
-      type ImageMeta = {
-        id?: number;
-        image: string;
-        imagesRole: 'THUMBNAIL' | 'DESCRIPT_IMAGE';
-      };
-      const getExistingMeta = (
-        role: 'THUMBNAIL' | 'DESCRIPT_IMAGE',
-      ): ImageMeta | null => {
-        const list = Array.isArray(raw?.images) ? raw.images : [];
-        const obj = list.find(
-          (it: any) => (it.imagesRole ?? it.role ?? it.images_role) === role,
-        );
-        if (!obj) return null;
-        const id = obj.id ?? undefined;
-        const image = obj.image ?? obj.imageUrl ?? obj.url ?? '';
-        if (!image) return null;
-        return { id, image, imagesRole: role };
-      };
-
-      let thumbMetaToSend: ImageMeta | null = null;
-      if (thumbnailFile) {
-        thumbMetaToSend = { image: thumbnailFile.name, imagesRole: 'THUMBNAIL' };
-      } else {
-        thumbMetaToSend = getExistingMeta('THUMBNAIL');
-      }
-
-      let descMetaToSend: ImageMeta | null = null;
-      if (descriptionFiles.length > 0) {
-        descMetaToSend = {
-          image: descriptionFiles[0].name,
-          imagesRole: 'DESCRIPT_IMAGE',
-        };
-      } else {
-        descMetaToSend = getExistingMeta('DESCRIPT_IMAGE');
-      }
 
       const fd = new FormData();
       fd.append(
@@ -412,37 +405,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
         new Blob([JSON.stringify(seatMap)], { type: 'application/json' }),
       );
 
-      fd.append(
-        'thumbnailImage',
-        new Blob(
-          [
-            JSON.stringify(
-              thumbMetaToSend ?? { id: undefined, image: '', imagesRole: 'THUMBNAIL' },
-            ),
-          ],
-          { type: 'application/json' },
-        ),
-      );
-      fd.append(
-        'descriptionImage',
-        new Blob(
-          [
-            JSON.stringify(
-              descMetaToSend ?? {
-                id: undefined,
-                image: '',
-                imagesRole: 'DESCRIPT_IMAGE',
-              },
-            ),
-          ],
-          { type: 'application/json' },
-        ),
-      );
-
-      if (thumbnailFile) fd.append('images', thumbnailFile, thumbnailFile.name);
-      if (descriptionFiles.length > 0)
-        descriptionFiles.forEach((f) => fd.append('images', f, f.name));
-
       if (svgFile) {
         fd.append('svgImage', svgFile, svgFile.name);
       } else if (concert.svg_content) {
@@ -453,14 +415,17 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
       }
 
       const url = `${API_BASE}/api/concerts/${concertId}`;
+
       const res = await fetch(url, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
         body: fd,
       });
-      const text = await res.text();
 
-      if (!res.ok) throw new Error(text || '콘서트 수정 실패');
+      const rawText = await res.text().catch(() => '');
+      if (!res.ok) {
+        throw new Error(rawText || '콘서트 수정 실패');
+      }
 
       setConcert((prev) =>
         prev
@@ -482,7 +447,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
       setSelectedZone(null);
       alert('구역 설정이 저장되었습니다.');
     } catch (error: any) {
-      console.error('구역 저장 오류:', error);
       alert('구역 저장에 실패했습니다: ' + (error?.message || '알 수 없는 오류'));
     }
   };
@@ -525,8 +489,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
     reader.readAsText(file);
   };
 
-  // ====== 클릭: 편집 모드에서 이름변경/새로추가 + 가격설정 프롬프트 ======
-  // ====== 클릭: 편집 모드에서 이름/가격 같이 수정 (가격은 1회 입력) ======
+  // ====== 클릭: 편집 모드에서 이름/가격 설정 ======
   const handleSVGElementClick = (e: Event, element: Element) => {
     e.preventDefault();
     e.stopPropagation();
@@ -538,15 +501,10 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
     const hash = getElementHash(element, rootSvg);
     const idx = tempZones.findIndex((z) => z.hash === hash);
 
-    // 이미 선택된 구역 ⇒ 이름/가격 수정
     if (idx >= 0) {
       const current = tempZones[idx];
-
-      // 1) 이름
       const newName = prompt('구역 이름 수정', current.name || '')?.trim();
       if (!newName) return;
-
-      // 2) 가격 (단일 입력) — 취소하면 기존 가격 유지
       const newUnit = promptSinglePrice(current.priceRange.min);
       const next = [...tempZones];
       next[idx] = {
@@ -566,12 +524,11 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
       return;
     }
 
-    // 새 구역 추가 ⇒ 이름/가격 1회 입력
     const name = prompt('새 구역 이름을 입력하세요')?.trim();
     if (!name) return;
 
     const unit = promptSinglePrice();
-    if (unit === null) return; // 가격 입력 취소 시 추가 안 함
+    if (unit === null) return;
 
     const { id: stableId } = makeStableZoneId(element, rootSvg);
     element.setAttribute('id', stableId);
@@ -589,7 +546,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
         hash,
         svgElementId: stableId,
         seatCount: 0,
-        priceRange: { min: unit, max: unit }, // 단가를 min=max로 저장
+        priceRange: { min: unit, max: unit },
       },
     ]);
   };
@@ -648,7 +605,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
     svgEl.parentNode?.replaceChild(newSvgEl, svgEl);
 
     if (isEditMode) {
-      // 편집 모드: tempZones 기준
       const root = newSvgEl as unknown as SVGSVGElement;
 
       root
@@ -690,7 +646,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
           el.addEventListener('mouseleave', () => el.setAttribute('opacity', '1'));
         });
     } else {
-      // 보기 모드: 서버 zones 있으면 그걸로, 없으면 seatSections(colorCode) 매칭
       const sections = Array.isArray((concert as any).seatSections)
         ? (concert as any).seatSections
         : [];
@@ -749,7 +704,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
         setDerivedZones(matchedZones);
       }
 
-      // 서버 zones 강조
       concert.zones?.forEach((zone: any) => {
         const element =
           newSvgEl.querySelector(`#${zone.svgElementId}`) ||
@@ -781,7 +735,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
 
   useEffect(() => {
     renderSVG();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [concert, selectedZone, isEditMode, tempZones]);
 
   // ====== 뷰 ======
@@ -840,7 +793,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
 
   return (
     <div className={styles.container}>
-      {/* 헤더 */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <Link href='/admin/concerts' className={styles.backButton}>
@@ -877,7 +829,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
       </div>
 
       <div className={styles.content}>
-        {/* SVG 뷰어 */}
         <div className={styles.svgSection}>
           <div className={styles.svgHeader}>
             <div className={styles.svgHeaderLeft}>
@@ -891,42 +842,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
               )}
             </div>
             <div className={styles.svgActions}>
-              {/* 이미지 업로드 UI */}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 12,
-                  alignItems: 'center',
-                  marginRight: 12,
-                }}
-              >
-                <label className={styles.reuploadButton}>
-                  📷 썸네일 업로드
-                  <input
-                    type='file'
-                    accept='image/*'
-                    onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
-                    style={{ display: 'none' }}
-                  />
-                </label>
-                <label className={styles.reuploadButton}>
-                  🖼️ 상세 이미지 추가
-                  <input
-                    type='file'
-                    accept='image/*'
-                    multiple
-                    onChange={(e) =>
-                      setDescriptionFiles(Array.from(e.target.files || []))
-                    }
-                    style={{ display: 'none' }}
-                  />
-                </label>
-                <div className={styles.inputHint}>
-                  {thumbnailFile ? `썸네일: ${thumbnailFile.name}` : '썸네일 미선택'}
-                  {descriptionFiles.length > 0 && ` · 상세 ${descriptionFiles.length}장`}
-                </div>
-              </div>
-
               {!concert.svg_content ? (
                 <label className={styles.uploadButton}>
                   📁 SVG 업로드
@@ -1046,7 +961,6 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
           )}
         </div>
 
-        {/* 구역 정보 패널 */}
         <div className={styles.infoPanel}>
           <h2>구역 정보</h2>
 

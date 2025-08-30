@@ -5,7 +5,15 @@ import { useDateStore } from '@/stores/dateStore';
 
 import styles from './Selecting.module.css';
 
-const SelectDate = () => {
+type Props = {
+  startDate: string; // "YYYY-MM-DD"
+  endDate: string; // "YYYY-MM-DD"
+  totalSeatCount: number; // 전체 좌석 수 (seatSections[*].seats 합계)
+};
+
+const toDate = (d: string) => new Date(d);
+
+const SelectDate: React.FC<Props> = ({ startDate, endDate, totalSeatCount }) => {
   const { selectedDate, setSelectedDate } = useDateStore();
 
   return (
@@ -23,12 +31,14 @@ const SelectDate = () => {
                 value={selectedDate}
                 locale='ko-KR'
                 calendarType='gregory'
+                minDate={toDate(startDate)}
+                maxDate={toDate(endDate)}
               />
             </div>
           </div>
         </div>
 
-        {/* 회차 선택 - 임시 고정 */}
+        {/* 회차 선택 - 임시 고정 (필요 시 나중에 실제 스케줄로 교체) */}
         <div className={styles.center}>
           <div className={styles.selectTitle}>선택 2</div>
           <div className={styles.selectBox}>
@@ -40,7 +50,7 @@ const SelectDate = () => {
           </div>
         </div>
 
-        {/* 좌석 정보 - 임시 고정 */}
+        {/* 좌석 정보 - 전체 좌석 수 표시 */}
         <div className={styles.right}>
           <div className={styles.selectTitle}>선택 3</div>
           <div className={styles.selectBox}>
@@ -49,15 +59,11 @@ const SelectDate = () => {
               <div className={styles.seats}>
                 <div className={styles.seatType}>전체</div>
                 <div className={styles.restSeat}>
-                  120<p>석</p>
+                  {totalSeatCount.toLocaleString()}
+                  <p>석</p>
                 </div>
               </div>
-              <div className={styles.seats}>
-                <div className={styles.seatType}>전체</div>
-                <div className={styles.restSeat}>
-                  120<p>석</p>
-                </div>
-              </div>
+              {/* 필요하면 등급/구역별로 추가 섹션 구성 가능 */}
             </div>
           </div>
         </div>

@@ -57,7 +57,7 @@ export default function ConcertList({ initialConcerts }: ConcertListProps = {}) 
       await apiCall(`/api/concerts/${concertId}`, { method: 'DELETE' });
       setConcerts((prev) => {
         const next = prev.filter((c) => c.id !== concertId);
-        setConcertCount(next.length); // 👈 삭제 후 개수 반영
+        setConcertCount(next.length);
         return next;
       });
       alert(`${concertTitle}이(가) 삭제되었습니다.`);

@@ -34,7 +34,7 @@ interface ConcertRound {
 type ImagesRole = 'THUMBNAIL' | 'DETAIL';
 
 interface ScheduleItem {
-  concertTime: string; // ISO
+  concertTime: string;
 }
 
 interface ImageItem {
@@ -183,6 +183,7 @@ export const useVenueStore = create<VenueStore>((set, get) => ({
     }
   },
 
+  // useVenueStore 안 createConcert 변경/추가 로그만 발췌
   createConcert: async (concertData: ConcertCreateData) => {
     try {
       set({ loading: true, error: null });
@@ -192,24 +193,11 @@ export const useVenueStore = create<VenueStore>((set, get) => ({
       const token = localStorage.getItem('admin_token');
       if (!token) throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
 
-      // 1) 모든 회차 -> schedules 배열로 변환
       if (!concertData.concertRounds || concertData.concertRounds.length === 0) {
         throw new Error('회차(concertRounds)가 필요합니다.');
       }
 
-      console.groupCollapsed('🧾 원본 concertRounds');
-      console.table(
-        concertData.concertRounds.map((r) => ({
-          id: r.id,
-          date: r.date,
-          time: r.startTime,
-        })),
-      );
-      console.groupEnd();
-
-      // ... createConcert 내부
-
-      // 🔁 회차 정렬 (그대로 유지)
+      // 1) 회차 정렬
       const rounds = [...concertData.concertRounds]
         .filter((r) => r.date && r.startTime)
         .sort(
@@ -218,24 +206,19 @@ export const useVenueStore = create<VenueStore>((set, get) => ({
             new Date(`${b.date}T${b.startTime}`).getTime(),
         );
 
-      // ✅ 각 회차 → ISO 로 바꾼 concertTime 목록
-      const concertTimes = rounds.map((r) =>
-        new Date(toIso(r.date, r.startTime)).toISOString(),
-      );
+      const concertTimes = rounds.map((r) => `${r.date}T${r.startTime}:00`); // 로컬 문자열, Z 제거 권장
+      const scheduleRequests = concertTimes.map((ct) => ({ startTime: ct })); // ✅ 키를 startTime으로
 
-      // ✅ scheduleRequests: [{ concertTime }]
-      const scheduleRequests: ScheduleItem[] = concertTimes.map((ct) => ({
-        concertTime: ct,
-      }));
-
-      console.groupCollapsed('✅ scheduleRequests (concertTime only)');
-      console.table(scheduleRequests);
+      console.groupCollapsed('🧪 Schedule Build (Store)');
+      console.log('concertTimes (LOCAL):', concertTimes);
+      console.table(scheduleRequests); // 열이 startTime으로 찍혀야 정상
       console.groupEnd();
 
-      // ✅ 기간(YYYY-MM-DD)도 concertTimes 기준으로 추론
+      // 4) 기간 계산
+      const toYMD = (iso: string) => new Date(iso).toISOString().slice(0, 10);
       const inferredStartDate = concertTimes[0]
         ? toYMD(concertTimes[0])
-        : new Date().toISOString().slice(0, 10);
+        : toYMD(new Date().toISOString());
       const inferredEndDate = concertTimes.at(-1)
         ? toYMD(concertTimes.at(-1)!)
         : inferredStartDate;
@@ -243,7 +226,7 @@ export const useVenueStore = create<VenueStore>((set, get) => ({
       const startDate = concertData.startDate ?? inferredStartDate;
       const endDate = concertData.endDate ?? inferredEndDate;
 
-      // 3) 공통 요청 본문 (🔹 schedule은 여기서 제외!)
+      // 5) 공통 본문
       const baseRequest = {
         id: 0,
         title: concertData.title,
@@ -265,58 +248,66 @@ export const useVenueStore = create<VenueStore>((set, get) => ({
         casts: concertData.casts ?? [],
       };
 
-      // 4) 파일 유무에 따라 전송 방식 선택
       const hasFiles =
         !!concertData.thumbnailImage ||
         (concertData.descriptionImages && concertData.descriptionImages.length > 0) ||
         !!concertData.seatMap;
 
       if (hasFiles) {
-        // 🔹 multipart: concertRequest + scheduleRequests + files
-        const concertRequest = {
-          ...baseRequest,
-          images: [] as any[], // 서버가 파일 저장 후 메타를 채움
-          seatMap: undefined as any,
-        };
-        console.log('🧾 multipart concertRequest:', concertRequest);
+        // 🔹 multipart
+        const concertRequest = { ...baseRequest, images: [], seatMap: undefined as any };
 
         const formData = new FormData();
         formData.append(
           'concertRequest',
           new Blob([JSON.stringify(concertRequest)], { type: 'application/json' }),
         );
-
         formData.append(
           'scheduleRequests',
           new Blob([JSON.stringify(scheduleRequests)], { type: 'application/json' }),
         );
 
-        if (concertData.thumbnailImage) {
+        if (concertData.thumbnailImage)
           formData.append('thumbnailImage', concertData.thumbnailImage);
+        concertData.descriptionImages?.forEach((img) =>
+          formData.append('descriptionImage', img),
+        );
+        if (concertData.seatMap) formData.append('seatMap', concertData.seatMap);
+
+        // ✅ multipart 콘솔 프린트
+        console.group('📦 Multipart FormData (Store)');
+        for (const [k, v] of formData.entries()) {
+          if (v instanceof Blob) {
+            console.log(k, 'Blob', (v as Blob).type, (v as Blob).size, 'bytes');
+          } else {
+            console.log(k, v);
+          }
         }
-        if (concertData.descriptionImages?.length) {
-          concertData.descriptionImages.forEach((img) => {
-            formData.append('descriptionImage', img);
-          });
-        }
-        if (concertData.seatMap) {
-          formData.append('seatMap', concertData.seatMap);
-        }
+        console.groupEnd();
 
         const response = await fetch(`${baseUrl}/api/concerts/create`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }, // Content-Type 지정 금지
+          headers: { Authorization: `Bearer ${token}` },
           body: formData,
         });
-        if (!response.ok) {
-          const errorData = await response.text();
-          throw new Error(`콘서트 생성에 실패했습니다: ${response.status} ${errorData}`);
-        }
-        return await response.json();
+
+        console.log('🔁 [multipart] status:', response.status);
+        const ct = response.headers.get('content-type') || '';
+        const body = ct.includes('application/json')
+          ? await response.json()
+          : await response.text();
+        console.log('🔁 [multipart] response:', body);
+
+        if (!response.ok)
+          throw new Error(
+            `콘서트 생성에 실패했습니다: ${response.status} ${typeof body === 'string' ? body : (body?.message ?? '')}`,
+          );
+        return body;
       } else {
+        // 🔹 JSON
         const payload = {
           ...baseRequest,
-          scheduleRequests,
+          scheduleRequests, // ← 서버가 읽는 키
           images: (concertData.images ?? []).map((img, idx) => ({
             id: img.id ?? idx,
             imageUrl: img.imageUrl,
@@ -324,6 +315,11 @@ export const useVenueStore = create<VenueStore>((set, get) => ({
           })),
           seatMap: null as any,
         };
+
+        // ✅ JSON 콘솔 프린트
+        console.group('📦 JSON Payload (Store)');
+        console.log(JSON.stringify(payload, null, 2));
+        console.groupEnd();
 
         const response = await fetch(`${baseUrl}/api/concerts/create`, {
           method: 'POST',
@@ -333,17 +329,23 @@ export const useVenueStore = create<VenueStore>((set, get) => ({
           },
           body: JSON.stringify(payload),
         });
-        if (!response.ok) {
-          const errorData = await response.text();
-          throw new Error(`콘서트 생성에 실패했습니다: ${response.status} ${errorData}`);
+
+        console.log('🔁 [json] status:', response.status);
+        const body = await response.text(); // 서버가 text/json 섞어줄 수 있으니 우선 text로
+        console.log('🔁 [json] raw response:', body);
+
+        if (!response.ok)
+          throw new Error(`콘서트 생성에 실패했습니다: ${response.status} ${body}`);
+        try {
+          return JSON.parse(body);
+        } catch {
+          return body;
         }
-        return await response.json();
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
-      console.error('❌ 콘서트 생성 오류:', errorMessage);
-      set({ error: errorMessage });
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('❌ 콘서트 생성 오류:', msg);
+      set({ error: msg });
       throw error;
     } finally {
       set({ loading: false });

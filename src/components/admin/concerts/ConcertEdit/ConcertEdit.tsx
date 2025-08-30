@@ -385,6 +385,25 @@ export default function ConcertEdit() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  // 날짜/시간 포맷 유틸
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const isoToYmd = (iso: string) => {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+  const isoToHHmm = (iso: string) => {
+    const d = new Date(iso);
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  // 서버 이미지 → DisplayImage 매핑
+  const mapImages = (images: any[] | undefined | null): DisplayImage[] => {
+    if (!Array.isArray(images)) return [];
+    return images.map((img: any) => ({
+      imageUrl: img.image || img.imageUrl || img.url || '', // ✅ 서버는 image 필드 사용
+      imagesRole: img.imagesRole === 'THUMBNAIL' ? 'THUMBNAIL' : 'DETAIL', // DESCRIPT_IMAGE/SVG_IMAGE → DETAIL
+    }));
+  };
 
   // ------------ 데이터 불러오기(EDIT 전용) ------------
   useEffect(() => {
@@ -404,54 +423,41 @@ export default function ConcertEdit() {
         if (!res.ok) throw new Error('콘서트 정보를 불러오지 못했습니다.');
         const data = await res.json();
 
-        // 회차 매핑: concertRounds 우선, 없으면 schedules → 회차로 역매핑
-        // 회차 매핑: concertRounds 우선, 없으면 schedules → 회차로 역매핑
+        // ✅ schedules/rounds 매핑 (concertTime → startTime → time 폴백)
         let rounds: ConcertRound[] = [];
         if (Array.isArray(data.concertRounds) && data.concertRounds.length > 0) {
-          rounds = data.concertRounds.map((r: any, idx: number) => ({
-            id: r.id ?? idx,
-            date:
-              r.date ??
-              (r.startTime ? new Date(r.startTime).toISOString().slice(0, 10) : ''),
-            startTime:
-              r.startTime && typeof r.startTime === 'string' && r.startTime.length === 5
-                ? r.startTime
-                : r.startTime
-                  ? new Date(r.startTime)
-                      .toLocaleTimeString('ko-KR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false,
-                      })
-                      .slice(0, 5)
-                  : '',
-          }));
+          rounds = data.concertRounds.map((r: any, idx: number) => {
+            // r.date가 'YYYY-MM-DD', r.startTime이 'HH:mm' 또는 ISO일 수 있음
+            const hasHHmm =
+              typeof r.startTime === 'string' &&
+              r.startTime.length === 5 &&
+              r.startTime.includes(':');
+            const iso = !hasHHmm && r.startTime ? String(r.startTime) : null;
+
+            return {
+              id: r.id ?? idx,
+              date: r.date ?? (iso ? isoToYmd(iso) : ''),
+              startTime: hasHHmm ? r.startTime : iso ? isoToHHmm(iso) : '',
+            };
+          });
         } else if (Array.isArray(data.schedules)) {
           rounds = data.schedules.map((s: any, idx: number) => {
-            // ✅ concertTime 우선 사용, 없으면 startTime/ time 등 fallback
             const iso = s.concertTime ?? s.startTime ?? s.time ?? null;
-            const pad = (n: number) => `${n}`.padStart(2, '0');
-
-            if (!iso) {
-              return { id: s.id ?? idx, date: '', startTime: '' };
-            }
-
-            const d = new Date(iso);
+            if (!iso) return { id: s.id ?? idx, date: '', startTime: '' };
+            const isoStr = String(iso);
             return {
               id: s.id ?? idx,
-              date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-              startTime: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+              date: isoToYmd(isoStr),
+              startTime: isoToHHmm(isoStr),
             };
           });
         }
 
-        // 이미지 매핑
-        const mappedImages: DisplayImage[] = Array.isArray(data.images)
-          ? data.images.map((img: any) => ({
-              imageUrl: img.imageUrl ?? img.url ?? '',
-              imagesRole: img.imagesRole ?? img.role ?? 'DETAIL',
-            }))
-          : [];
+        // 정렬/빈값 정리
+        rounds = sortRoundsByDateTime(rounds.filter((r) => r.date && r.startTime));
+
+        // ✅ 이미지 매핑 (image 필드 우선)
+        const mappedImages: DisplayImage[] = mapImages(data.images);
 
         setFormData({
           title: data.title ?? '',
@@ -474,7 +480,7 @@ export default function ConcertEdit() {
           images: mappedImages,
         });
 
-        // 주소 초기값(단순 세팅)
+        // 주소 초기값
         setBaseAddress(data.location ?? '');
         setDetailAddress('');
       } catch (e: any) {
@@ -486,6 +492,7 @@ export default function ConcertEdit() {
   }, [id]);
 
   // ------------ 제출(수정 전용) ------------
+  // ✅ 교체: handleSubmit (필드 단위 검증 제거, 응답 로깅만 수행)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm() || !id) return;
@@ -493,16 +500,28 @@ export default function ConcertEdit() {
     try {
       setIsSubmitting(true);
 
-      // 회차 정렬 + schedules 생성
+      // 회차 정렬 및 스케줄 생성 (기존 유틸 사용)
       const rounds = sortRoundsByDateTime(
         formData.concertRounds.filter((r) => r.date && r.startTime),
       );
+
+      // ✅ startDate / endDate 계산 (가장 이른/늦은 회차 날짜)
+      const startDateForEvent = rounds.length ? rounds[0].date : '';
+      const endDateForEvent = rounds.length ? rounds[rounds.length - 1].date : '';
+
+      // ✅ schedules: 서버 호환 위해 startTime/endTime + concertTime 모두 전송
       const schedules = rounds.map((r, idx) => {
-        const startISO = new Date(toISO(r.date, r.startTime)).toISOString();
+        const startISO = new Date(`${r.date}T${r.startTime}:00`).toISOString();
         const endISO = addMinutesISO(startISO, formData.durationTime || 0);
-        return { id: idx, startTime: startISO, endTime: endISO };
+        return {
+          id: idx,
+          startTime: startISO, // 기존 필드
+          endTime: endISO, // 기존 필드
+          concertTime: startISO, // ✅ 추가: 서버 응답의 concertTime 채우기용
+        };
       });
 
+      // ✅ requestBody에 startDate / endDate 추가
       const requestBody = {
         title: formData.title,
         description: formData.description,
@@ -515,7 +534,9 @@ export default function ConcertEdit() {
         limitAge: formData.limitAge,
         durationTime: formData.durationTime,
         concertRounds: rounds.map((r) => ({ date: r.date, startTime: r.startTime })),
-        schedules,
+        schedules, // ✅ concertTime 포함됨
+        startDate: startDateForEvent, // ✅ 추가 (YYYY-MM-DD)
+        endDate: endDateForEvent, // ✅ 추가 (YYYY-MM-DD)
       };
 
       const fd = new FormData();
@@ -523,28 +544,44 @@ export default function ConcertEdit() {
         'concertRequest',
         new Blob([JSON.stringify(requestBody)], { type: 'application/json' }),
       );
-
-      if (formData.thumbnailFile) {
-        fd.append('images', formData.thumbnailFile);
-      }
-      if (formData.descriptionFiles.length > 0) {
-        formData.descriptionFiles.forEach((f) => fd.append('images', f));
-      }
+      if (formData.thumbnailFile) fd.append('images', formData.thumbnailFile);
+      formData.descriptionFiles.forEach((f) => fd.append('images', f));
 
       const token = localStorage.getItem('admin_token');
-      const res = await fetch(`http://localhost:8080/api/concerts/${id}`, {
+
+      // 🔸 PUT 요청
+      const putRes = await fetch(`http://localhost:8080/api/concerts/${id}`, {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        } as any,
+        headers: { Authorization: `Bearer ${token}` } as any, // FormData: content-type 자동
         body: fd,
       });
 
-      if (!res.ok) {
-        const msg = await res.text();
-        throw new Error(msg || '콘서트 수정 실패');
+      // 🔸 응답 로그(상태/헤더/본문)
+      const contentType = putRes.headers.get('content-type') || '';
+      let parsedBody: any = null;
+      if (putRes.status !== 204) {
+        parsedBody = contentType.includes('application/json')
+          ? await putRes.json()
+          : await putRes.text();
       }
 
+      console.log('📨 PUT /api/concerts/:id status:', putRes.status);
+      console.log(
+        '📨 PUT response headers:',
+        Object.fromEntries(putRes.headers.entries()),
+      );
+      console.log('📨 PUT response body:', parsedBody);
+
+      if (!putRes.ok) {
+        const msg =
+          typeof parsedBody === 'string'
+            ? parsedBody
+            : parsedBody?.message || '콘서트 수정 실패';
+        alert(`수정 실패 (${putRes.status})\n${msg}`);
+        return;
+      }
+
+      // 성공 처리 (필드 비교/재조회 없음)
       alert('콘서트가 성공적으로 수정되었습니다!');
       router.push('/admin/concerts');
     } catch (error: any) {

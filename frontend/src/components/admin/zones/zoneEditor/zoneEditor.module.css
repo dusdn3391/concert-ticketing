@@ -1,0 +1,560 @@
+/* ZoneEditor 컴팩트 컨테이너 */
+.compactContainer {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 투명 드래그 이미지 */
+.dragImage {
+  position: absolute;
+  top: -1000px;
+  left: -1000px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 컴팩트 헤더 */
+.compactHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  flex-shrink: 0;
+  min-height: 48px;
+  padding: 8px 16px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.compactTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.zoneId {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.compactHeaderControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 가이드 툴팁 */
+.guideTooltipBtn {
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.guideTooltipBtn:hover,
+.guideTooltipBtn.active {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+.guideTooltip {
+  position: absolute;
+  top: 60px;
+  right: 16px;
+  width: 300px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.tooltipHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.tooltipHeader h3 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.tooltipHeader button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.tooltipContent {
+  padding: 12px 16px;
+}
+
+.guideItem {
+  padding: 4px 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.guideItem strong {
+  color: var(--text-primary);
+}
+
+/* 컴팩트 행 관리 */
+.compactRowManager {
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  flex-shrink: 0;
+}
+
+.controlsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.rowSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.rowSelect {
+  padding: 4px 8px;
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.newRowInput {
+  padding: 4px 8px;
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+  width: 60px;
+}
+
+.gridInfoSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gridSize {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 4px 8px;
+  background-color: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.seatCount {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.gridControls {
+  display: flex;
+  gap: 12px;
+}
+
+.gridControlGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.controlLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 32px;
+  text-align: center;
+}
+
+.gridButton {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border-secondary);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.gridButton:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  border-color: var(--border-primary);
+}
+
+.gridButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gridValue {
+  font-size: 11px;
+  color: var(--text-primary);
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* 컴팩트 에디터 영역 */
+.compactEditorArea {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.fixedControlPanel {
+  width: 200px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-primary);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.statsSection,
+.actionsSection,
+.bulkSection {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.sectionTitle {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 통계 */
+.compactStats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.statChip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.statValue {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 빠른 액션 */
+.quickActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quickActionButtons {
+  display: flex;
+  gap: 4px;
+}
+
+.statusBtn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  margin-right: 8px;
+}
+
+.statusBtn.available {
+  background: #10b981;
+  color: white;
+}
+
+.statusBtn.occupied {
+  background: #f59e0b;
+  color: white;
+}
+
+.statusBtn.disabled {
+  background: #6b7280;
+  color: white;
+}
+
+.statusBtn:hover {
+  transform: scale(1.05);
+}
+
+.noSelection {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-align: center;
+  margin: 16px 0;
+  font-style: italic;
+}
+
+/* 가격 입력 그룹 */
+.priceInputGroup {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.priceSelect {
+  flex: 1;
+  min-width: 80px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  order: 1;
+}
+
+.priceSelect:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.customPriceInput {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+  flex-basis: 100%;
+  order: 3;
+}
+
+.customPriceInput:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.priceActionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  flex-shrink: 0;
+  order: 2;
+}
+
+.priceActionBtn:hover:not(:disabled) {
+  border-color: var(--border-primary);
+  background: var(--bg-tertiary);
+}
+
+.saveAllBtn {
+  background: var(--success-primary);
+  color: white;
+  border-color: var(--success-primary);
+}
+
+.saveAllBtn:hover:not(:disabled) {
+  background: var(--success-secondary);
+  border-color: var(--success-secondary);
+}
+
+.saveAllBtn:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  border-color: var(--border-secondary);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* 대량 작업 */
+.bulkActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bulkButton {
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.bulkButton:hover:not(:disabled) {
+  background: var(--bg-primary);
+  border-color: var(--border-primary);
+}
+
+.bulkButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 좌석 그리드 래퍼 */
+.compactSeatGridWrapper {
+  flex: 1;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+/* 컴팩트 범례 */
+.compactLegend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-primary);
+  flex-shrink: 0;
+}
+
+.legendChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.legendDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legendDot.available {
+  background-color: #10b981;
+}
+
+.legendDot.occupied {
+  background-color: #f59e0b;
+}
+
+.legendDot.disabled {
+  background-color: #6b7280;
+}
+
+.legendDot.selected {
+  background-color: var(--accent-primary);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .controlsRow {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .gridControls {
+    gap: 8px;
+  }
+
+  .gridControlGroup {
+    padding: 2px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .controlsRow {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .rowSection,
+  .gridInfoSection,
+  .gridControls {
+    justify-content: space-between;
+  }
+
+  .gridControls {
+    gap: 6px;
+  }
+
+  .gridControlGroup {
+    flex: 1;
+    justify-content: center;
+  }
+}

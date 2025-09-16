@@ -1,0 +1,172 @@
+{
+  "parser": "@typescript-eslint/parser", // typescript 코드를 분석하기 위해 사용
+  "parserOptions": {
+    "ecmaVersion": "latest", // 사용할 ECMAScript 버전 지정
+    "sourceType": "module" // ECMAScript 타입 지정
+  },
+  "extends": [
+    "airbnb", // airbnb의 eslint 규칙을 확장
+    "airbnb/hooks", // airbnb의 react-hooks 규칙을 확장
+    "plugin:react/recommended", // React 플러그인의 추천 규칙을 확장
+    "plugin:jsx-a11y/recommended", // 접근성 관련 jsx-a11y 플러그인의 추천 규칙을 확장
+    "eslint-config-prettier", // Prettier와 충돌하는 규칙을 비활성
+    "next/core-web-vitals" // Next.js의 Core Web Vitals 관련 규칙을 확장
+  ],
+  "env": {
+    "browser": true, // 브라우저 전역 변수를 사용 가능하도록 설정
+    "node": true, // Node.js 전역 변수와 스코프를 사용 가능하도록 설정
+    "jest": true, // Jest 전역 변수를 사용 가능하도록 설정
+    "es6": true // ES6 전역 변수를 사용 가능하도록 설정
+  },
+  "plugins": ["@typescript-eslint"], // TypeScript 규칙을 지원하는 ESLint 플러그인을 사용
+  "settings": {
+    "react": {
+      "version": "detect" // 설치된 React의 버전을 자동으로 감지
+    },
+    "import/extensions": [".js", ".jsx", ".ts", ".tsx"], // import 시 인식할 파일 확장자를 지정
+    "import/resolver": {
+      "node": {
+        "paths": ["src"], // 모듈 해석을 위한 기본 경로를 'src'로 설정
+        "extensions": [".js", ".jsx", ".ts", ".tsx"] // Node.js 모듈 해석을 위해 인식할 파일 확장자를 지정
+      },
+      "typescript": {
+        "project": "." // TypeScript 프로젝트 파일 위치를 지정
+      }
+    }
+  },
+  "rules": {
+    // 규칙 설정
+    // 특정 ESLint 규칙을 활성화, 비활성화하거나 수정
+    // 예를 들어, "react/jsx-filename-extension": ["error", { "extensions": [".js", ".jsx", ".ts", ".tsx"] }]
+    // 위 규칙은 JSX를 사용할 수 있는 파일 확장자를 .js, .jsx, .ts, .tsx로 지정
+    // 이하 설정들도 비슷한 방식으로 각각의 규칙을 설정
+    "camelcase": "off",
+    "arrow-body-style": "off",
+    "no-plusplus": "off",
+    "react/display-name": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "react/function-component-definition": "off",
+    "react/jsx-one-expression-per-line": "off",
+    "react/jsx-filename-extension": [
+      "error",
+      { "extensions": [".js", ".jsx", ".ts", ".tsx"] }
+    ],
+    "react/jsx-props-no-spreading": "off",
+    "react/require-default-props": "off",
+    "react/jsx-wrap-multilines": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "import/prefer-default-export": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never"
+      }
+    ],
+    "import/no-unresolved": ["error", { "ignore": ["^@/"] }],
+    "no-restricted-exports": [
+      "error",
+      { "restrictDefaultExports": { "defaultFrom": false } }
+    ],
+    "import/order": [
+      "error",
+      {
+        "pathGroups": [
+          {
+            "pattern": "@/lib/**",
+            "group": "external"
+          },
+          {
+            "pattern": "{types/*,@/types*,./types}",
+            "group": "type"
+          },
+          {
+            "pattern": "{hooks,@/hooks/**/*,./hooks/**,./use**,../use**,../../use**,../../../use**,,../../hooks/**,./_hooks/**,../../../_hooks/**}",
+            "group": "internal"
+          },
+          {
+            "pattern": "{utils/**/*,./utils,../utils,../../utils,../../../utils}",
+            "group": "type"
+          },
+          {
+            "pattern": "{@/constants/*,./constants}",
+            "group": "type"
+          },
+          {
+            "pattern": "{states/**/*,./states*,./**/states*,../states*,../../states*,../../../states*,,../../../../states*,**/**/**/states*}",
+            "group": "type"
+          },
+          {
+            "pattern": "@/services/**",
+            "group": "type"
+          },
+          {
+            "pattern": "{./helpers,./data,./config,./defaults,../../../defaults}",
+            "group": "type"
+          },
+          {
+            "pattern": "{components,components/_common/**,@/components,@/components/**,svgs,@/assets/**/*,@/app/**,routes/**,public/**}",
+            "group": "index"
+          },
+          {
+            "pattern": "{styles,./*.css,../*.css,../*.module.css}",
+            "group": "index"
+          }
+        ],
+        "groups": [
+          ["external", "builtin"],
+          ["type", "internal", "object"],
+          ["parent", "sibling", "index"]
+        ],
+        "newlines-between": "always"
+      }
+    ],
+    "import/no-anonymous-default-export": "off",
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": ["**/*.stories.*", "**/.storybook/**/*.*"],
+        "peerDependencies": true
+      }
+    ],
+    "no-param-reassign": ["error", { "props": false }],
+    "no-unused-expressions": ["warn"],
+    "prefer-destructuring": ["error", { "object": true, "array": false }],
+    "lines-between-class-members": "off",
+    "consistent-return": "off",
+    "jsx-a11y/click-events-have-key-events": "off", // <div> 태그에 onClick props를 사용 설정
+    "jsx-a11y/no-static-element-interactions": "off",
+    "no-bitwise": "off", // 조건식 '<<', '>>', '~~' 사용 설정
+    "react/button-has-type": "off", // '<button>btn</button>' 엘리먼트를 사용 설정
+    "jsx-a11y/label-has-associated-control": [
+      // label, htmlFor, input에 type 명시 설정
+      "off",
+      {
+        "labelComponents": ["label"],
+        "labelAttributes": ["htmlFor"],
+        "controlComponents": ["input"]
+      }
+    ],
+    // 새로 추가한 완화된 규칙들
+    "array-callback-return": "off", // Array.find() 등에서 return 강제 안함
+    "no-restricted-syntax": "off", // for-of, for-in 루프 허용
+    "no-use-before-define": ["error", { "functions": false, "classes": true }], // 함수는 선언 전 사용 허용, 클래스는 금지
+    "no-unused-vars": ["warn", { "args": "none" }], // 함수 매개변수는 사용하지 않아도 경고 안함
+    "no-restricted-globals": ["error", { "name": "event", "message": "Use local parameter instead." }], // isNaN은 허용, event만 제한
+    "no-else-return": "off", // else 에서 return 강제 안함
+    "no-alert": "off" // alert, confirm 허용
+  },
+  "globals": {
+    "navigation": "readonly", // 'navigation'을 전역 읽기 전용 변수로 선언
+    "globalThis": false, // 'globalThis' 전역 변수 사용을 금지
+    "NodeJS": true, // NodeJS 전역 타입을 사용 가능하도록 설정
+    "RequestInit": true, // RequestInit 타입을 전역에서 사용 가능하도록 설정
+    "ResponseInit": true, // ResponseInit 타입을 전역에서 사용 가능하도록 설정
+    "HeadersInit": true, // HeadersInit 타입을 전역에서 사용 가능하도록 설정
+  }
+}

@@ -1,0 +1,171 @@
+.leftPanel {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding:20px;
+  min-height: 530px;
+  background-color: #EFEFEF;
+}
+
+.layout {
+  display: flex;
+  justify-content: space-between;
+  border-radius: 5px;
+  padding:10px 0px;
+  background-color: #fff;
+}
+
+
+.left {
+  flex: 2; /* 넓게 */
+  padding: 0px 10px;
+  border-right: 1px solid #ddd;
+}
+
+.center {
+  flex: 1; /* 작게 */
+  padding: 0px 10px;
+  border-right: 1px solid #ddd;
+}
+
+.right {
+  flex: 1;
+  padding: 0px 10px;
+}
+
+.selectTitle{
+    color:#e60012;
+    font-size: 12px;
+}
+
+.selectBox{
+    display: flex;
+    gap:10px;
+    margin-top: 10px;
+}
+
+.selectBox .selectName{
+    font-size: 14px;
+    white-space:nowrap;
+}
+
+.selectBox .calendar{
+    width:80%;
+    text-align: center;
+    height:350px;
+}
+.calendarRoot {
+  width: 100%;
+  max-width: 360px;
+  border: none;
+  max-height:200px;
+  font-family: inherit;
+}
+
+/* 내부 기본 컨테이너 */
+.calendarRoot :global(.react-calendar) {
+  width: 100%;
+  max-height:200px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+
+/* 요일 헤더 컴팩트 */
+.calendarRoot :global(.react-calendar__month-view__weekdays) {
+  font-size: 12px;
+}
+.calendarRoot :global(.react-calendar__month-view__weekdays__weekday abbr) {
+  text-decoration: none;
+}
+.calendarRoot :global(.react-calendar__tile) {
+  height: 35px;            /* ✅ 32~36px로 조절 */
+  padding: 2px;              /* 여백 제거 */
+  line-height: 34px;       /* 텍스트 수직정렬 */
+  border-radius: 8px;
+}
+
+.roundsGroupList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.roundsGroup {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+}
+
+.groupHeader {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.roundItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  gap:40px;
+  cursor: pointer;
+}
+
+.roundItem:hover {
+  background: #f9fbff;
+}
+
+.roundItem.active {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) inset;
+}
+
+.roundLabel {
+  font-weight: 600;
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
+}
+
+.seatAll{
+    width:100%;
+}
+
+.seats{
+    display: flex;
+    width: 100%;
+        font-size: 14px;
+    justify-content: space-between;
+}
+
+.restSeat{
+    display: flex;
+    color:#e60012
+}
+
+.restSeat p{
+    color:#000;
+}
+.rounds div{
+    font-size: 12px;
+}
+.noticeBox {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.noticeTitle {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.noticeContent {
+  font-size: 14px;
+  color: #555;
+}

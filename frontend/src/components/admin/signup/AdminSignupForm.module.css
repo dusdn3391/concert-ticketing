@@ -1,0 +1,57 @@
+.container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.title {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 30px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.input {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+.error {
+  font-size: 12px;
+  color: red;
+  margin-top: 5px;
+}
+
+.submitButton {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #000;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.AddressArray{display: flex;
+gap:10px;
+justify-content: space-between;}
+
+.AddressArray button{
+border:none;
+background-color: #3b82f6;
+color:#fff;
+border-radius: 5px;
+padding: 5px;
+}

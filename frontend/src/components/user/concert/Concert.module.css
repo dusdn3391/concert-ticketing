@@ -1,0 +1,59 @@
+/* styles/Concert.module.css */
+
+.container {
+  padding: 20px 20%;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 40px 0px;
+}
+.sortWrapper {
+  margin-bottom: 20px;
+}
+
+.sortSelect {
+  padding: 6px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  justify-items: center;
+  margin-bottom: 40px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pageButton {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #000;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: white;
+}
+/* ConcertCard.module.css */
+.image {
+  position: relative; /* next/image fill용 */
+  width: 100%;
+  aspect-ratio: 16 / 9; /* 또는 고정 높이: height: 180px; */
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f2f3f5; /* 로딩 배경 */
+}
+
+.pageButton.active {
+  background-color: black;
+  color: white;
+}

@@ -3,8 +3,6 @@
 **Concert Ticketing**은 **온라인 콘서트 티켓 예매 플랫폼**으로,  
 사용자가 쉽고 빠르게 공연을 예매하고, 관리자가 좌석과 공연을 효율적으로 관리할 수 있도록 설계되었습니다.  
 
-![concert](https://user-images.githubusercontent.com/yourusername/concert-image.png) <!-- 예시 이미지 URL -->
-
 ---
 
 ## ✨ Features

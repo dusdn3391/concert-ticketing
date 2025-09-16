@@ -138,8 +138,8 @@ function promptSinglePrice(init?: number): number | null {
     '구역 가격(원)을 입력하세요 (숫자만)',
     init !== undefined ? String(init) : '50000',
   );
-  if (s === null) return null;
-  const v = Number(s.replace(/[, ]/g, ''));
+  if (s === null) return null; // 취소
+  const v = Number(String(s).replace(/[, ]/g, ''));
   if (!Number.isFinite(v) || v < 0) {
     alert('가격은 0 이상의 숫자로 입력해주세요.');
     return null;
@@ -147,47 +147,30 @@ function promptSinglePrice(init?: number): number | null {
   return v;
 }
 
-// ===== SCHEDULE 유틸 =====
-function fmtLocalYMDHM(d: Date) {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const y = d.getFullYear();
-  const m = pad(d.getMonth() + 1);
-  const day = pad(d.getDate());
-  const hh = pad(d.getHours());
-  const mm = pad(d.getMinutes());
-  return `${y}-${m}-${day}T${hh}:${mm}:00`;
+// ===== 스케줄 유틸 (concertTime 그대로 보냄) =====
+function ensureYYYYMMDDTHHMMSS(s?: string | null): string {
+  if (!s) return '';
+  // 타임존 표기(Z, +09:00 등)는 제거해서 LocalDateTime 파싱에 안전하게
+  const noZone = s.replace(/[Zz]|([+\-]\d{2}:\d{2})$/, '');
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(noZone)) return noZone;
+  const m = noZone.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/);
+  return m ? `${m[1]}T${m[2]}:${m[3]}:00` : noZone;
 }
-function toStartTimeLocal(s: any): string {
-  const src =
-    s?.startTime ??
-    s?.concertTime ??
-    (s?.date && s?.startTime ? `${s.date}T${s.startTime}` : null);
 
-  if (typeof src === 'string' && src.trim()) {
-    const d = new Date(src);
-    if (!isNaN(d.getTime())) return fmtLocalYMDHM(d);
-    const m = src.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/);
-    if (m) return `${m[1]}T${m[2]}:${m[3]}:00`;
-  }
-  const d = new Date();
-  d.setHours(20, 0, 0, 0);
-  return fmtLocalYMDHM(d);
-}
 function buildScheduleRequestsFromRawSchedules(
   raw: any,
-): Array<{ id: number; startTime: string }> {
+): Array<{ id: number; concertTime: string }> {
   const list = Array.isArray(raw?.schedules) ? raw.schedules : [];
-  if (list.length === 0) {
-    const base =
-      typeof raw?.startDate === 'string' && raw.startDate
-        ? new Date(`${raw.startDate}T20:00`)
-        : new Date();
-    return [{ id: 0, startTime: fmtLocalYMDHM(base) }];
-  }
-  return list.map((s: any, idx: number) => ({
-    id: Number(s?.id ?? idx),
-    startTime: toStartTimeLocal(s),
-  }));
+  return list.map((s: any, idx: number) => {
+    // 우선순위: concertTime > (date+startTime) > startTime
+    const rawTime =
+      s?.concertTime ??
+      (s?.date && s?.startTime ? `${s.date}T${s.startTime}` : (s?.startTime ?? ''));
+    return {
+      id: Number(s?.id ?? idx),
+      concertTime: ensureYYYYMMDDTHHMMSS(String(rawTime || '')),
+    };
+  });
 }
 
 export default function ConcertDetail({ concertId }: ConcertDetailProps) {
@@ -378,7 +361,7 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
         casts: Array.isArray(raw.casts) ? raw.casts : [],
       };
 
-      // --- scheduleRequests: 서버 요구 포맷 { id, startTime } ---
+      // --- ✅ scheduleRequests: { id, concertTime }로 그대로 전송 ---
       const scheduleRequests = buildScheduleRequestsFromRawSchedules(raw);
 
       const seatMap = {
@@ -392,10 +375,10 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
         'concertRequest',
         new Blob([JSON.stringify(concertRequest)], { type: 'application/json' }),
       );
-      fd.append(
-        'scheduleRequests',
-        new Blob([JSON.stringify(scheduleRequests)], { type: 'application/json' }),
-      );
+      // fd.append(
+      //   'scheduleRequests',
+      //   new Blob([JSON.stringify(scheduleRequests)], { type: 'application/json' }),
+      // );
       fd.append(
         'seatSections',
         new Blob([JSON.stringify(seatSections)], { type: 'application/json' }),
@@ -552,6 +535,8 @@ export default function ConcertDetail({ concertId }: ConcertDetailProps) {
   };
 
   // ====== SVG 이동/확대 ======
+  const [, /* unused */ setUnused] = useState(false); // to avoid lint for handlers closuring stale state (optional)
+
   const handleZoom = (delta: number, centerX?: number, centerY?: number) => {
     setSvgTransform((prev) => {
       const newScale = Math.max(0.1, Math.min(5, prev.scale + delta));

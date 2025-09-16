@@ -9,7 +9,7 @@ import styles from './Inquiry.module.css';
 interface Inquiry {
   id: number;
   title: string;
-  state: string;
+  status: string;
   content: string;
   date: string;
 }
@@ -72,7 +72,13 @@ export default function EntireInquiry() {
                   >
                     <p>{inquiry.title}</p>
                     <div className={styles.inquiryState}>
-                      <p>{inquiry.state}</p>
+                      <p>
+                        {inquiry.status === 'PENDING'
+                          ? '답변중'
+                          : inquiry.status === 'COMPLETED'
+                            ? '답변완료'
+                            : inquiry.status}
+                      </p>
                       <div className={styles.line} />
                       <p>{inquiry.date}</p>
                       <Image

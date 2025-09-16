@@ -124,7 +124,7 @@ export default function HomePage() {
                   backgroundImage: `url(${slide.image})`,
                 }}
               >
-                <div className={styles.slideText}>{slide.text}</div>
+                {/* <div className={styles.slideText}>{slide.text}</div> */}
               </div>
             ))}
           </div>

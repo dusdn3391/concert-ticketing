@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import styles from './Mypage.module.css';
 import MypageNav from '@/components/user/mypage/MypageNav';
 
-interface Reservation {
+const API_BASE = process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL || 'http://localhost:8080';
+
+interface ReservationRow {
   id: number;
   date: string;
   number: string;
@@ -26,33 +29,124 @@ interface Notice {
   createdAt: string;
 }
 
+type ImageItem = {
+  id: number;
+  image?: string;
+  imageUrl?: string;
+  imagesRole?: string;
+  role?: string;
+  images_role?: string;
+};
+type ConcertLite = {
+  id: number;
+  title: string;
+  location?: string | null;
+  images?: ImageItem[];
+};
+type ReserveItem = {
+  id: number;
+  status?: string;
+  state?: string;
+  concert?: ConcertLite;
+  concertScheduleDate?: string;
+  seatReservations?: Array<{ id: number }>;
+  createdAt?: string;
+  updatedAt?: string;
+};
+type PageResponse<T> = {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+};
+
 export default function EntireMypage() {
+  const router = useRouter(); // ✅ push에 사용
+
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [latestNotice, setLatestNotice] = useState<Notice | null>(null);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0); // 문의 페이징 유지
   const inquiriesPerPage = 5;
 
-  const reservationData: Reservation[] = [
-    {
-      id: 1,
-      date: '2025-05-01',
-      number: 'A123456',
-      title: '뮤지컬 위키드',
-      showTime: '2025-06-01 19:00',
-      count: 2,
-      status: '예매완료',
-    },
-    {
-      id: 2,
-      date: '2025-04-28',
-      number: 'B987654',
-      title: '콘서트 블랙핑크',
-      showTime: '2025-06-10 18:00',
-      count: 1,
-      status: '예매완료',
-    },
-  ];
+  const [reservations, setReservations] = useState<ReservationRow[]>([]);
+  const [loadingReserve, setLoadingReserve] = useState(false);
 
+  /* ===== 날짜 유틸 ===== */
+  const fmtDateTime = (v?: string) => {
+    if (!v) return '';
+    const dt = new Date(v);
+    if (isNaN(dt.getTime())) return v;
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    const hh = String(dt.getHours()).padStart(2, '0');
+    const mi = String(dt.getMinutes()).padStart(2, '0');
+    return `${yyyy}.${mm}.${dd} ${hh}:${mi}`;
+  };
+  const fmtDate = (v?: string) => {
+    if (!v) return '';
+    const dt = new Date(v);
+    if (isNaN(dt.getTime())) return v;
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const isCancelled = (r: ReserveItem) => {
+    const s = (r.state ?? r.status ?? '').toUpperCase();
+    return s === 'CANCELLED' || s === 'CANCELED' || s.includes('CANCEL');
+  };
+  const pickStatus = (r: ReserveItem) =>
+    isCancelled(r)
+      ? '취소완료'
+      : (r.status ?? ((r.seatReservations?.length ?? 0) > 0 ? '예약완료' : '-'));
+
+  const pickSortKey = (r: ReserveItem) =>
+    r.createdAt || r.updatedAt || r.concertScheduleDate || '';
+
+  /* ===== 예매 2건 조회 ===== */
+  const fetchRecentReservations = async () => {
+    setLoadingReserve(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const url = `${API_BASE}/api/reserve?page=0&size=2`;
+      const res = await fetch(url, {
+        headers: {
+          Accept: '*/*',
+          Authorization: token ? `Bearer ${token}` : '',
+        },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: PageResponse<ReserveItem> | ReserveItem[] = await res.json();
+
+      const items = Array.isArray(data) ? data : (data.content ?? []);
+
+      const sorted = [...items].sort(
+        (a, b) => new Date(pickSortKey(b)).getTime() - new Date(pickSortKey(a)).getTime(),
+      );
+
+      const rows: ReservationRow[] = sorted.slice(0, 2).map((r) => ({
+        id: r.id,
+        date: fmtDate(r.createdAt || r.concertScheduleDate) || '-',
+        number: String(r.id),
+        title: r.concert?.title ?? '콘서트',
+        showTime: fmtDateTime(r.concertScheduleDate) || '-',
+        count: r.seatReservations?.length ?? 0,
+        status: pickStatus(r),
+      }));
+
+      setReservations(rows);
+    } catch (e) {
+      console.error('❌ 예매내역 조회 실패:', e);
+      setReservations([]);
+    } finally {
+      setLoadingReserve(false);
+    }
+  };
+
+  /* ===== 문의 1건/공지 1건 ===== */
   useEffect(() => {
     const fetchInquiries = async () => {
       try {
@@ -60,7 +154,7 @@ export default function EntireMypage() {
         if (!token) throw new Error('No access token found');
 
         const response = await fetch(
-          `http://localhost:8080/api/inquiries?page=${currentPage}&size=${inquiriesPerPage}`,
+          `${API_BASE}/api/inquiries?page=${currentPage}&size=${inquiriesPerPage}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -92,12 +186,11 @@ export default function EntireMypage() {
 
     const fetchLatestNotice = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/api/notices`, {
+        const res = await fetch(`${API_BASE}/api/notices`, {
           headers: { Accept: '*/*' },
         });
         if (!res.ok) throw new Error('Failed to fetch notices');
         const data = await res.json();
-        console.log(data);
         if (Array.isArray(data)) {
           const sorted = data.sort(
             (a: Notice, b: Notice) =>
@@ -113,6 +206,17 @@ export default function EntireMypage() {
     fetchInquiries();
     fetchLatestNotice();
   }, [currentPage]);
+
+  useEffect(() => {
+    fetchRecentReservations();
+  }, []);
+
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+      d.getDate(),
+    ).padStart(2, '0')}`;
+  }, []);
 
   return (
     <div className={styles.all}>
@@ -134,8 +238,14 @@ export default function EntireMypage() {
               <div className={styles.sectionHeader}>
                 <div className={styles.border} />
                 <h3>최근 예매내역</h3>
-                <button className={styles.moreButton}>더보기</button>
+                <button
+                  className={styles.moreButton}
+                  onClick={() => router.push('/mypage/ticketing')} // ✅ 더보기 → 예매확인 페이지
+                >
+                  더보기
+                </button>
               </div>
+
               <table className={styles.table}>
                 <thead>
                   <tr>
@@ -148,12 +258,16 @@ export default function EntireMypage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {reservationData.length === 0 ? (
+                  {loadingReserve ? (
+                    <tr>
+                      <td colSpan={6}>로딩 중…</td>
+                    </tr>
+                  ) : reservations.length === 0 ? (
                     <tr>
                       <td colSpan={6}>예매 내역이 없습니다.</td>
                     </tr>
                   ) : (
-                    reservationData.map((item) => (
+                    reservations.map((item) => (
                       <tr key={item.id}>
                         <td>{item.date}</td>
                         <td>{item.number}</td>
@@ -166,13 +280,19 @@ export default function EntireMypage() {
                   )}
                 </tbody>
               </table>
+              <div className={styles.asOf}>({todayStr} 기준)</div>
             </div>
 
             <div className={styles.inquiryBox}>
               <div className={styles.sectionHeader}>
                 <div className={styles.border} />
                 <h3>1:1 문의 내역</h3>
-                <button className={styles.moreButton}>더보기</button>
+                <button
+                  className={styles.moreButton}
+                  onClick={() => router.push('/mypage/inquiry')} // ✅ 더보기 → 문의 목록 페이지
+                >
+                  더보기
+                </button>
               </div>
 
               {inquiries.length === 0 ? (

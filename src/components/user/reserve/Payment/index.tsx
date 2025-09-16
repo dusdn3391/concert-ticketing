@@ -3,9 +3,10 @@ import React from 'react';
 import ProgressNav from '../Navbar/ProgressNav';
 import ConfirmPayment from './ConfirmPayment';
 import styles from './Payment.module.css';
+import { useDateStore } from '@/stores/dateStore';
 
 const PaymentPage = () => {
-  //   const router = useRouter();
+  const { selectedSeats, seatCount, totalPrice } = useDateStore();
 
   return (
     <div className={styles.wrapper}>

@@ -3,24 +3,193 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding:20px;
+  padding: 20px;
   min-height: 530px;
 }
 
 .cocertVenue{
-    display: flex;
-    gap:5px;
-    align-items: center;
+  display: flex;
+  gap: 5px;
+  align-items: center;
 }
 
 .line{
-    height:10px;
-    width:1px;
-    background-color:#d9d9d9;
+  height: 10px;
+  width: 1px;
+  background-color: #d9d9d9;
 }
 
+/* ✅ 고정 높이 제거 + 콘텐츠 크기에 맞춰 박스가 커지도록 */
 .seats{
   background-color: #d9d9d9;
-  padding:20px;
-  height:400px;
+  padding: 20px;
+  display: inline-block;     /* 콘텐츠 크기에 따라 가로/세로가 맞춰짐 */
+  width: max-content;        /* SVG 너비만큼 박스가 늘어남 */
+  max-width: 100%;           /* 너무 크면 부모 폭에서 멈추고 */
+  overflow: auto;            /* 넘치면 스크롤 (원하는 경우 hidden으로 변경 가능) */
+  border-radius: 8px;
 }
+
+/* 간단한 호스트: 절대 위치 제거, 크기 제한 없음 */
+.svgHost {
+  display: inline-block;
+}
+
+/* ✅ SVG는 원본 사이즈 그대로 (width/height를 CSS로 강제하지 않음) */
+.svgHost svg {
+  display: block;
+  width: auto;
+  height: auto;
+}
+
+/* 나머지 스타일 동일 */
+.svgLoading, .svgError { padding: 12px; color: #666; }
+
+.selectionBox { margin-top: 12px; }
+.selectionHeader { font-weight: 600; margin-bottom: 8px; }
+
+.seatList {}
+.seatsEmpty { color: #9AA0A6; padding: 8px 0; }
+
+.seatChips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.seatChip {
+  padding: 6px 10px; border: 1px solid #ddd; border-radius: 999px; background: #fff; cursor: pointer;
+}
+.seatChip:hover { background: #f9fbff; }
+.seatChip.active { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15) inset; }
+
+
+
+.seatPanel {
+  background: #f8f9fb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 420px;
+}
+
+.seatPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sectionMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.sectionMeta .dot {
+  width: 4px;
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 999px;
+}
+
+.resetBtn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+}
+.resetBtn:hover { background: #f3f4f6; }
+
+.seatGridContainer { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+  overflow-x: auto;          /* 가로가 길어지면 스크롤 */
+  padding-bottom: 6px;
+}
+
+.rowLabel {
+  width: 40px;               /* TSX의 40px과 맞춤 */
+  text-align: left;
+  font-weight: 600;
+  color: #4b5563;
+  line-height: var(--seat-size, 34px);
+}
+
+.seatCell {
+  width: var(--seat-size, 34px);
+  height: var(--seat-size, 34px);
+  border-radius: 8px;
+  background: #9ca3af;
+  border: 1px solid #6b7280;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seatCell.placeholder { background: #e5e7eb; border-color: #d1d5db; }
+.seatCell.selected { outline: 2px solid #2563eb; outline-offset: 2px; }
+.seatLabel { font-size: 12px; color: #fff; }
+.rowBlock {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+/* .rowLabel {
+  width: 28px;
+  text-align: center;
+  font-weight: 600;
+  color: #4b5563;
+  line-height: var(--seat-size);
+} */
+
+.seatRow {
+  display: grid;
+  gap: 6px;
+}
+
+/* .seatCell {
+  width: var(--seat-size, 34px);
+  height: var(--seat-size, 34px);
+  border-radius: 8px;
+  background: #9ca3af;
+  border: 1px solid #6b7280;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+} */
+.seatCell:hover { filter: brightness(0.95); }
+.seatCell.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background-color: #fff;
+  pointer-events: auto; /* disabled이지만 hover 차단이 안되면 유지 */
+}
+
+.seatCell.placeholder {
+  background: #e5e7eb;            /* 비어있는 칸 */
+  border-color: #d1d5db;
+  cursor: default;
+}
+
+.seatCell.selected {
+  outline: 2px solid #2563eb;     /* 선택 표시 */
+  outline-offset: 2px;
+  background: #808991;
+}
+
+.seatLabel {
+  font-size: 12px;
+  color: #fff;
+  /* user-select: none; */
+}
+
+.selectionInfo {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #4b5563;
+}
+
+/* SVG 컨테이너(그대로 유지) */
+.svgHost svg { width: 100%; height: auto; display: block; }

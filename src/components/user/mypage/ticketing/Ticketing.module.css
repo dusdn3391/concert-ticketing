@@ -125,6 +125,10 @@
   line-height: 160px;
   color: #555;
 }
+.img {
+    width: 120px;
+  height: 160px;
+}
 
 .infoRow {
   display: flex;

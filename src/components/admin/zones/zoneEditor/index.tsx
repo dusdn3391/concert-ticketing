@@ -59,7 +59,6 @@ type ConcertRequest = {
   limitAge: number;
   durationTime: number;
   adminId: number;
-  concertHallName: string | null;
 };
 
 export default function ZoneEditor({
@@ -72,8 +71,8 @@ export default function ZoneEditor({
 
   /** ====== 스토어 접근 ====== */
   const fetchConcert = useConcertStore((s) => s.fetchConcert);
-  const concert = useConcertStore((s) => s.get(concertId));
-  const isLoading = useConcertStore((s) => s.isLoading(concertId));
+  const concert = useConcertStore((s) => s.get(concertId as any));
+  const isLoading = useConcertStore((s) => s.isLoading(concertId as any));
 
   /** ====== concertId / zoneId 해석 ====== */
   const resolvedConcertId = useMemo(() => {
@@ -110,7 +109,7 @@ export default function ZoneEditor({
 
   /** ====== seatSections -> 초기 좌석 변환 ====== */
   const storeSeatSections: ApiSeatSectionLocal[] = useMemo(
-    () => (Array.isArray(concert?.seatSections) ? concert!.seatSections : []),
+    () => (Array.isArray(concert?.seatSections) ? (concert!.seatSections as any) : []),
     [concert],
   );
 
@@ -128,10 +127,9 @@ export default function ZoneEditor({
 
         const sortedRows = Object.keys(byRow).sort(); // 'A','B',...
         sortedRows.forEach((rowName, rowIdx) => {
-          const y = rowIdx + sectionIdx * 6; // 섹션마다 6칸 아래로
+          const y = rowIdx + sectionIdx * 6;
           const rowSeats = byRow[rowName];
 
-          // seatNumber 순서대로 배치, 빈칸('')은 스킵
           const nums = rowSeats
             .map((s) => s.seatNumber)
             .filter((sn) => String(sn).trim() !== '')
@@ -143,7 +141,7 @@ export default function ZoneEditor({
               id: `sec${section.id}-${rowName}-${n}`,
               row: rowName,
               number: n,
-              x: sectionOffsetX + i, // 가로로 쭉
+              x: sectionOffsetX + i,
               y,
               status: 'available',
               colorCode: section.colorCode,
@@ -235,7 +233,6 @@ export default function ZoneEditor({
         x: col,
         y: row,
         status: 'available',
-        // ✅ 현재 구역(colorCode) 자동 부여 (저장 시 섹션 매핑 누락 방지)
         colorCode: resolvedZoneId,
       };
 
@@ -342,7 +339,7 @@ export default function ZoneEditor({
             x: currentColX,
             y: currentRowY,
             status: 'available',
-            colorCode: resolvedZoneId, // ✅ 대량 생성도 현재 섹션으로
+            colorCode: resolvedZoneId,
           });
         }
       });
@@ -407,7 +404,6 @@ export default function ZoneEditor({
     [],
   );
 
-  /** ========= multipart/form-data PUT ========= */
   const handleSaveMultipart = useCallback(async () => {
     if (!resolvedConcertId) {
       alert('concertId를 찾을 수 없습니다.');
@@ -421,18 +417,16 @@ export default function ZoneEditor({
     onSeatUpdate?.(seats);
 
     // ✅ 저장 직전, 스토어 최신 스냅샷으로만 ConcertRequest 구성
-    // (필요 시 최신 fetch 재시도)
-    let latest = useConcertStore.getState().get(resolvedConcertId);
+    let latest = useConcertStore.getState().get(resolvedConcertId as any);
     if (!latest) {
-      await fetchConcert(resolvedConcertId);
-      latest = useConcertStore.getState().get(resolvedConcertId);
+      await fetchConcert(resolvedConcertId as any);
+      latest = useConcertStore.getState().get(resolvedConcertId as any);
     }
     if (!latest) {
       alert('콘서트 데이터를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.');
       return;
     }
 
-    // ✅ 필수 필드 검증 (스토어 값 없으면 저장 중단)
     const required: Array<[string, any]> = [
       ['id', (latest as any).id],
       ['title', (latest as any).title],
@@ -455,11 +449,10 @@ export default function ZoneEditor({
       return;
     }
 
-    // ✅ 전부 스토어 값으로만 구성 (하드코딩/기본값 없음)
     const concertRequest: ConcertRequest = {
       id: Number((latest as any).id),
       title: String((latest as any).title),
-      description: String((latest as any).description ?? ''), // 선택 필드: 비어있을 수 있음 (스토어 값 기반)
+      description: String((latest as any).description ?? ''),
       location: String((latest as any).location),
       locationX: Number((latest as any).locationX),
       locationY: Number((latest as any).locationY),
@@ -472,51 +465,60 @@ export default function ZoneEditor({
       limitAge: Number((latest as any).limitAge),
       durationTime: Number((latest as any).durationTime),
       adminId: Number((latest as any).adminId),
-      concertHallName:
-        (latest as any).concertHallName === null
-          ? null
-          : String((latest as any).concertHallName ?? ''), // null 허용
     };
 
-    // (B) seatSections: 현재 편집중 colorCode 하나만
-    const template = storeSeatSections.find((s) => s.colorCode === resolvedZoneId);
-    const section = buildSingleSeatSectionByColor(
+    // ✅ 원본 seatSections 유지 + 현재 편집중 섹션만 seats 덮어쓰기
+    const latestSeatSections: any[] = Array.isArray((latest as any).seatSections)
+      ? (latest as any).seatSections
+      : [];
+
+    // 현재 zone(colorCode) 템플릿 찾기
+    const template =
+      latestSeatSections.find((s) => (s?.colorCode ?? '') === resolvedZoneId) || null;
+
+    // 템플릿 메타 유지 + seats만 에디터 좌표로 재구성
+    const editedSection = buildSingleSeatSectionByColor(
       seats,
-      resolvedZoneId,
+      template?.colorCode ?? String(resolvedZoneId ?? ''),
       template
-        ? { id: template.id, sectionName: template.sectionName, price: template.price }
-        : { id: 0, sectionName: '', price: 0 }, // 신규 생성 시에도 스토어 기반이 없으면 빈 값
+        ? {
+            id: Number(template.id),
+            sectionName: String(template.sectionName ?? ''),
+            price: Number(template.price ?? 0),
+          }
+        : { id: 0, sectionName: '', price: 0 },
       { treatDisabledAsEmpty: false },
     );
-    const seatSectionsPayload = [section];
 
-    // (C) FormData 구성
+    // 편집 섹션만 교체, 나머지 섹션은 그대로
+    const seatSectionsPayload = template
+      ? latestSeatSections.map((sec) =>
+          (sec?.colorCode ?? '') === (editedSection.colorCode ?? '')
+            ? editedSection
+            : sec,
+        )
+      : // 템플릿이 없었다면 원본 보존 + 새 섹션 추가
+        [...latestSeatSections, editedSection];
+
     const fd = new FormData();
     fd.append('concertRequest', JSON.stringify(concertRequest));
-    // 필요 시, 회차가 있다면 이렇게 추가:
-    // fd.append('scheduleRequests', JSON.stringify(scheduleRequestsArray));
     fd.append('seatSections', JSON.stringify(seatSectionsPayload));
-
-    // 파일 추가가 필요하면 File 객체로 추가 (서버 계약필드명에 맞춰)
-    // fd.append('thumbnailImage', thumbnailFile);
-    // fd.append('descriptionImage', descriptionFile);
-    // fd.append('svgImage', svgFile);
-
-    const token =
-      localStorage.getItem('admin_token') || localStorage.getItem('accessToken') || '';
+    const token = localStorage.getItem('admin_token');
     const base = process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL || '';
     const url = `${base}/api/concerts/${resolvedConcertId}`;
 
     console.groupCollapsed('[ZoneEditor] PUT multipart payload');
     console.log('URL:', url);
     console.log('concertRequest:', concertRequest);
-    console.log('seatSections:', seatSectionsPayload);
+    console.log(
+      'seatSections (merge: pass-through others, replace current zone):',
+      seatSectionsPayload,
+    );
     console.groupEnd();
 
     const res = await fetch(url, {
       method: 'PUT',
       headers: {
-        // ⚠️ Content-Type를 수동 설정하지 마세요 (브라우저가 boundary 포함 자동 설정)
         Accept: '*/*',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -534,14 +536,12 @@ export default function ZoneEditor({
     console.log('✅ Save success:', data);
     alert('좌석이 저장되었습니다.');
 
-    // 성공 후 최신 데이터 재조회(옵션)
-    fetchConcert(resolvedConcertId);
+    fetchConcert(resolvedConcertId as any);
   }, [
     resolvedConcertId,
     resolvedZoneId,
     seats,
     onSeatUpdate,
-    storeSeatSections,
     buildSingleSeatSectionByColor,
     fetchConcert,
   ]);

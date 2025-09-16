@@ -85,11 +85,52 @@
   line-height: 34px;       /* 텍스트 수직정렬 */
   border-radius: 8px;
 }
-.rounds{
-    border:1px solid #000;
-    display: flex;
-    gap:32px;
-    padding:5px;
+
+.roundsGroupList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.roundsGroup {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+}
+
+.groupHeader {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.roundItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  gap:40px;
+  cursor: pointer;
+}
+
+.roundItem:hover {
+  background: #f9fbff;
+}
+
+.roundItem.active {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) inset;
+}
+
+.roundLabel {
+  font-weight: 600;
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
 }
 
 .seatAll{

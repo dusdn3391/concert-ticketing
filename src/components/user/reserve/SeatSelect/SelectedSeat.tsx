@@ -26,16 +26,6 @@ const SelectedSeat = ({ onPrev, onNext }: SelectedSeatProps) => {
 
         <div className={styles.divide}>
           <div className={styles.notice}>최대 2매까지 예매가 가능합니다.</div>
-          <div className={styles.selector}>
-            <select className={styles.selectSeatBox} title='좌석 유형'>
-              <option>일반</option>
-            </select>
-            <select className={styles.selectCountBox} title='count'>
-              <option>0</option>
-              <option>1</option>
-              <option>2</option>
-            </select>
-          </div>
         </div>
       </div>
       <div className={styles.buttonGroup}>

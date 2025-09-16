@@ -5,43 +5,34 @@ import ProgressNav from '../Navbar/ProgressNav';
 import SelectDate from './Selecting';
 import ConcertRightPanel from './ConcertInfos';
 import styles from './ConcertDate.module.css';
+import { useDateStore } from '@/stores/dateStore'; // 🔹 추가
 
-const API_BASE = process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL;
+const API_BASE = process.env.NEXT_PUBLIC_API_LOCAL_BASE_URL ?? '';
+const TOKEN_KEY = 'accessToken';
 const toAbsolute = (p?: string) =>
   !p ? '' : p.startsWith('http') ? p : `${API_BASE}${p}`;
 
-type ApiSeat = {
-  id: number;
-  rowName: string;
-  seatNumber: string;
-};
-
+type ApiSeat = { id: number; rowName: string; seatNumber: string };
 type ApiSeatSection = {
   id: number;
   sectionName: string;
   colorCode: string;
   price: number;
-  seats: ApiSeat[]; // 빈 배열일 수 있음
+  seats: ApiSeat[];
 };
-
 type ConcertImage = {
   id: number;
   image: string;
-  imagesRole: 'THUMBNAIL' | 'DESCRIPT_IMAGE' | 'SVG_IMAGE'; // 응답에 SVG_IMAGE도 옴
+  imagesRole: 'THUMBNAIL' | 'DESCRIPT_IMAGE' | 'SVG_IMAGE';
 };
-
-type ConcertSchedule = {
-  id: number;
-  concertTime: string | null; // ✅ null 허용 (응답과 일치)
-};
-
+type ConcertSchedule = { id: number; concertTime: string | null };
 type ConcertData = {
   id: number;
   title: string;
   description: string;
   location: string;
-  startDate: string; // 'YYYY-MM-DD'
-  endDate: string; // 'YYYY-MM-DD'
+  startDate: string;
+  endDate: string;
   reservationStartDate: string;
   reservationEndDate: string;
   price: string;
@@ -51,35 +42,55 @@ type ConcertData = {
   concertHallName: string | null;
   images: ConcertImage[];
   schedules: ConcertSchedule[];
-  seatSections: ApiSeatSection[]; // ✅ 추가
+  seatSections: ApiSeatSection[];
   locationX?: number | null;
   locationY?: number | null;
 };
 
-const ConcertDate = () => {
+export default function ConcertDate() {
   const router = useRouter();
   const { concertId } = router.query;
 
+  // 🔹 store setter
+  const { setPosterUrl } = useDateStore();
+
+  // 데이터 상태
   const [data, setData] = useState<ConcertData | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // 썸네일/설명 이미지 계산
-  const thumbnail = useMemo(
+  // ✅ 포스터(blob URL)
+  const [posterSrc, setPosterSrc] = useState<string>('');
+
+  // 썸네일 원본 URL (절대 경로로 변환)
+  const thumbnailUrl = useMemo(
     () => toAbsolute(data?.images.find((i) => i.imagesRole === 'THUMBNAIL')?.image),
     [data],
   );
-  const descriptionImages = useMemo(
+
+  // 일정 정리 (null 제거 + 시간순)
+  const schedules = useMemo(
     () =>
-      (data?.images || [])
-        .filter((i) => i.imagesRole === 'DESCRIPT_IMAGE')
-        .map((i) => toAbsolute(i.image)),
-    [data],
+      (data?.schedules ?? [])
+        .filter((s): s is { id: number; concertTime: string } => !!s.concertTime)
+        .sort(
+          (a, b) => new Date(a.concertTime).getTime() - new Date(b.concertTime).getTime(),
+        ),
+    [data?.schedules],
   );
 
+  // 좌석 총합
+  const totalSeatCount = useMemo(
+    () =>
+      (data?.seatSections ?? []).reduce((sum, sec) => sum + (sec.seats?.length ?? 0), 0),
+    [data?.seatSections],
+  );
+
+  // 콘서트 데이터 패칭
   useEffect(() => {
     if (!router.isReady) return;
-    if (!concertId || Array.isArray(concertId) || !/^\d+$/.test(concertId)) {
+
+    if (!concertId || Array.isArray(concertId) || !/^\d+$/.test(String(concertId))) {
       setErrorMsg('잘못된 접근입니다.');
       setLoading(false);
       return;
@@ -94,9 +105,10 @@ const ConcertDate = () => {
         if (!res.ok) throw new Error('콘서트 정보를 불러오지 못했습니다.');
         const json: ConcertData = await res.json();
         setData(json);
+        setErrorMsg(null);
       } catch (e: any) {
         console.error('❌ 콘서트 조회 실패:', e);
-        setErrorMsg(e.message || '오류가 발생했습니다.');
+        setErrorMsg(e?.message || '오류가 발생했습니다.');
       } finally {
         setLoading(false);
       }
@@ -105,12 +117,67 @@ const ConcertDate = () => {
     fetchConcert();
   }, [router.isReady, concertId]);
 
+  // ✅ 포스터(blob URL) 가져오고 store에도 저장
+  useEffect(() => {
+    let canceled = false;
+
+    const run = async () => {
+      try {
+        if (!thumbnailUrl) {
+          if (!canceled) {
+            setPosterSrc('');
+            setPosterUrl(null); // 🔹 store 초기화
+          }
+          return;
+        }
+
+        const token =
+          typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+        if (!token) {
+          if (!canceled) {
+            setPosterSrc('');
+            setPosterUrl(null); // 🔹 store 초기화
+          }
+          return;
+        }
+
+        const resp = await fetch(thumbnailUrl, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!resp.ok) throw new Error(`POSTER_HTTP_${resp.status}`);
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+
+        if (!canceled) {
+          setPosterSrc(url);
+          setPosterUrl(url); // 🔹 store에 저장
+        }
+      } catch (err) {
+        console.error('포스터 로딩 오류:', err);
+        if (!canceled) {
+          setPosterSrc('');
+          setPosterUrl(null); // 🔹 store 초기화
+        }
+      }
+    };
+
+    run();
+
+    return () => {
+      canceled = true;
+    };
+  }, [thumbnailUrl, setPosterUrl]);
+
   const handleNext = () => {
-    // 다음 단계(좌석 선택)로 이동 — 동적 라우트로 이어붙이기
     router.push(`/reserve/${concertId}/select-seat`);
   };
 
-  if (loading) return <div className={styles.wrapper}>불러오는 중…</div>;
+  // 분기 렌더
+  if (loading) {
+    return <div className={styles.wrapper}>불러오는 중…</div>;
+  }
+
   if (errorMsg || !data) {
     return (
       <div className={styles.wrapper}>
@@ -121,36 +188,24 @@ const ConcertDate = () => {
     );
   }
 
-  const totalSeatCount = (data.seatSections || []).reduce(
-    (sum, sec) => sum + (sec.seats?.length ?? 0),
-    0,
-  );
   return (
     <div className={styles.wrapper}>
       <ProgressNav />
-
       <div className={styles.container}>
-        {/* 날짜/회차 선택에 필요한 데이터 내려주기 */}
         <SelectDate
           startDate={data.startDate}
           endDate={data.endDate}
           totalSeatCount={totalSeatCount}
+          schedules={schedules}
         />
-
-        {/* 우측 패널 정보 내려주기 */}
         <ConcertRightPanel
           showNextButton
           onNextClick={handleNext}
-          posterUrl={thumbnail || '/events/event-2.png'}
-          title={data.title}
-          location={data.location}
-          durationTime={data.durationTime}
-          price={data.price}
-          rating={data.rating}
+          concertId={Array.isArray(concertId) ? concertId[0] : concertId}
+          posterUrl={posterSrc || '/events/event-2.png'}
+          posterAlt={data.title}
         />
       </div>
     </div>
   );
-};
-
-export default ConcertDate;
+}
